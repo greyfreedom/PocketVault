@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">PocketVault</string>
+    <string name="version_format">Versão %1$s</string>
+    
+    <!-- Authentication -->
+    <string name="setup_password_title">Defina sua Senha Mestra</string>
+    <string name="master_password">Senha Mestra</string>
+    <string name="confirm_password">Confirmar Senha</string>
+    <string name="password_mismatch_error">As senhas não coincidem</string>
+    <string name="create_vault">Criar Cofre</string>
+    <string name="import_from_file">Ou Importar de Arquivo</string>
+    <string name="welcome_back">Bem-vindo de volta</string>
+    <string name="unlock">Desbloquear</string>
+    <string name="show_hint">Mostrar Dica</string>
+    <string name="hint_prefix">Dica: %1$s</string>
+    <string name="use_master_password">Usar Senha Mestra</string>
+    <string name="invalid_password">Senha inválida</string>
+    <plurals name="master_password_too_short">
+        <item quantity="one">A senha mestra deve ter pelo menos %1$d caractere</item>
+        <item quantity="many">A senha mestra deve ter pelo menos %1$d caracteres</item>
+        <item quantity="other">A senha mestra deve ter pelo menos %1$d caracteres</item>
+    </plurals>
+    <string name="setup_password_description">Esta senha será usada para criptografar todos os seus dados. Por favor, mantenha-a segura e lembre-se dela.</string>
+    <string name="password_hint">Dica de Senha</string>
+    <string name="password_hint_optional">Dica de Senha (Opcional)</string>
+    <string name="password_hint_description">Esta dica é armazenada em metadados legíveis do cofre e incluída nos backups exportados. Não insira informações sensíveis.</string>
+    
+    <!-- Biometric -->
+    <string name="fingerprint_unlock_title">Desbloqueio por Impressão Digital</string>
+    <string name="fingerprint_unlock_subtitle">Por favor, use sua impressão digital para desbloquear seu cofre de senhas</string>
+    <string name="biometric_setup_success">Desbloqueio por impressão digital ativado</string>
+    <string name="biometric_setup_disabled">Desbloqueio por impressão digital desativado</string>
+    <string name="biometric_unavailable_warning">Informações biométricas alteradas, por favor use a senha mestra.</string>
+    <string name="biometric_unlock_failed">Falha no desbloqueio por impressão digital, por favor use a senha mestra</string>
+
+    
+    <!-- Main Interface -->
+    <string name="edit_mode">Modo de Edição</string>
+    <string name="detail">Detalhe</string>
+    <string name="add_new_password">Adicionar Nova Senha</string>
+    <string name="no_passwords_found">Nenhum registro de senha encontrado</string>
+    <string name="search_passwords">Pesquisar senhas</string>
+    <string name="vault_empty_message">"O cofre está vazio,\nToque no botão \'+\' no canto inferior direito para adicionar uma nova senha!"</string>
+    <string name="no_search_results">Nenhum resultado correspondente encontrado</string>
+    
+    <!-- Password Entry -->
+    <string name="title">Título</string>
+    <string name="title_required">Título (Obrigatório)</string>
+    <string name="username">Nome de Usuário</string>
+    <string name="username_optional">Nome de Usuário (Opcional)</string>
+    <string name="password">Senha</string>
+    <string name="password_required">Senha (Obrigatória)</string>
+    <string name="notes">Notas</string>
+    <string name="notes_label">Notas</string>
+    <string name="notes_optional">Notas (Opcional)</string>
+    <string name="title_and_password_required">Título e senha são obrigatórios</string>
+    <string name="password_hidden">••••••••</string>
+    
+    <!-- Action Buttons -->
+    <string name="save">Salvar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Excluir</string>
+    <string name="edit">Editar</string>
+    <string name="copy">Copiar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="continue_action">Continuar</string>
+    <string name="done">Concluído</string>
+    
+    <!-- Confirmation Dialog -->
+    <string name="confirm_delete">Confirmar Exclusão</string>
+    <string name="confirm_delete_target_message">Tem certeza de que deseja excluir %1$s? Esta ação não pode ser desfeita.</string>
+    <string name="confirm_delete_message">Tem certeza de que deseja excluir esta senha? Esta ação não pode ser desfeita.</string>
+
+    <!-- Change Password -->
+    <string name="change_master_password">Alterar Senha Mestra</string>
+    <string name="current_master_password">Senha Mestra Atual</string>
+    <string name="new_password">Nova Senha</string>
+    <string name="confirm_new_password">Confirmar Nova Senha</string>
+    <string name="confirm_change">Confirmar Alteração</string>
+    <string name="password_change_success">Senha mestra alterada com sucesso</string>
+    <string name="password_change_success_biometric_disabled">Senha mestra alterada com sucesso! O desbloqueio por impressão digital foi desativado, por favor, ative-o novamente nas configurações.</string>
+    <string name="password_mismatch_new">As novas senhas não coincidem</string>
+    <string name="current_password_incorrect">A senha mestra atual está incorreta</string>
+    
+    <!-- Settings Page -->
+    <string name="settings">Configurações</string>
+    <string name="enable_fingerprint_unlock">Ativar Desbloqueio por Impressão Digital</string>
+    <string name="export_data">Exportar Dados</string>
+    <string name="import_data">Importar Dados</string>
+    <string name="history">Histórico</string>
+    <string name="master_password_hint">Dica da Senha Mestra</string>
+    <string name="enter_password_hint">Digite a Dica da Senha</string>
+    <string name="password_hint_updated">Dica de senha atualizada com sucesso</string>
+    
+    <!-- Settings Categories -->
+    <string name="settings_appearance">Aparência</string>
+    <string name="settings_appearance_desc">Idioma, tema</string>
+    <string name="settings_security">Segurança</string>
+    <string name="settings_security_desc">Impressão digital, senha</string>
+    <string name="settings_data">Dados</string>
+    <string name="settings_data_desc">Exportar, importar, compartilhar</string>
+    <string name="settings_other">Outros</string>
+    <string name="settings_other_desc">Histórico, categorias</string>
+    
+    <!-- Import/Export -->
+    <string name="export_success">Exportação bem-sucedida</string>
+    <string name="import_success_restart">Importação bem-sucedida! O aplicativo será reiniciado para carregar os novos dados.</string>
+    <string name="import_success_biometric_reset">Importação bem-sucedida! Por favor, faça login novamente e redefina o desbloqueio por impressão digital.</string>
+    <string name="import_failed">Falha na importação: a senha mestra está incorreta ou o arquivo de backup é inválido.</string>
+    <string name="import_failed_registration">Falha na importação: a senha mestra está incorreta ou o arquivo de backup é inválido.</string>
+    <string name="import_master_password_prompt">Digite a senha mestra deste backup. O cofre só será substituído após a verificação de todos os arquivos criptografados.</string>
+    <string name="share_data">Compartilhar Dados</string>
+    <string name="share_data_security_title">Compartilhamento Seguro</string>
+    <string name="share_data_security_message">O conteúdo do cofre neste backup é criptografado com AES-256-GCM e exige sua senha mestra para ser descriptografado. O backup também contém metadados de configuração legíveis, incluindo a dica de senha. Qualquer pessoa com o arquivo pode ler esses metadados. Guarde o backup com segurança e compartilhe-o apenas quando necessário.</string>
+    <string name="got_it">Entendi</string>
+    <string name="generate_file_failed">Falha ao gerar arquivo</string>
+    
+    <!-- Warning Dialogs -->
+    <string name="important_notice">Aviso Importante</string>
+    <string name="change_password_warning">Após alterar a senha mestra, todos os arquivos de backup antigos não poderão ser recuperados com a nova senha. %1$s \n\nTem certeza de que deseja continuar?</string>
+    <string name="change_password_biometric_info">\n\nApós alterar a senha mestra, por favor redefina o desbloqueio por impressão digital</string>
+    <string name="import_data_warning">Após importar o arquivo, todas as senhas atuais serão substituídas. Mas um backup dos dados atuais será criado antes da substituição. %1$s \n\nTem certeza de que deseja continuar?</string>
+    <string name="import_data_biometric_info">\n\nApós importar o arquivo, por favor redefina o desbloqueio por impressão digital</string>
+    
+    <!-- History -->
+    <string name="history_title">Histórico</string>
+    <string name="backup_date_format">Backup realizado em: %1$s</string>
+    <string name="no_backup_history">Nenhum registro de backup encontrado</string>
+    <string name="restore_success">Restauração bem-sucedida! O aplicativo será reiniciado.</string>
+    <string name="restore_failed">Falha na restauração, o arquivo pode estar corrompido.</string>
+    <string name="delete_backup_success">Arquivo de backup excluído com sucesso.</string>
+    <string name="delete_backup_failed">Falha ao excluir arquivo de backup.</string>
+    
+    <!-- Restore Confirmation Dialog -->
+    <string name="confirm_restore">Confirmar Restauração</string>
+    <string name="restore_warning">Tem certeza de que deseja restaurar a partir do arquivo de backup %1$s?\n\nEsta operação substituirá todos os dados atuais, mas um backup dos dados atuais será criado antes da restauração.%2$s</string>
+    <string name="restore_biometric_info">\n\nApós restaurar o arquivo de backup, você precisa redefinir o desbloqueio por impressão digital</string>
+    <string name="confirm_restore_action">Confirmar Restauração</string>
+    
+    <!-- Delete Backup Confirmation Dialog -->
+    <string name="confirm_delete_backup">Confirmar Exclusão</string>
+    <string name="delete_backup_warning">Tem certeza de que deseja excluir o arquivo de backup \"%1$s\"?\n\nUma vez excluído, não pode ser recuperado!</string>
+    <string name="confirm_delete_action">Confirmar Exclusão</string>
+    
+    <!-- Clipboard Messages -->
+    <string name="copied_to_clipboard">%1$s copiado para a área de transferência</string>
+    <string name="cleared_from_clipboard">%1$s removido da área de transferência</string>
+    
+    <!-- General -->
+    <string name="loading">Carregando…</string>
+    <string name="error">Erro</string>
+    <string name="back">Voltar</string>
+    <string name="data_format">"yyyy-MM-dd HH:mm:ss"</string>
+    <string name="unknown_date">Data desconhecida</string>
+    <string name="biometric_prompt_title">Ativar Desbloqueio por Impressão Digital</string>
+    <string name="biometric_prompt_subtitle">Por favor, verifique sua impressão digital para autorização</string>
+    <string name="biometric_prompt_negative">Cancelar</string>
+
+    <!-- Biometric Enrollment -->
+    <string name="enroll_biometric_dialog_title">Inscrição Biométrica</string>
+    <string name="enroll_biometric_dialog_message">Para usar o desbloqueio por impressão digital, você precisa configurá-lo nas configurações do seu dispositivo primeiro.</string>
+    <string name="go_to_settings">Ir para Configurações</string>
+    <string name="biometric_not_available">A autenticação biométrica não está disponível neste dispositivo.</string>
+    <string name="biometric_key_invalidated">Configure novamente o desbloqueio biométrico porque a biometria ou o bloqueio de tela do dispositivo foi alterado.</string>
+    <string name="unknown_error">Erro desconhecido</string>
+
+    
+    <!-- Password Generator -->
+    <string name="password_generator">Gerador de Senhas</string>
+    <string name="generate_password">Gerar Senha</string>
+    <string name="password_length">Comprimento da Senha</string>
+    <string name="include_uppercase">Incluir Letras Maiúsculas</string>
+    <string name="include_lowercase">Incluir Letras Minúsculas</string>
+    <string name="include_numbers">Incluir Números</string>
+    <string name="include_symbols">Incluir Símbolos</string>
+    <string name="avoid_confusing">Evitar Caracteres Confusos</string>
+    <string name="generated_password">Senha Gerada</string>
+    <string name="refresh_password">Atualizar</string>
+    <string name="use_password">Usá-la</string>
+    <string name="password_copied">Senha copiada para a área de transferência</string>
+    <string name="password_generator_condition_failed">Ative pelo menos uma condição</string>
+    
+    <!-- Add Password Screen -->
+    <string name="item_details">Detalhes do Item</string>
+    <string name="category">Categoria</string>
+    <string name="no_category">Sem Categoria</string>
+    <string name="login_info">Informações de Login</string>
+    <string name="check_password_in_database">Verificar senha no banco de dados</string>
+    <string name="authenticator_key">Chave do Autenticador</string>
+    <string name="setup_authenticator_key">Configurar Chave do Autenticador</string>
+    <string name="autofill_options">Opções de Preenchimento Automático</string>
+    <string name="website_uri">Site (URI)</string>
+    <string name="add_website">Adicionar Site</string>
+
+    <!-- TAB -->
+    <string name="tab_home">Início</string>
+    <string name="tab_settings">Configurações</string>
+    
+    <!-- Category Management -->
+    <string name="category_management">Gerenciamento de Categorias</string>
+    <string name="add_category">Adicionar Categoria</string>
+    <string name="edit_category">Editar Categoria</string>
+    <string name="category_name">Nome da Categoria</string>
+    <string name="select_color">Selecionar Cor</string>
+    <string name="category_created_success">Categoria criada com sucesso</string>
+    <string name="category_updated_success">Categoria atualizada com sucesso</string>
+    <string name="category_deleted_success">Categoria excluída com sucesso</string>
+    <string name="create_category_failed">Falha ao criar categoria</string>
+    <string name="update_category_failed">Falha ao atualizar categoria</string>
+    <string name="delete_category_failed">Falha ao excluir categoria</string>
+    <string name="enter_category_name">Por favor, insira o nome da categoria</string>
+    <string name="no_categories_manage">Sem categorias, gerencie as categorias na página inicial</string>
+    <string name="select_categories">Selecionar Categorias (seleção múltipla)</string>
+    <string name="all_categories">Todas as Categorias</string>
+    <string name="uncategorized">Sem Categoria</string>
+    <string name="favorites">Favoritos</string>
+    <plurals name="password_count">
+        <item quantity="one">%1$d senha</item>
+        <item quantity="many">%1$d senhas</item>
+        <item quantity="other">%1$d senhas</item>
+    </plurals>
+    <string name="switch_to_list_view">Alternar para visualização de lista</string>
+    <string name="switch_to_grid_view">Alternar para visualização de grade</string>
+    <string name="select_category">Selecionar Categoria</string>
+    <string name="manage_categories">Gerenciar Categorias</string>
+    <string name="associated_categories">Categorias Associadas</string>
+    <string name="categories">Categorias</string>
+    <string name="no_categories_selected">Nenhuma categoria selecionada</string>
+    <string name="remove_category">Remover categoria</string>
+    <string name="no_categories_available">Nenhuma categoria disponível</string>
+    <string name="create_new_category">Criar Nova Categoria</string>
+    <string name="add_to_favorites">Adicionar aos favoritos</string>
+    <string name="remove_from_favorites">Remover dos favoritos</string>
+
+    <!-- Language Settings -->
+    <string name="language">Idioma</string>
+    <string name="language_follow_system">Seguir o sistema</string>
+    <string name="language_english">Inglês (English)</string>
+    <string name="language_chinese">Chinês (Chinese)</string>
+    <string name="language_korean">Coreano (Korean)</string>
+    <string name="language_vietnamese">Vietnamita (Vietnamese)</string>
+    <string name="language_hindi">Hindi (Hindi)</string>
+    <string name="language_spanish">Espanhol (Spanish)</string>
+    <string name="language_portuguese">Português (Portuguese)</string>
+
+    <!-- Theme Settings -->
+    <string name="theme">Tema</string>
+    <string name="theme_follow_system">Seguir o sistema</string>
+    <string name="theme_light">Modo Claro</string>
+    <string name="theme_dark">Modo Escuro</string>
+
+    <!-- About Page -->
+    <string name="about_us">Sobre Nós</string>
+    <string name="contact_us">Fale Conosco</string>
+    <string name="privacy_policy">Política de Privacidade</string>
+    <string name="open_source_licenses">Licenças de código aberto</string>
+    <string name="email_copied">E-mail copiado para a área de transferência</string>
+    <string name="no_email_client">Nenhum aplicativo de e-mail encontrado</string>
+
+    <!-- Attachments -->
+    <string name="attachments">Anexos</string>
+    <string name="add_attachment">Adicionar Anexo</string>
+    <string name="remove_attachment">Remover Anexo</string>
+    <string name="no_attachments">Sem anexos</string>
+    <string name="attachment_size_exceeded">O tamanho do arquivo excede o limite. Atual: %1$d MB, Máximo: %2$d MB</string>
+    <string name="attachment_add_failed">Falha ao adicionar arquivo</string>
+    <string name="attachment_add_failed_with_reason">Falha ao adicionar arquivo: %1$s</string>
+
+    <!-- Secure Notes -->
+    <string name="add_secure_note">Adicionar Nota Segura</string>
+    <string name="content">Conteúdo</string>
+    <string name="content_optional">Conteúdo (Opcional)</string>
+
+    <!-- Type Selection -->
+    <string name="all_types">Todos os Tipos</string>
+    <string name="type_password">Senha</string>
+    <string name="type_note">Nota Segura</string>
+    <string name="select_type">Selecionar Tipo</string>
+
+    <!-- Q&A Page -->
+    <string name="qa_title">Perguntas e Respostas</string>
+    <string name="qa_network_permission_title">O PocketVault acessa a Internet?</string>
+    <string name="qa_network_permission_content">Não. O PocketVault não solicita a permissão de Internet do Android e não inclui SDKs de análise, publicidade, telemetria ou relatórios de falhas. Os dados do cofre são processados localmente e só saem do aplicativo quando você exporta ou compartilha um backup.</string>
+    <string name="qa_data_security_title">Esqueci minha Senha Mestra. Vocês podem redefini-la para mim?</string>
+    <string name="qa_data_security_content">Não. O PocketVault não tem conta, servidor, chave de recuperação nem porta dos fundos para redefinir a senha. Uma chave derivada da senha mestra desembrulha localmente a chave aleatória que criptografa o cofre. Se você perder a senha mestra e o desbloqueio biométrico não estiver disponível, o cofre não poderá ser recuperado. Guarde a senha com segurança. Backups antigos exigem a senha usada quando foram criados.</string>
+    <string name="qa_offline_usage_title">Onde meus dados são armazenados?</string>
+    <string name="qa_offline_usage_content" formatted="false">O cofre atual e o histórico de backups automáticos ficam no armazenamento privado do PocketVault. Limpar os dados do aplicativo ou desinstalá-lo remove esses arquivos locais. Backups exportados ou compartilhados ficam fora do controle do aplicativo e precisam ser excluídos separadamente de cada destino.</string>
+    <string name="how_is_my_data_protected_title">Como meus dados são protegidos?</string>
+    <string name="how_is_my_data_protected_content">Usamos a biblioteca criptográfica Google Tink.\n • Criptografia: AES-256-GCM-HKDF (Streaming AEAD).\n • Derivação: cofres novos e com chave alterada usam PBKDF2-SHA256 com 600.000 iterações.\nUma senha mestra forte aumenta o custo de tentativas offline, mas nenhum software ou senha garante segurança absoluta.</string>
+
+    <!-- TOTP -->
+    <string name="tab_totp">TOTP</string>
+    <string name="totp_add_entry">Adicionar autenticador</string>
+    <string name="scan_qr_code">Escanear Código QR</string>
+    <string name="totp_enter_manually">Inserir manualmente</string>
+    <string name="totp_edit_entry">Editar autenticador</string>
+    <string name="totp_edit_entry_title">Editar autenticador</string>
+    <string name="totp_edit_entry_description">Atualize os dados de configuração desta entrada do autenticador.</string>
+    <string name="totp_manual_add_title">Adicionar autenticador</string>
+    <string name="totp_manual_add_description">Insira os dados de configuração exibidos pelo serviço que você deseja proteger.</string>
+    <string name="totp_issuer">Emissor</string>
+    <string name="totp_issuer_hint">Por exemplo, GitHub</string>
+    <string name="totp_account">Conta</string>
+    <string name="totp_account_hint">Por exemplo, name@example.com</string>
+    <string name="totp_secret">Chave secreta</string>
+    <string name="totp_secret_hint">Por exemplo, JBSWY3DPEHPK3PXP</string>
+    <string name="totp_secret_supporting_text">Espaços e hifens são aceitos.</string>
+    <string name="totp_advanced_options">Opções avançadas</string>
+    <string name="totp_algorithm">Algoritmo</string>
+    <string name="totp_digits">Dígitos do código</string>
+    <string name="totp_period_seconds">Período (segundos)</string>
+    <string name="totp_period_supporting_text">Insira um valor entre 15 e 120 segundos.</string>
+    <string name="totp_issuer_required">O emissor é obrigatório.</string>
+    <string name="totp_account_required">A conta é obrigatória.</string>
+    <string name="totp_secret_required">A chave secreta é obrigatória.</string>
+    <string name="totp_secret_invalid">Insira uma chave Base32 válida.</string>
+    <string name="totp_period_invalid">O período deve estar entre 15 e 120 segundos.</string>
+    <string name="camera_permission_required">Permissão de câmera necessária</string>
+    <string name="camera_permission_rationale">A permissão de câmera é necessária para escanear códigos QR e adicionar entradas TOTP.</string>
+    <string name="grant_permission">Conceder Permissão</string>
+    <string name="totp_empty_message">Nenhuma entrada TOTP ainda</string>
+    <string name="totp_empty_hint">Toque no botão de adicionar para incluir sua primeira conta 2FA</string>
+    <string name="ok">OK</string>
+    <string name="totp_toggle_visibility">Alternar visibilidade</string>
+    <string name="totp_copy_code">Copiar código</string>
+    <string name="totp_delete">Excluir</string>
+    <string name="totp_adding_entry">Adicionando entrada TOTP…</string>
+    <string name="totp_permission_denied_message">Permissão de câmera é necessária para escanear códigos QR e adicionar entradas TOTP.\n\nConceda permissão de câmera nas configurações do aplicativo para continuar.</string>
+    <string name="totp_go_back">Voltar</string>
+    <string name="totp_try_again">Tentar novamente</string>
+    <string name="totp_more">Mais opções</string>
+    <string name="totp_edit_title">Editar título</string>
+    <string name="totp_edit_title_dialog_title">Editar Título</string>
+    <string name="totp_edit_title_hint">Digite o novo título</string>
+    <string name="totp_title_cannot_be_empty">O título não pode estar vazio</string>
+    <string name="save_failed">Não foi possível salvar as alterações. Os dados anteriores do cofre não foram alterados.</string>
+    <string name="operation_failed_try_again">A operação falhou. Tente novamente.</string>
+    <string name="no_app_found">Nenhum aplicativo está disponível para abrir este arquivo.</string>
+    <string name="vault_file_corrupted">O cofre ou os dados do autenticador estão danificados e não foram sobrescritos. Restaure um backup verificado.</string>
+    <string name="vault_integrity_failed">A verificação de integridade do cofre falhou. Os dados não foram abertos nem sobrescritos.</string>
+    <string name="vault_version_unsupported">Este cofre usa a versão não compatível %1$d. Atualize o HelloPocket e tente novamente.</string>
+    <string name="totp_invalid_qr">Código QR inválido. Leia um código autenticador TOTP válido.</string>
+    <string name="totp_add_failed">Não foi possível salvar a entrada do autenticador.</string>
+    <string name="totp_update_failed">Não foi possível atualizar a entrada do autenticador.</string>
+    <string name="totp_entry_not_found">Esta entrada do autenticador não existe mais.</string>
+    <string name="show_password">Mostrar senha</string>
+    <string name="hide_password">Ocultar senha</string>
+    <string name="title_cannot_be_empty">O título não pode ficar vazio</string>
+</resources>

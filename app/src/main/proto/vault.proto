@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package com.turisla.hellopocket.model;
+
+option java_package = "com.turisla.hellopocket.model";
+option java_multiple_files = true;
+
+// 条目类型枚举
+enum VaultItemType {
+  PASSWORD = 0;  // 登录凭证
+  NOTE = 1;      // 安全笔记
+}
+
+message Vault {
+  bytes salt = 1;
+  bytes hashedPassword = 2;
+  EncryptedPayload payload = 3;
+  int32 version = 4;
+}
+
+message EncryptedPayload {
+  bytes iv = 1;
+  bytes ciphertext = 2;
+}
+
+message Category {
+  string id = 1;
+  string name = 2;
+  string color = 3; // 分类颜色，格式为十六进制颜色值
+  int64 createdAt = 4; // 创建时间戳
+}
+
+message PasswordEntry {
+  string id = 1;
+  string title = 2;
+  string username = 3;
+  string password = 4;
+  string notes = 5;
+  repeated string categoryIds = 6; // 关联的分类ID列表
+  int64 createdAt = 7;
+  int64 updatedAt = 8;
+  repeated string attachmentIds = 9; // 关联的附件ID列表
+  VaultItemType type = 10;    // 条目类型，默认为 PASSWORD，用于区分密码和笔记
+  string content = 11;         // 安全笔记的内容（仅当 type = NOTE 时使用）
+}
+
+// 密码/笔记条目集合
+message PasswordEntries {
+    repeated PasswordEntry entries = 1;  // 保持原有编号，确保向后兼容
+    int32 schema_version = 2;  // 新字段使用新编号
+}
+
+// 分类集合
+message Categories {
+    repeated Category categories = 1;  // 保持原有编号，确保向后兼容
+    int32 schema_version = 2;  // 新字段使用新编号
+}
+
+// TOTP 条目
+message TotpEntry {
+  string id = 1;                    // 唯一标识
+  string issuer = 2;                // 发行者（如 Google, GitHub）
+  string account = 3;               // 账号（如 user@example.com）
+  bytes secret = 4;                 // 加密后的 Base32 Secret（明文存储，后续通过流式加密）
+  int32 digits = 5;                 // 验证码位数（默认 6）
+  int32 period = 6;                 // 周期（默认 30 秒）
+  string algorithm = 7;             // 算法（SHA1/SHA256/SHA512）
+  int64 createdAt = 8;
+  int64 updatedAt = 9;
+}
+
+// TOTP 条目集合
+message TotpEntries {
+  repeated TotpEntry entries = 1;
+  int32 schema_version = 2;
+}
+

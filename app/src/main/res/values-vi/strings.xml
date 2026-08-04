@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">PocketVault</string>
+    <string name="version_format">Phiên bản %1$s</string>
+    
+    <!-- Authentication -->
+    <string name="setup_password_title">Đặt mật khẩu chính của bạn</string>
+    <string name="master_password">Mật khẩu chính</string>
+    <string name="confirm_password">Xác nhận mật khẩu</string>
+    <string name="password_mismatch_error">Mật khẩu không khớp</string>
+    <string name="create_vault">Tạo kho lưu trữ</string>
+    <string name="import_from_file">Hoặc nhập từ tệp</string>
+    <string name="welcome_back">Chào mừng trở lại</string>
+    <string name="unlock">Mở khóa</string>
+    <string name="show_hint">Hiện gợi ý</string>
+    <string name="hint_prefix">Gợi ý: %1$s</string>
+    <string name="use_master_password">Sử dụng mật khẩu chính</string>
+    <string name="invalid_password">Mật khẩu không hợp lệ</string>
+    <plurals name="master_password_too_short">
+        <item quantity="other">Mật khẩu chính phải có ít nhất %1$d ký tự</item>
+    </plurals>
+    <string name="setup_password_description">Mật khẩu này sẽ được sử dụng để mã hóa tất cả dữ liệu của bạn. Vui lòng giữ an toàn và ghi nhớ nó.</string>
+    <string name="password_hint">Gợi ý mật khẩu</string>
+    <string name="password_hint_optional">Gợi ý mật khẩu (Tùy chọn)</string>
+    <string name="password_hint_description">Gợi ý này được lưu trong siêu dữ liệu kho có thể đọc được và được đưa vào bản sao lưu đã xuất. Không nhập thông tin nhạy cảm.</string>
+    
+    <!-- Biometric -->
+    <string name="fingerprint_unlock_title">Mở khóa bằng vân tay</string>
+    <string name="fingerprint_unlock_subtitle">Vui lòng sử dụng vân tay để mở khóa kho mật khẩu</string>
+    <string name="biometric_setup_success">Đã bật mở khóa bằng vân tay</string>
+    <string name="biometric_setup_disabled">Đã tắt mở khóa bằng vân tay</string>
+    <string name="biometric_unavailable_warning">Thông tin sinh trắc học đã thay đổi, vui lòng sử dụng mật khẩu chính.</string>
+    <string name="biometric_unlock_failed">Mở khóa bằng vân tay thất bại, vui lòng sử dụng mật khẩu chính</string>
+
+    
+    <!-- Main Interface -->
+    <string name="edit_mode">Chế độ chỉnh sửa</string>
+    <string name="detail">Chi tiết</string>
+    <string name="add_new_password">Thêm mật khẩu mới</string>
+    <string name="no_passwords_found">Không tìm thấy hồ sơ mật khẩu</string>
+    <string name="search_passwords">Tìm kiếm mật khẩu</string>
+    <string name="vault_empty_message">"Kho lưu trữ trống,\nNhấn nút '+' ở góc dưới bên phải để thêm mật khẩu mới!"</string>
+    <string name="no_search_results">Không tìm thấy kết quả phù hợp</string>
+    
+    <!-- Password Entry -->
+    <string name="title">Tiêu đề</string>
+    <string name="title_required">Tiêu đề (Bắt buộc)</string>
+    <string name="username">Tên đăng nhập</string>
+    <string name="username_optional">Tên đăng nhập (Tùy chọn)</string>
+    <string name="password">Mật khẩu</string>
+    <string name="password_required">Mật khẩu (Bắt buộc)</string>
+    <string name="notes">Ghi chú</string>
+    <string name="notes_label">Ghi chú</string>
+    <string name="notes_optional">Ghi chú (Tùy chọn)</string>
+    <string name="title_and_password_required">Tiêu đề và mật khẩu là bắt buộc</string>
+    <string name="password_hidden">••••••••</string>
+    
+    <!-- Action Buttons -->
+    <string name="save">Lưu</string>
+    <string name="cancel">Hủy</string>
+    <string name="delete">Xóa</string>
+    <string name="edit">Sửa</string>
+    <string name="copy">Sao chép</string>
+    <string name="confirm">Xác nhận</string>
+    <string name="continue_action">Tiếp tục</string>
+    <string name="done">Xong</string>
+    
+    <!-- Confirmation Dialog -->
+    <string name="confirm_delete">Xác nhận xóa</string>
+    <string name="confirm_delete_target_message">Bạn có chắc chắn muốn xóa %1$s? Hành động này không thể hoàn tác.</string>
+    <string name="confirm_delete_message">Bạn có chắc chắn muốn xóa mật khẩu này? Hành động này không thể hoàn tác.</string>
+
+    <!-- Change Password -->
+    <string name="change_master_password">Đổi mật khẩu chính</string>
+    <string name="current_master_password">Mật khẩu chính hiện tại</string>
+    <string name="new_password">Mật khẩu mới</string>
+    <string name="confirm_new_password">Xác nhận mật khẩu mới</string>
+    <string name="confirm_change">Xác nhận thay đổi</string>
+    <string name="password_change_success">Đổi mật khẩu chính thành công</string>
+    <string name="password_change_success_biometric_disabled">Đổi mật khẩu chính thành công! Mở khóa bằng vân tay đã bị tắt, vui lòng bật lại trong cài đặt.</string>
+    <string name="password_mismatch_new">Mật khẩu mới không khớp</string>
+    <string name="current_password_incorrect">Mật khẩu chính hiện tại không đúng</string>
+    
+    <!-- Settings Page -->
+    <string name="settings">Cài đặt</string>
+    <string name="enable_fingerprint_unlock">Bật mở khóa bằng vân tay</string>
+    <string name="export_data">Xuất dữ liệu</string>
+    <string name="import_data">Nhập dữ liệu</string>
+    <string name="history">Lịch sử</string>
+    <string name="master_password_hint">Gợi ý mật khẩu chính</string>
+    <string name="enter_password_hint">Nhập gợi ý mật khẩu</string>
+    <string name="password_hint_updated">Cập nhật gợi ý mật khẩu thành công</string>
+    
+    <!-- Settings Categories -->
+    <string name="settings_appearance">Giao diện</string>
+    <string name="settings_appearance_desc">Ngôn ngữ, chủ đề</string>
+    <string name="settings_security">Bảo mật</string>
+    <string name="settings_security_desc">Vân tay, mật khẩu</string>
+    <string name="settings_data">Dữ liệu</string>
+    <string name="settings_data_desc">Xuất, nhập, chia sẻ</string>
+    <string name="settings_other">Khác</string>
+    <string name="settings_other_desc">Lịch sử, danh mục</string>
+    
+    <!-- Import/Export -->
+    <string name="export_success">Xuất thành công</string>
+    <string name="import_success_restart">Nhập thành công! Ứng dụng sẽ khởi động lại để tải dữ liệu mới.</string>
+    <string name="import_success_biometric_reset">Nhập thành công! Vui lòng đăng nhập lại và thiết lập lại mở khóa bằng vân tay.</string>
+    <string name="import_failed">Nhập thất bại: mật khẩu chính không đúng hoặc tệp sao lưu không hợp lệ.</string>
+    <string name="import_failed_registration">Nhập thất bại: mật khẩu chính không đúng hoặc tệp sao lưu không hợp lệ.</string>
+    <string name="import_master_password_prompt">Nhập mật khẩu chính của bản sao lưu này. Kho chỉ được thay thế sau khi mọi tệp mã hóa đã được xác minh.</string>
+    <string name="share_data">Chia sẻ dữ liệu</string>
+    <string name="share_data_security_title">Chia sẻ an toàn</string>
+    <string name="share_data_security_message">Nội dung kho trong bản sao lưu này được mã hóa bằng AES-256-GCM và cần mật khẩu chính để giải mã. Bản sao lưu cũng chứa siêu dữ liệu cấu hình có thể đọc được, bao gồm gợi ý mật khẩu. Bất kỳ ai có tệp đều có thể đọc siêu dữ liệu này. Hãy bảo quản bản sao lưu an toàn và chỉ chia sẻ khi cần thiết.</string>
+    <string name="got_it">Đã hiểu</string>
+    <string name="generate_file_failed">Tạo tệp thất bại</string>
+    
+    <!-- Warning Dialogs -->
+    <string name="important_notice">Thông báo quan trọng</string>
+    <string name="change_password_warning">Sau khi đổi mật khẩu chính, tất cả các tệp sao lưu cũ sẽ không thể khôi phục bằng mật khẩu mới. %1$s\n Bạn có chắc chắn muốn tiếp tục?</string>
+    <string name="change_password_biometric_info">Sau khi đổi mật khẩu chính, vui lòng thiết lập lại mở khóa bằng vân tay</string>
+    <string name="import_data_warning">Sau khi nhập tệp, tất cả mật khẩu hiện tại sẽ bị ghi đè. Tuy nhiên, một bản sao lưu dữ liệu hiện tại sẽ được tạo trước khi ghi đè. %1$s\n Bạn có chắc chắn muốn tiếp tục?</string>
+    <string name="import_data_biometric_info">Sau khi nhập tệp, vui lòng thiết lập lại mở khóa bằng vân tay</string>
+    
+    <!-- History -->
+    <string name="history_title">Lịch sử</string>
+    <string name="backup_date_format">Đã sao lưu lúc: %1$s</string>
+    <string name="no_backup_history">Không tìm thấy bản sao lưu nào</string>
+    <string name="restore_success">Khôi phục thành công! Ứng dụng sẽ khởi động lại.</string>
+    <string name="restore_failed">Khôi phục thất bại, tệp có thể bị hỏng.</string>
+    <string name="delete_backup_success">Xóa tệp sao lưu thành công.</string>
+    <string name="delete_backup_failed">Xóa tệp sao lưu thất bại.</string>
+    
+    <!-- Restore Confirmation Dialog -->
+    <string name="confirm_restore">Xác nhận khôi phục</string>
+    <string name="restore_warning">Bạn có chắc chắn muốn khôi phục từ tệp sao lưu %1$s?\n\n Thao tác này sẽ ghi đè tất cả dữ liệu hiện tại, nhưng một bản sao lưu dữ liệu hiện tại sẽ được tạo trước khi khôi phục.%2$s</string>
+    <string name="restore_biometric_info">Sau khi khôi phục tệp sao lưu, bạn cần thiết lập lại mở khóa bằng vân tay</string>
+    <string name="confirm_restore_action">Xác nhận khôi phục</string>
+    
+    <!-- Delete Backup Confirmation Dialog -->
+    <string name="confirm_delete_backup">Xác nhận xóa</string>
+    <string name="delete_backup_warning">Bạn có chắc chắn muốn xóa tệp sao lưu "%1$s"?\n\nSau khi xóa, nó không thể được khôi phục!</string>
+    <string name="confirm_delete_action">Xác nhận xóa</string>
+    
+    <!-- Clipboard Messages -->
+    <string name="copied_to_clipboard">Đã sao chép %1$s vào bộ nhớ tạm</string>
+    <string name="cleared_from_clipboard">Đã xóa %1$s khỏi bộ nhớ tạm</string>
+    
+    <!-- General -->
+    <string name="loading">Đang tải…</string>
+    <string name="error">Lỗi</string>
+    <string name="back">Quay lại</string>
+    <string name="data_format">"yyyy-MM-dd HH:mm:ss"</string>
+    <string name="unknown_date">Ngày không xác định</string>
+    <string name="biometric_prompt_title">Bật mở khóa bằng vân tay</string>
+    <string name="biometric_prompt_subtitle">Vui lòng xác minh vân tay của bạn để ủy quyền</string>
+    <string name="biometric_prompt_negative">Hủy</string>
+
+    <!-- Biometric Enrollment -->
+    <string name="enroll_biometric_dialog_title">Đăng ký sinh trắc học</string>
+    <string name="enroll_biometric_dialog_message">Để sử dụng mở khóa bằng vân tay, bạn cần thiết lập nó trong cài đặt thiết bị trước.</string>
+    <string name="go_to_settings">Đi tới Cài đặt</string>
+    <string name="biometric_not_available">Xác thực sinh trắc học không khả dụng trên thiết bị này.</string>
+    <string name="biometric_key_invalidated">Hãy thiết lập lại mở khóa sinh trắc học vì sinh trắc học hoặc khóa màn hình của thiết bị đã thay đổi.</string>
+    <string name="unknown_error">Lỗi không xác định</string>
+
+    
+    <!-- Password Generator -->
+    <string name="password_generator">Trình tạo mật khẩu</string>
+    <string name="generate_password">Tạo mật khẩu</string>
+    <string name="password_length">Độ dài mật khẩu</string>
+    <string name="include_uppercase">Bao gồm chữ hoa</string>
+    <string name="include_lowercase">Bao gồm chữ thường</string>
+    <string name="include_numbers">Bao gồm số</string>
+    <string name="include_symbols">Bao gồm ký tự đặc biệt</string>
+    <string name="avoid_confusing">Tránh ký tự gây nhầm lẫn</string>
+    <string name="generated_password">Mật khẩu đã tạo</string>
+    <string name="refresh_password">Làm mới</string>
+    <string name="use_password">Sử dụng</string>
+    <string name="password_copied">Đã sao chép mật khẩu vào bộ nhớ tạm</string>
+    <string name="password_generator_condition_failed">Bật ít nhất một điều kiện</string>
+    
+    <!-- Add Password Screen -->
+    <string name="item_details">Chi tiết mục</string>
+    <string name="category">Danh mục</string>
+    <string name="no_category">Không có danh mục</string>
+    <string name="login_info">Thông tin đăng nhập</string>
+    <string name="check_password_in_database">Kiểm tra mật khẩu trong cơ sở dữ liệu</string>
+    <string name="authenticator_key">Khóa xác thực</string>
+    <string name="setup_authenticator_key">Thiết lập khóa xác thực</string>
+    <string name="autofill_options">Tùy chọn tự động điền</string>
+    <string name="website_uri">Trang web (URI)</string>
+    <string name="add_website">Thêm trang web</string>
+
+    <!-- TAB -->
+    <string name="tab_home">Trang chủ</string>
+    <string name="tab_settings">Cài đặt</string>
+    
+    <!-- Category Management -->
+    <string name="category_management">Quản lý danh mục</string>
+    <string name="add_category">Thêm danh mục</string>
+    <string name="edit_category">Sửa danh mục</string>
+    <string name="category_name">Tên danh mục</string>
+    <string name="select_color">Chọn màu</string>
+    <string name="category_created_success">Tạo danh mục thành công</string>
+    <string name="category_updated_success">Cập nhật danh mục thành công</string>
+    <string name="category_deleted_success">Xóa danh mục thành công</string>
+    <string name="create_category_failed">Tạo danh mục thất bại</string>
+    <string name="update_category_failed">Cập nhật danh mục thất bại</string>
+    <string name="delete_category_failed">Xóa danh mục thất bại</string>
+    <string name="enter_category_name">Vui lòng nhập tên danh mục</string>
+    <string name="no_categories_manage">Không có danh mục, hãy quản lý danh mục trên trang chủ</string>
+    <string name="select_categories">Chọn danh mục (chọn nhiều)</string>
+    <string name="all_categories">Tất cả danh mục</string>
+    <string name="uncategorized">Chưa phân loại</string>
+    <string name="favorites">Yêu thích</string>
+    <plurals name="password_count">
+        <item quantity="other">%1$d mật khẩu</item>
+    </plurals>
+    <string name="switch_to_list_view">Chuyển sang xem danh sách</string>
+    <string name="switch_to_grid_view">Chuyển sang xem lưới</string>
+    <string name="select_category">Chọn danh mục</string>
+    <string name="manage_categories">Quản lý danh mục</string>
+    <string name="associated_categories">Danh mục liên kết</string>
+    <string name="categories">Danh mục</string>
+    <string name="no_categories_selected">Chưa chọn danh mục nào</string>
+    <string name="remove_category">Xóa danh mục</string>
+    <string name="no_categories_available">Không có danh mục nào</string>
+    <string name="create_new_category">Tạo danh mục mới</string>
+    <string name="add_to_favorites">Thêm vào yêu thích</string>
+    <string name="remove_from_favorites">Xóa khỏi yêu thích</string>
+
+    <!-- Language Settings -->
+    <string name="language">Ngôn ngữ</string>
+    <string name="language_follow_system">Theo hệ thống</string>
+    <string name="language_english">Tiếng Anh (English)</string>
+    <string name="language_chinese">Tiếng Trung (Chinese)</string>
+    <string name="language_korean">Tiếng Hàn (Korean)</string>
+    <string name="language_vietnamese">Tiếng Việt (Vietnamese)</string>
+    <string name="language_hindi">Tiếng Hindi (Hindi)</string>
+    <string name="language_spanish">Tiếng Tây Ban Nha (Spanish)</string>
+    <string name="language_portuguese">Tiếng Bồ Đào Nha (Portuguese)</string>
+
+    <!-- Theme Settings -->
+    <string name="theme">Chủ đề</string>
+    <string name="theme_follow_system">Theo hệ thống</string>
+    <string name="theme_light">Chế độ sáng</string>
+    <string name="theme_dark">Chế độ tối</string>
+
+    <!-- About Page -->
+    <string name="about_us">Về chúng tôi</string>
+    <string name="contact_us">Liên hệ</string>
+    <string name="privacy_policy">Chính sách quyền riêng tư</string>
+    <string name="open_source_licenses">Giấy phép mã nguồn mở</string>
+    <string name="email_copied">Đã sao chép email vào bộ nhớ tạm</string>
+    <string name="no_email_client">Không tìm thấy ứng dụng email</string>
+
+    <!-- Attachments -->
+    <string name="attachments">Tệp đính kèm</string>
+    <string name="add_attachment">Thêm tệp đính kèm</string>
+    <string name="remove_attachment">Xóa tệp đính kèm</string>
+    <string name="no_attachments">Không có tệp đính kèm</string>
+    <string name="attachment_size_exceeded">Kích thước tệp vượt quá giới hạn. Hiện tại: %1$d MB, Tối đa: %2$d MB</string>
+    <string name="attachment_add_failed">Thêm tệp thất bại</string>
+    <string name="attachment_add_failed_with_reason">Thêm tệp thất bại: %1$s</string>
+
+    <!-- Secure Notes -->
+    <string name="add_secure_note">Thêm ghi chú an toàn</string>
+    <string name="content">Nội dung</string>
+    <string name="content_optional">Nội dung (Tùy chọn)</string>
+
+    <!-- Type Selection -->
+    <string name="all_types">Tất cả các loại</string>
+    <string name="type_password">Mật khẩu</string>
+    <string name="type_note">Ghi chú an toàn</string>
+    <string name="select_type">Chọn loại</string>
+
+    <!-- Q&A Page -->
+    <string name="qa_title">Hỏi đáp</string>
+    <string name="qa_network_permission_title">PocketVault có truy cập Internet không?</string>
+    <string name="qa_network_permission_content">Không. PocketVault không yêu cầu quyền Internet của Android và không chứa SDK phân tích, quảng cáo, đo từ xa hoặc báo cáo sự cố. Dữ liệu kho chỉ được xử lý cục bộ và chỉ rời khỏi ứng dụng khi bạn chủ động xuất hoặc chia sẻ bản sao lưu.</string>
+    <string name="qa_data_security_title">Tôi quên Mật khẩu chính. Bạn có thể đặt lại cho tôi không?</string>
+    <string name="qa_data_security_content">Không. PocketVault không có tài khoản, máy chủ, khóa khôi phục hoặc cửa hậu đặt lại mật khẩu. Khóa được dẫn xuất từ mật khẩu chính chỉ mở khóa ngẫu nhiên mã hóa kho ngay trên thiết bị. Nếu mất mật khẩu chính và không thể dùng mở khóa sinh trắc học, kho sẽ không thể khôi phục. Hãy giữ mật khẩu an toàn. Bản sao lưu cũ cần mật khẩu đã bảo vệ nó khi được tạo.</string>
+    <string name="qa_offline_usage_title">Dữ liệu của tôi được lưu trữ ở đâu?</string>
+    <string name="qa_offline_usage_content" formatted="false">Kho hiện tại và lịch sử sao lưu tự động được lưu trong bộ nhớ riêng của PocketVault. Xóa dữ liệu ứng dụng hoặc gỡ cài đặt sẽ xóa các tệp cục bộ này. Bản sao lưu đã xuất hoặc chia sẻ nằm ngoài quyền kiểm soát của ứng dụng và phải được xóa riêng ở từng nơi lưu.</string>
+    <string name="how_is_my_data_protected_title">Dữ liệu của tôi được bảo vệ như thế nào?</string>
+    <string name="how_is_my_data_protected_content">Chúng tôi sử dụng thư viện mật mã Google Tink.\n • Mã hóa: AES-256-GCM-HKDF (Streaming AEAD).\n • Dẫn xuất: kho mới và kho đổi khóa dùng PBKDF2-SHA256 với 600.000 lần lặp.\nMật khẩu chính mạnh làm tăng chi phí của các lần thử ngoại tuyến, nhưng không phần mềm hay mật khẩu nào có thể bảo đảm an toàn tuyệt đối.</string>
+
+    <!-- TOTP -->
+    <string name="tab_totp">TOTP</string>
+    <string name="totp_add_entry">Thêm trình xác thực</string>
+    <string name="scan_qr_code">Quét mã QR</string>
+    <string name="totp_enter_manually">Nhập thủ công</string>
+    <string name="totp_edit_entry">Chỉnh sửa trình xác thực</string>
+    <string name="totp_edit_entry_title">Chỉnh sửa trình xác thực</string>
+    <string name="totp_edit_entry_description">Cập nhật thông tin thiết lập cho mục xác thực này.</string>
+    <string name="totp_manual_add_title">Thêm trình xác thực</string>
+    <string name="totp_manual_add_description">Nhập thông tin thiết lập do dịch vụ bạn muốn bảo vệ cung cấp.</string>
+    <string name="totp_issuer">Nhà phát hành</string>
+    <string name="totp_issuer_hint">Ví dụ: GitHub</string>
+    <string name="totp_account">Tài khoản</string>
+    <string name="totp_account_hint">Ví dụ: name@example.com</string>
+    <string name="totp_secret">Khóa bí mật</string>
+    <string name="totp_secret_hint">Ví dụ: JBSWY3DPEHPK3PXP</string>
+    <string name="totp_secret_supporting_text">Chấp nhận khoảng trắng và dấu gạch nối.</string>
+    <string name="totp_advanced_options">Tùy chọn nâng cao</string>
+    <string name="totp_algorithm">Thuật toán</string>
+    <string name="totp_digits">Số chữ số của mã</string>
+    <string name="totp_period_seconds">Chu kỳ (giây)</string>
+    <string name="totp_period_supporting_text">Nhập giá trị từ 15 đến 120 giây.</string>
+    <string name="totp_issuer_required">Nhà phát hành là bắt buộc.</string>
+    <string name="totp_account_required">Tài khoản là bắt buộc.</string>
+    <string name="totp_secret_required">Khóa bí mật là bắt buộc.</string>
+    <string name="totp_secret_invalid">Nhập khóa bí mật Base32 hợp lệ.</string>
+    <string name="totp_period_invalid">Chu kỳ phải từ 15 đến 120 giây.</string>
+    <string name="camera_permission_required">Cần quyền camera</string>
+    <string name="camera_permission_rationale">Cần quyền camera để quét mã QR và thêm mục TOTP.</string>
+    <string name="grant_permission">Cấp quyền</string>
+    <string name="totp_empty_message">Chưa có mục TOTP nào</string>
+    <string name="totp_empty_hint">Nhấn nút thêm để thêm tài khoản 2FA đầu tiên của bạn</string>
+    <string name="ok">OK</string>
+    <string name="totp_toggle_visibility">Chuyển đổi hiển thị</string>
+    <string name="totp_copy_code">Sao chép mã</string>
+    <string name="totp_delete">Xóa</string>
+    <string name="totp_adding_entry">Đang thêm mục TOTP…</string>
+    <string name="totp_permission_denied_message">Cần quyền máy ảnh để quét mã QR và thêm mục TOTP.\n\nVui lòng cấp quyền máy ảnh trong cài đặt ứng dụng để tiếp tục.</string>
+    <string name="totp_go_back">Quay lại</string>
+    <string name="totp_try_again">Thử lại</string>
+    <string name="totp_more">Thêm tùy chọn</string>
+    <string name="totp_edit_title">Chỉnh sửa tiêu đề</string>
+    <string name="totp_edit_title_dialog_title">Chỉnh sửa Tiêu đề</string>
+    <string name="totp_edit_title_hint">Nhập tiêu đề mới</string>
+    <string name="totp_title_cannot_be_empty">Tiêu đề không được để trống</string>
+    <string name="save_failed">Không thể lưu thay đổi. Dữ liệu kho trước đó không bị thay đổi.</string>
+    <string name="operation_failed_try_again">Thao tác không thành công. Vui lòng thử lại.</string>
+    <string name="no_app_found">Không có ứng dụng nào để mở tệp này.</string>
+    <string name="vault_file_corrupted">Kho hoặc dữ liệu xác thực đã hỏng và chưa bị ghi đè. Hãy khôi phục bản sao lưu đã xác minh.</string>
+    <string name="vault_integrity_failed">Xác minh tính toàn vẹn của kho thất bại. Dữ liệu chưa được mở hoặc ghi đè.</string>
+    <string name="vault_version_unsupported">Kho này dùng phiên bản chưa được hỗ trợ %1$d. Hãy cập nhật HelloPocket rồi thử lại.</string>
+    <string name="totp_invalid_qr">Mã QR không hợp lệ. Hãy quét mã xác thực TOTP hợp lệ.</string>
+    <string name="totp_add_failed">Không thể lưu mục xác thực.</string>
+    <string name="totp_update_failed">Không thể cập nhật mục xác thực.</string>
+    <string name="totp_entry_not_found">Mục xác thực này không còn tồn tại.</string>
+    <string name="show_password">Hiện mật khẩu</string>
+    <string name="hide_password">Ẩn mật khẩu</string>
+    <string name="title_cannot_be_empty">Tiêu đề không được để trống</string>
+</resources>

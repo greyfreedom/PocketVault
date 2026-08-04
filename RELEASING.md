@@ -1,0 +1,48 @@
+# Release and verification process
+
+Google Play and this repository's GitHub Releases distribute one official application identity: `com.turisla.hellopocket`, signed with the same Play App Signing key. The GitHub asset is the signed Universal APK downloaded from Play Console for the exact AAB uploaded to Google Play. There is no separately built or signed GitHub flavor.
+
+## Before a release
+
+1. Confirm the new `versionCode` is greater than every artifact in every Play Console track.
+2. Update `versionName`, `CHANGELOG.md`, the privacy policy revision date, and supported-version documentation.
+3. Run compilation, unit tests, lint, and a signed upgrade test over the latest production version using a synthetic vault.
+4. Verify passwords, secure notes, TOTP, categories, attachments, biometrics, password changes, export, import, and backup restoration after the upgrade.
+5. Confirm the merged release manifest contains no Internet or network-state permission and no Firebase or Crashlytics component.
+6. Review runtime dependencies and update `THIRD_PARTY_NOTICES.md` and the in-app notices.
+7. Confirm that GitHub will receive only the Play-generated Universal APK—not a locally signed APK.
+
+## Source and artifact traceability
+
+For each production release:
+
+1. Create a signed Git tag matching the version, such as `v2.4.0`.
+2. Build the `googlePlayRelease` AAB from that exact tag with the untracked upload-signing configuration.
+3. Record the AAB SHA-256 digest, then upload that exact AAB to Google Play.
+4. In Play Console, open **Test and release → Latest releases and bundles**, select the uploaded bundle, open **Downloads**, and download the signed Universal APK.
+5. Verify that the Universal APK uses package name `com.turisla.hellopocket` and the expected **Play App Signing certificate** SHA-256 fingerprint.
+6. Record the Universal APK SHA-256 digest.
+7. Create the GitHub Release from the same signed tag and attach only that Play-generated Universal APK.
+8. Publish the tag, commit ID, versionCode, versionName, AAB SHA-256, Universal APK SHA-256, and Play App Signing certificate SHA-256 fingerprint in the release notes.
+9. Retain the Play Console release record so the uploaded AAB and downloaded Universal APK remain traceable.
+
+Useful local verification commands:
+
+```bash
+shasum -a 256 app-googlePlay-release.aab PocketVault-universal.apk
+apksigner verify --verbose --print-certs PocketVault-universal.apk
+```
+
+Never upload a locally generated APK signed with the upload key, another release key, or a debug key. Even with the same package name, a different certificate is not the same Android application identity and cannot update the Google Play installation.
+
+The upload certificate and Play App Signing certificate may be different. The fingerprint communicated to users must be the Play App Signing certificate shown by Play Console, because both Google Play and the downloadable Universal APK use that installed-app identity.
+
+## Privacy rollout
+
+Before changing Google Play Data safety to “no data collected or shared,” confirm that no currently distributed version in production, open testing, or closed testing contains Firebase or another reporting SDK. Publish the new privacy-policy URL before submitting the Play update.
+
+## Key safety
+
+- Keep keystores and `keystore.properties` outside version control and CI logs.
+- Store CI secrets with least privilege and require two-factor authentication on maintainer accounts.
+- If only an upload key is compromised, follow the Play Console upload-key reset process rather than treating it as the Play App Signing key.

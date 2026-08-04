@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用名称 -->
+    <string name="app_name">口袋密本</string>
+    <string name="version_format">版本 %1$s</string>
+
+    <!-- 认证相关 -->
+    <string name="setup_password_title">设置您的主密码</string>
+    <string name="master_password">主密码</string>
+    <string name="confirm_password">确认密码</string>
+    <string name="password_mismatch_error">两次输入的密码不一致</string>
+    <string name="create_vault">创建保险库</string>
+    <string name="import_from_file">或从文件导入</string>
+    <string name="welcome_back">欢迎回来</string>
+    <string name="unlock">解锁</string>
+    <string name="show_hint">显示提示</string>
+    <string name="hint_prefix">提示: %1$s</string>
+    <string name="use_master_password">使用主密码</string>
+    <string name="invalid_password">密码错误</string>
+    <plurals name="master_password_too_short">
+        <item quantity="other">主密码至少需要 %1$d 个字符</item>
+    </plurals>
+    <string name="setup_password_description">这个密码将用于加密您的所有数据，请务必牢记。</string>
+    <string name="password_hint">密码提示</string>
+    <string name="password_hint_optional">密码提示 (可选)</string>
+    <string name="password_hint_description">密码提示保存在可读取的保险库元数据中，并会包含在导出的备份里，请勿填写敏感信息。</string>
+
+    <!-- 生物识别 -->
+    <string name="fingerprint_unlock_title">指纹解锁</string>
+    <string name="fingerprint_unlock_subtitle">请使用指纹解锁您的密码库</string>
+    <string name="biometric_setup_success">指纹解锁已开启</string>
+    <string name="biometric_setup_disabled">指纹解锁已关闭</string>
+    <string name="biometric_unavailable_warning">指纹信息已变更，请使用主密码登录</string>
+    <string name="biometric_unlock_failed">指纹解锁失败，请使用主密码</string>
+
+
+    <!-- 主界面 -->
+    <string name="edit_mode">编辑模式</string>
+    <string name="detail">详情</string>
+    <string name="add_new_password">添加新密码</string>
+    <string name="no_passwords_found">暂无密码记录</string>
+    <string name="search_passwords">搜索密码</string>
+    <string name="vault_empty_message">保险库是空的，\n点击右下角 \'+\' 添加一个新密码吧！</string>
+    <string name="no_search_results">没有找到匹配的结果</string>
+
+    <!-- 密码条目 -->
+    <string name="title">标题</string>
+    <string name="title_required">标题 (必填)</string>
+    <string name="username">用户名</string>
+    <string name="username_optional">用户名 (非必填)</string>
+    <string name="password">密码</string>
+    <string name="password_required">密码 (必填)</string>
+    <string name="notes">备注</string>
+    <string name="notes_label">备注</string>
+    <string name="notes_optional">备注 (非必填)</string>
+    <string name="title_and_password_required">标题和密码不能为空</string>
+    <string name="password_hidden">••••••••</string>
+
+    <!-- 操作按钮 -->
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="edit">编辑</string>
+    <string name="copy">复制</string>
+    <string name="confirm">确认</string>
+    <string name="continue_action">继续</string>
+    <string name="done">完成</string>
+
+    <!-- 确认对话框 -->
+    <string name="confirm_delete">确认删除</string>
+    <string name="confirm_delete_target_message">你确定要删除 %1$s 吗? 删除后将无法恢复.</string>
+    <string name="confirm_delete_message">确定要删除这个密码吗？此操作无法撤销。</string>
+
+    <!-- 修改密码 -->
+    <string name="change_master_password">修改主密码</string>
+    <string name="current_master_password">当前主密码</string>
+    <string name="new_password">新密码</string>
+    <string name="confirm_new_password">确认新密码</string>
+    <string name="confirm_change">确认修改</string>
+    <string name="password_change_success">主密码修改成功</string>
+    <string name="password_change_success_biometric_disabled">主密码修改成功！指纹解锁已关闭，请在设置中重新开启。</string>
+    <string name="password_mismatch_new">两次输入的新密码不一致</string>
+    <string name="current_password_incorrect">当前主密码不正确</string>
+
+    <!-- 设置页面 -->
+    <string name="settings">设置</string>
+    <string name="enable_fingerprint_unlock">启用指纹解锁</string>
+    <string name="export_data">导出数据</string>
+    <string name="import_data">导入数据</string>
+    <string name="history">历史记录</string>
+    <string name="master_password_hint">主密码提示</string>
+    <string name="enter_password_hint">输入密码提示</string>
+    <string name="password_hint_updated">密码提示更新成功</string>
+    
+    <!-- 设置分类 -->
+    <string name="settings_appearance">外观</string>
+    <string name="settings_appearance_desc">语言、主题</string>
+    <string name="settings_security">安全</string>
+    <string name="settings_security_desc">指纹、密码</string>
+    <string name="settings_data">数据</string>
+    <string name="settings_data_desc">导出、导入、分享</string>
+    <string name="settings_other">其他</string>
+    <string name="settings_other_desc">历史记录、分类管理</string>
+
+    <!-- 导入导出 -->
+    <string name="export_success">导出成功</string>
+    <string name="import_success_restart">导入成功！应用将重启以加载新数据。</string>
+    <string name="import_success_biometric_reset">数据导入成功。为了安全起见，生物识别解锁已被禁用。请在设置中重新启用。</string>
+    <string name="share_data">分享数据</string>
+    <string name="share_data_security_title">安全分享</string>
+    <string name="share_data_security_message">备份中的保险库内容使用 AES-256-GCM 加密，需要主密码才能解密。备份也包含可读取的配置元数据，包括您的密码提示；任何获得该文件的人都能查看这些元数据。请妥善保管备份，只在确有需要时分享。</string>
+    <string name="got_it">我知道了</string>
+    <string name="import_failed">导入失败：主密码错误或备份文件无效。</string>
+    <string name="import_failed_registration">导入失败：主密码错误或备份文件无效。</string>
+    <string name="import_master_password_prompt">请输入此备份的主密码。只有全部加密文件验证通过后，才会替换当前保险库。</string>
+    <string name="generate_file_failed">生成文件失败</string>
+
+    <!-- 警告对话框 -->
+    <string name="important_notice">重要提示</string>
+    <string name="change_password_warning">修改主密码后，所有旧的备份文件将无法使用新密码恢复. %1$s \n\n确定要继续吗？</string>
+    <string name="change_password_biometric_info">\n\n修改主密码后，请重新设置指纹解锁</string>
+    <string name="import_data_warning">导入文件后，当前所有密码将被覆盖，但会在覆盖前为您创建一份当前的备份。 %1$s \n\n确定要继续吗？</string>
+    <string name="import_data_biometric_info">\n\n导入文件后，请重新设置指纹解锁</string>
+
+    <!-- 历史记录 -->
+    <string name="history_title">历史记录</string>
+    <string name="backup_date_format">备份于: %1$s</string>
+    <string name="no_backup_history">没有找到任何备份记录</string>
+    <string name="restore_success">恢复成功！应用将重启。</string>
+    <string name="restore_failed">恢复失败，文件可能已损坏。</string>
+    <string name="delete_backup_success">删除备份文件成功。</string>
+    <string name="delete_backup_failed">删除备份文件失败。</string>
+
+    <!-- 恢复确认对话框 -->
+    <string name="confirm_restore">确认恢复</string>
+    <string name="restore_warning">确定要从备份文件 %1$s 恢复吗？\n\n此操作将覆盖当前所有数据，但会在恢复前为您创建一份当前的备份。%2$s</string>
+    <string name="restore_biometric_info">\n\n恢复备份文件后，需要重新设置指纹解锁</string>
+    <string name="confirm_restore_action">确认恢复</string>
+
+    <!-- 删除备份确认对话框 -->
+    <string name="confirm_delete_backup">确认删除</string>
+    <string name="delete_backup_warning">确定要删除备份文件 %1$s 吗？\n\n删除后无法再找回！</string>
+    <string name="confirm_delete_action">确认删除</string>
+
+    <!-- 剪贴板消息 -->
+    <string name="copied_to_clipboard">%1$s 已复制到剪贴板</string>
+    <string name="cleared_from_clipboard">%1$s 已从剪贴板中清除</string>
+
+    <!-- 通用 -->
+    <string name="loading">加载中…</string>
+    <string name="error">错误</string>
+    <string name="back">返回</string>
+    <string name="data_format">"yyyy年MM月dd日 HH:mm:ss"</string>
+    <string name="unknown_date">未知日期</string>
+    <string name="biometric_prompt_title">开启指纹解锁</string>
+    <string name="biometric_prompt_subtitle">请验证指纹以授权</string>
+    <string name="biometric_prompt_negative">取消</string>
+
+    <!-- 生物识别注册 -->
+    <string name="enroll_biometric_dialog_title">注册指纹</string>
+    <string name="enroll_biometric_dialog_message">如需使用指纹解锁，请先在系统设置中注册您的指纹信息。</string>
+    <string name="go_to_settings">前往设置</string>
+    <string name="biometric_not_available">生物识别功能当前不可用</string>
+    <string name="biometric_key_invalidated">由于设备的生物识别或锁屏设置已更改，请重新设置生物识别解锁。</string>
+    <string name="unknown_error">未知错误</string>
+
+    
+    <!-- 密码生成器 -->
+    <string name="password_generator">密码生成器</string>
+    <string name="generate_password">生成密码</string>
+    <string name="password_length">密码长度</string>
+    <string name="include_uppercase">包含大写字母</string>
+    <string name="include_lowercase">包含小写字母</string>
+    <string name="include_numbers">包含数字</string>
+    <string name="include_symbols">包含符号</string>
+    <string name="avoid_confusing">避免易混淆字符</string>
+    <string name="generated_password">生成的密码</string>
+    <string name="refresh_password">刷新密码</string>
+    <string name="use_password">使用此密码</string>
+    <string name="password_copied">密码已复制到剪贴板</string>
+    <string name="password_generator_condition_failed">至少开启一个条件</string>
+    
+    <!-- 添加密码页面 -->
+    <string name="item_details">项目详细信息</string>
+    <string name="category">分类</string>
+    <string name="no_category">无分类</string>
+    <string name="login_info">登录凭据</string>
+    <string name="check_password_in_database">检查数据泄露中的密码</string>
+    <string name="authenticator_key">验证器密钥</string>
+    <string name="setup_authenticator_key">设置验证器密钥</string>
+    <string name="autofill_options">自动填充选项</string>
+    <string name="website_uri">网站 (URI)</string>
+    <string name="add_website">添加网站</string>
+
+    <!-- TAB -->
+    <string name="tab_home">密码本</string>
+    <string name="tab_settings">设置</string>
+    
+    <!-- Category Management -->
+    <string name="category_management">分类管理</string>
+    <string name="add_category">添加分类</string>
+    <string name="edit_category">编辑分类</string>
+    <string name="category_name">分类名称</string>
+    <string name="select_color">选择颜色</string>
+    <string name="category_created_success">分类创建成功</string>
+    <string name="category_updated_success">分类更新成功</string>
+    <string name="category_deleted_success">分类删除成功</string>
+    <string name="create_category_failed">创建分类失败</string>
+    <string name="update_category_failed">更新分类失败</string>
+    <string name="delete_category_failed">删除分类失败</string>
+    <string name="enter_category_name">请输入分类名称</string>
+    <string name="no_categories_manage">暂无分类，可在首页管理分类</string>
+    <string name="select_categories">选择分类（可多选）</string>
+    <string name="all_categories">全部分类</string>
+    <string name="uncategorized">未分类</string>
+    <string name="favorites">收藏夹</string>
+    <plurals name="password_count">
+        <item quantity="other">%1$d 个密码</item>
+    </plurals>
+    <string name="switch_to_list_view">切换到列表视图</string>
+    <string name="switch_to_grid_view">切换到网格视图</string>
+    <string name="select_category">选择分类</string>
+    <string name="manage_categories">管理分类</string>
+    <string name="associated_categories">关联分类</string>
+    <string name="categories">分类</string>
+    <string name="no_categories_selected">未选择分类</string>
+    <string name="remove_category">移除分类</string>
+    <string name="no_categories_available">暂无可选分类</string>
+    <string name="create_new_category">创建新分类</string>
+    <string name="add_to_favorites">添加到收藏</string>
+    <string name="remove_from_favorites">取消收藏</string>
+
+    <!-- 语言设置 -->
+    <string name="language">语言</string>
+    <string name="language_follow_system">跟随系统</string>
+    <string name="language_english">英文</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_korean">韩语</string>
+    <string name="language_vietnamese">越南语</string>
+    <string name="language_hindi">印地语</string>
+    <string name="language_spanish">西班牙语</string>
+    <string name="language_portuguese">葡萄牙语</string>
+
+    <!-- 主题设置 -->
+    <string name="theme">主题</string>
+    <string name="theme_follow_system">跟随系统</string>
+    <string name="theme_light">浅色模式</string>
+    <string name="theme_dark">深色模式</string>
+
+    <!-- 关于页面 -->
+    <string name="about_us">关于我们</string>
+    <string name="contact_us">联系我们</string>
+    <string name="privacy_policy">隐私协议</string>
+    <string name="open_source_licenses">开源许可证</string>
+    <string name="email_copied">邮箱已复制到剪贴板</string>
+    <string name="no_email_client">未找到邮件应用</string>
+
+    <!-- 附件 -->
+    <string name="attachments">附件</string>
+    <string name="add_attachment">添加附件</string>
+    <string name="remove_attachment">移除附件</string>
+    <string name="no_attachments">暂无附件</string>
+    <string name="attachment_size_exceeded">文件大小超出限制。当前: %1$d MB, 最大: %2$d MB</string>
+    <string name="attachment_add_failed">添加文件失败</string>
+    <string name="attachment_add_failed_with_reason">添加文件失败: %1$s</string>
+
+    <!-- 安全笔记 -->
+    <string name="add_secure_note">添加安全笔记</string>
+    <string name="content">内容</string>
+    <string name="content_optional">内容 (非必填)</string>
+
+    <!-- 类型筛选 -->
+    <string name="all_types">全部类型</string>
+    <string name="type_password">密码</string>
+    <string name="type_note">安全笔记</string>
+    <string name="select_type">选择类型</string>
+
+    <!-- Q&A Page -->
+    <string name="qa_title">常见问题</string>
+    <string name="qa_network_permission_title">口袋密本会访问网络吗？</string>
+    <string name="qa_network_permission_content">不会。口袋密本不申请 Android 网络权限，也不包含分析、广告、遥测或崩溃上报 SDK。保险库数据只在本地处理，只有您主动导出或分享备份时，数据才会离开应用。</string>
+    <string name="qa_data_security_title">我忘记了主密码，你能帮我重置吗？</string>
+    <string name="qa_data_security_content">不能。口袋密本没有账号、服务器、恢复密钥或主密码重置后门。由主密码派生的密钥只在本地解包用于加密保险库的随机密钥。如果主密码丢失且生物识别快捷解锁不可用，保险库将无法恢复，请妥善保管主密码。旧备份需要使用创建时保护它的密码。</string>
+    <string name="qa_offline_usage_title">我的数据存在哪里？</string>
+    <string name="qa_offline_usage_content" formatted="false">当前保险库和自动备份历史保存在口袋密本的应用私有目录中。清除应用数据或卸载应用会删除这些本地文件。您主动导出或分享的备份已位于应用控制范围之外，需要从每个保存位置单独删除。</string>
+    <string name="how_is_my_data_protected_title">你们使用什么加密技术？</string>
+    <string name="how_is_my_data_protected_content">我们使用 Google Tink 加密库。\n • 加密算法：AES-256-GCM-HKDF（流式认证加密）。\n • 密钥派生：新建和改密后的保险库使用 PBKDF2-SHA256（60 万次迭代）。\n高强度主密码能显著提高离线破解成本，但任何软件或密码都不能保证绝对安全。</string>
+
+    <!-- TOTP -->
+    <string name="tab_totp">双因素认证</string>
+    <string name="totp_add_entry">添加验证器</string>
+    <string name="scan_qr_code">扫描二维码</string>
+    <string name="totp_enter_manually">手动填写</string>
+    <string name="totp_edit_entry">编辑验证器</string>
+    <string name="totp_edit_entry_title">编辑验证器</string>
+    <string name="totp_edit_entry_description">修改此验证器条目的设置信息。</string>
+    <string name="totp_manual_add_title">添加验证器</string>
+    <string name="totp_manual_add_description">请输入要保护的服务所提供的验证器设置信息。</string>
+    <string name="totp_issuer">服务商</string>
+    <string name="totp_issuer_hint">例如：GitHub</string>
+    <string name="totp_account">账号</string>
+    <string name="totp_account_hint">例如：name@example.com</string>
+    <string name="totp_secret">密钥</string>
+    <string name="totp_secret_hint">例如：JBSWY3DPEHPK3PXP</string>
+    <string name="totp_secret_supporting_text">支持包含空格和短横线的密钥。</string>
+    <string name="totp_advanced_options">高级选项</string>
+    <string name="totp_algorithm">算法</string>
+    <string name="totp_digits">验证码位数</string>
+    <string name="totp_period_seconds">周期（秒）</string>
+    <string name="totp_period_supporting_text">请输入 15 至 120 秒。</string>
+    <string name="totp_issuer_required">请填写服务商。</string>
+    <string name="totp_account_required">请填写账号。</string>
+    <string name="totp_secret_required">请填写密钥。</string>
+    <string name="totp_secret_invalid">请输入有效的 Base32 密钥。</string>
+    <string name="totp_period_invalid">周期必须在 15 至 120 秒之间。</string>
+    <string name="camera_permission_required">需要相机权限</string>
+    <string name="camera_permission_rationale">扫描二维码添加 TOTP 条目需要相机权限。</string>
+    <string name="grant_permission">授予权限</string>
+    <string name="totp_empty_message">暂无 TOTP 条目</string>
+    <string name="totp_empty_hint">点击添加按钮添加您的第一个双因素认证账户</string>
+    <string name="ok">确定</string>
+    <string name="totp_toggle_visibility">切换显示</string>
+    <string name="totp_copy_code">复制代码</string>
+    <string name="totp_delete">删除</string>
+    <string name="totp_adding_entry">正在添加 TOTP 条目…</string>
+    <string name="totp_permission_denied_message">扫描二维码添加 TOTP 条目需要相机权限。\n\n请在应用设置中授予权限以继续。</string>
+    <string name="totp_go_back">返回</string>
+    <string name="totp_try_again">重试</string>
+    <string name="totp_more">更多选项</string>
+    <string name="totp_edit_title">修改标题</string>
+    <string name="totp_edit_title_dialog_title">修改标题</string>
+    <string name="totp_edit_title_hint">请输入新标题</string>
+    <string name="totp_title_cannot_be_empty">标题不能为空</string>
+    <string name="save_failed">保存失败，原有保险库数据未被更改。</string>
+    <string name="operation_failed_try_again">操作失败，请重试。</string>
+    <string name="no_app_found">没有可用于打开此文件的应用。</string>
+    <string name="vault_file_corrupted">保险库或验证器数据已损坏，应用没有覆盖原文件。请恢复可信备份，或保留文件以便恢复。</string>
+    <string name="vault_integrity_failed">保险库完整性校验失败，数据没有被打开或覆盖。</string>
+    <string name="vault_version_unsupported">此保险库使用尚不支持的版本 %1$d，请更新 HelloPocket 后重试。</string>
+    <string name="totp_invalid_qr">二维码无效，请扫描有效的 TOTP 验证器二维码。</string>
+    <string name="totp_add_failed">无法保存验证器条目。</string>
+    <string name="totp_update_failed">无法更新验证器条目。</string>
+    <string name="totp_entry_not_found">该验证器条目不存在或已被删除。</string>
+    <string name="show_password">显示密码</string>
+    <string name="hide_password">隐藏密码</string>
+    <string name="title_cannot_be_empty">标题不能为空</string>
+</resources>

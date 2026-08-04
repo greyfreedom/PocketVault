@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PocketVault Privacy Policy</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #1a1a1a;
+            border-bottom: 1px solid #eaeaea;
+            padding-bottom: 10px;
+        }
+        p, li {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        strong {
+            color: #000;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>PocketVault Privacy Policy</h1>
+    <p><strong>Last Updated:</strong> August 4, 2026</p>
+
+    <h2>Introduction</h2>
+    <p>PocketVault is a local password manager. The app does not request Android Internet permission and contains no analytics, advertising, telemetry, or crash-reporting SDK. It does not operate an account system or a remote server.</p>
+    <p>Your vault is processed on your device. Data leaves the app only when you explicitly use an export or share action and choose a destination.</p>
+
+    <h2>1. Data Collection and Use</h2>
+    <p><strong>PocketVault does not collect or transmit personal data.</strong> In particular, the developer does not receive:</p>
+    <ul>
+        <li>Your master password or password hint.</li>
+        <li>Passwords, usernames, notes, TOTP secrets, attachments, categories, or other vault content.</li>
+        <li>Usage analytics, crash reports, device identifiers, advertising identifiers, or installation identifiers.</li>
+        <li>Your name, email address, contacts, or location.</li>
+    </ul>
+    <p>The app stores its encrypted vault and preferences in its private application storage. It does not include Firebase, Google Analytics, an advertising SDK, or another remote reporting service.</p>
+
+    <h2>2. App Permissions</h2>
+    <p>PocketVault does not request Internet or broad storage permission. It uses the following device capabilities:</p>
+    <ul>
+        <li><strong>Camera:</strong> Used only when you choose to scan a QR code for a TOTP entry. QR processing occurs on the device; the app does not take or retain a photo.</li>
+        <li><strong>Biometrics:</strong> Android's biometric prompt can be used for convenient local unlock. PocketVault does not receive or store fingerprint or face templates. Android Keystore performs the authorization.</li>
+        <li><strong>System file picker and share sheet:</strong> Used only when you choose a backup source or destination. The app receives access only to the files or destination you select.</li>
+    </ul>
+
+    <h2>3. User-Initiated Export and Sharing</h2>
+    <p>You can export or share a backup through Android's file picker or share sheet. PocketVault does not choose or contact a destination automatically. If you send a backup to cloud storage, email, messaging, or another app, that recipient's privacy and security practices apply.</p>
+    <p>A backup contains encrypted vault content and readable configuration metadata. The readable metadata includes the password hint, salt, key-derivation parameters, and an encrypted keyset. Anyone who obtains the backup can read this metadata, although the encrypted vault content still requires the master password. Do not put sensitive information in the password hint, and store backup files securely.</p>
+
+    <h2>4. Data Security</h2>
+    <p>PocketVault uses the following protections:</p>
+    <ul>
+        <li>Google Tink Streaming AEAD using AES-256-GCM-HKDF for encrypted vault files.</li>
+        <li>PBKDF2-HMAC-SHA256 with 600,000 iterations for new and re-keyed vaults; lower historical parameters are retained only to unlock compatible legacy vaults.</li>
+        <li>A randomly generated Streaming AEAD keyset wrapped by a key derived from the master password. The master password and derived key are not persisted.</li>
+        <li>Android Keystore protection for the optional biometric convenience key.</li>
+        <li>Authenticated encryption, integrity validation, application sandboxing, screenshot protection, automatic locking, and timed clipboard clearing.</li>
+    </ul>
+    <p>No software can guarantee absolute security. Device compromise, malicious keyboards or accessibility services, weak master passwords, insecurely stored backups, and undiscovered implementation or dependency vulnerabilities may still expose data. PocketVault has not undergone an independent professional security audit.</p>
+
+    <h2>5. Data Backup and Restoration</h2>
+    <p>You are responsible for protecting exported backups and remembering the applicable master password. PocketVault has no account, recovery service, escrow key, or master-password reset mechanism. Losing the master password can make the encrypted vault permanently inaccessible.</p>
+    <p>Changing the master password does not rewrite backups you exported earlier. An older backup must be opened with the password that protected it when it was created.</p>
+
+    <h2>6. Data Retention and Deletion</h2>
+    <p>Vault data and automatic backup history remain in the app's private storage until you delete app data or uninstall PocketVault. Exported backups are outside the app's control and must be deleted separately from every location to which you saved or shared them.</p>
+
+    <h2>7. Open Source</h2>
+    <p>PocketVault's source code is available under the Apache License 2.0. Source availability allows independent inspection, but it is not itself a guarantee that the software is free of vulnerabilities. Verify download sources, release hashes, and signing certificates where provided.</p>
+
+    <h2>8. Changes to This Privacy Policy</h2>
+    <p>This policy may be updated when app behavior or legal requirements change. The revision date above identifies the current version.</p>
+
+    <h2>9. Contact Us</h2>
+    <p>For privacy questions, contact:</p>
+    <p><strong>Email:</strong> <a href="mailto:richonenight@gmail.com">richonenight@gmail.com</a></p>
+</div>
+</body>
+</html>

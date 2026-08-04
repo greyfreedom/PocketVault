@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">PocketVault</string>
+    <string name="version_format">संस्करण %1$s</string>
+    
+    <!-- Authentication -->
+    <string name="setup_password_title">अपना मास्टर पासवर्ड सेट करें</string>
+    <string name="master_password">मास्टर पासवर्ड</string>
+    <string name="confirm_password">पासवर्ड की पुष्टि करें</string>
+    <string name="password_mismatch_error">पासवर्ड मेल नहीं खाते</string>
+    <string name="create_vault">वॉल्ट बनाएं</string>
+    <string name="import_from_file">या फ़ाइल से आयात करें</string>
+    <string name="welcome_back">वापसी पर स्वागत है</string>
+    <string name="unlock">अनलॉक करें</string>
+    <string name="show_hint">संकेत दिखाएं</string>
+    <string name="hint_prefix">संकेत: %1$s</string>
+    <string name="use_master_password">मास्टर पासवर्ड का उपयोग करें</string>
+    <string name="invalid_password">अमान्य पासवर्ड</string>
+    <plurals name="master_password_too_short">
+        <item quantity="one">मास्टर पासवर्ड कम से कम %1$d वर्ण का होना चाहिए</item>
+        <item quantity="other">मास्टर पासवर्ड कम से कम %1$d वर्णों का होना चाहिए</item>
+    </plurals>
+    <string name="setup_password_description">इस पासवर्ड का उपयोग आपके सभी डेटा को एन्क्रिप्ट करने के लिए किया जाएगा। कृपया इसे सुरक्षित रखें और याद रखें।</string>
+    <string name="password_hint">पासवर्ड संकेत</string>
+    <string name="password_hint_optional">पासवर्ड संकेत (वैकल्पिक)</string>
+    <string name="password_hint_description">यह संकेत पढ़े जा सकने वाले वॉल्ट मेटाडेटा में संग्रहीत होता है और निर्यात किए गए बैकअप में शामिल होता है। संवेदनशील जानकारी दर्ज न करें।</string>
+    
+    <!-- Biometric -->
+    <string name="fingerprint_unlock_title">फ़िंगरप्रिंट अनलॉक</string>
+    <string name="fingerprint_unlock_subtitle">कृपया अपने पासवर्ड वॉल्ट को अनलॉक करने के लिए अपने फ़िंगरप्रिंट का उपयोग करें</string>
+    <string name="biometric_setup_success">फ़िंगरप्रिंट अनलॉक सक्षम</string>
+    <string name="biometric_setup_disabled">फ़िंगरप्रिंट अनलॉक अक्षम</string>
+    <string name="biometric_unavailable_warning">बायोमेट्रिक जानकारी बदल गई, कृपया मास्टर पासवर्ड का उपयोग करें।</string>
+    <string name="biometric_unlock_failed">फ़िंगरप्रिंट अनलॉक विफल, कृपया मास्टर पासवर्ड का उपयोग करें</string>
+
+    
+    <!-- Main Interface -->
+    <string name="edit_mode">संपादन मोड</string>
+    <string name="detail">विवरण</string>
+    <string name="add_new_password">नया पासवर्ड जोड़ें</string>
+    <string name="no_passwords_found">कोई पासवर्ड रिकॉर्ड नहीं मिला</string>
+    <string name="search_passwords">पासवर्ड खोजें</string>
+    <string name="vault_empty_message">"वॉल्ट खाली है,\nनया पासवर्ड जोड़ने के लिए नीचे दाईं ओर \'+\' बटन टैप करें!"</string>
+    <string name="no_search_results">कोई मेल खाते परिणाम नहीं मिले</string>
+    
+    <!-- Password Entry -->
+    <string name="title">शीर्षक</string>
+    <string name="title_required">शीर्षक (आवश्यक)</string>
+    <string name="username">उपयोगकर्ता नाम</string>
+    <string name="username_optional">उपयोगकर्ता नाम (वैकल्पिक)</string>
+    <string name="password">पासवर्ड</string>
+    <string name="password_required">पासवर्ड (आवश्यक)</string>
+    <string name="notes">नोट्स</string>
+    <string name="notes_label">नोट्स</string>
+    <string name="notes_optional">नोट्स (वैकल्पिक)</string>
+    <string name="title_and_password_required">शीर्षक और पासवर्ड आवश्यक हैं</string>
+    <string name="password_hidden">••••••••</string>
+    
+    <!-- Action Buttons -->
+    <string name="save">सहेजें</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="delete">हटाएं</string>
+    <string name="edit">संपादित करें</string>
+    <string name="copy">कॉपी करें</string>
+    <string name="confirm">पुष्टि करें</string>
+    <string name="continue_action">जारी रखें</string>
+    <string name="done">हो गया</string>
+    
+    <!-- Confirmation Dialog -->
+    <string name="confirm_delete">हटाने की पुष्टि करें</string>
+    <string name="confirm_delete_target_message">क्या आप वाकई %1$s को हटाना चाहते हैं? इस कार्रवाई को पूर्ववत नहीं किया जा सकता।</string>
+    <string name="confirm_delete_message">क्या आप वाकई इस पासवर्ड को हटाना चाहते हैं? इस कार्रवाई को पूर्ववत नहीं किया जा सकता।</string>
+
+    <!-- Change Password -->
+    <string name="change_master_password">मास्टर पासवर्ड बदलें</string>
+    <string name="current_master_password">वर्तमान मास्टर पासवर्ड</string>
+    <string name="new_password">नया पासवर्ड</string>
+    <string name="confirm_new_password">नए पासवर्ड की पुष्टि करें</string>
+    <string name="confirm_change">परिवर्तन की पुष्टि करें</string>
+    <string name="password_change_success">मास्टर पासवर्ड सफलतापूर्वक बदला गया</string>
+    <string name="password_change_success_biometric_disabled">मास्टर पासवर्ड सफलतापूर्वक बदला गया! फ़िंगरप्रिंट अनलॉक अक्षम कर दिया गया है, कृपया इसे सेटिंग्स में फिर से सक्षम करें।</string>
+    <string name="password_mismatch_new">नए पासवर्ड मेल नहीं खाते</string>
+    <string name="current_password_incorrect">वर्तमान मास्टर पासवर्ड गलत है</string>
+    
+    <!-- Settings Page -->
+    <string name="settings">सेटिंग्स</string>
+    <string name="enable_fingerprint_unlock">फ़िंगरप्रिंट अनलॉक सक्षम करें</string>
+    <string name="export_data">डेटा निर्यात करें</string>
+    <string name="import_data">डेटा आयात करें</string>
+    <string name="history">इतिहास</string>
+    <string name="master_password_hint">मास्टर पासवर्ड संकेत</string>
+    <string name="enter_password_hint">पासवर्ड संकेत दर्ज करें</string>
+    <string name="password_hint_updated">पासवर्ड संकेत सफलतापूर्वक अपडेट किया गया</string>
+    
+    <!-- Settings Categories -->
+    <string name="settings_appearance">उपस्थिति</string>
+    <string name="settings_appearance_desc">भाषा, थीम</string>
+    <string name="settings_security">सुरक्षा</string>
+    <string name="settings_security_desc">फ़िंगरप्रिंट, पासवर्ड</string>
+    <string name="settings_data">डेटा</string>
+    <string name="settings_data_desc">निर्यात, आयात, साझा करें</string>
+    <string name="settings_other">अन्य</string>
+    <string name="settings_other_desc">इतिहास, श्रेणियाँ</string>
+    
+    <!-- Import/Export -->
+    <string name="export_success">निर्यात सफल</string>
+    <string name="import_success_restart">आयात सफल! नया डेटा लोड करने के लिए ऐप पुनरारंभ होगा।</string>
+    <string name="import_success_biometric_reset">आयात सफल! कृपया फिर से लॉग इन करें और फ़िंगरप्रिंट अनलॉक रीसेट करें।</string>
+    <string name="import_failed">आयात विफल: मास्टर पासवर्ड गलत है या बैकअप फ़ाइल अमान्य है।</string>
+    <string name="import_failed_registration">आयात विफल: मास्टर पासवर्ड गलत है या बैकअप फ़ाइल अमान्य है।</string>
+    <string name="import_master_password_prompt">इस बैकअप का मास्टर पासवर्ड दर्ज करें। सभी एन्क्रिप्टेड फ़ाइलों की पुष्टि होने के बाद ही वॉल्ट बदला जाएगा।</string>
+    <string name="share_data">डेटा साझा करें</string>
+    <string name="share_data_security_title">सुरक्षित साझाकरण</string>
+    <string name="share_data_security_message">इस बैकअप की वॉल्ट सामग्री AES-256-GCM से एन्क्रिप्टेड है और उसे डिक्रिप्ट करने के लिए मास्टर पासवर्ड चाहिए। बैकअप में पासवर्ड संकेत सहित पढ़े जा सकने वाले कॉन्फ़िगरेशन मेटाडेटा भी होते हैं। फ़ाइल पाने वाला कोई भी व्यक्ति यह मेटाडेटा पढ़ सकता है। बैकअप सुरक्षित रखें और केवल आवश्यकता होने पर साझा करें।</string>
+    <string name="got_it">समझ गया</string>
+    <string name="generate_file_failed">फ़ाइल जनरेट करने में विफल</string>
+    
+    <!-- Warning Dialogs -->
+    <string name="important_notice">महत्वपूर्ण सूचना</string>
+    <string name="change_password_warning">मास्टर पासवर्ड बदलने के बाद, सभी पुरानी बैकअप फ़ाइलें नए पासवर्ड के साथ पुनर्प्राप्त नहीं की जा सकेंगी। %1$s \n\nक्या आप वाकई जारी रखना चाहते हैं?</string>
+    <string name="change_password_biometric_info">\n\nमास्टर पासवर्ड बदलने के बाद, कृपया फ़िंगरप्रिंट अनलॉक रीसेट करें</string>
+    <string name="import_data_warning">फ़ाइल आयात करने के बाद, सभी वर्तमान पासवर्ड ओवरराइट हो जाएंगे। लेकिन ओवरराइट करने से पहले वर्तमान डेटा का बैकअप बनाया जाएगा। %1$s \n\nक्या आप वाकई जारी रखना चाहते हैं?</string>
+    <string name="import_data_biometric_info">\n\nफ़ाइल आयात करने के बाद, कृपया फ़िंगरप्रिंट अनलॉक रीसेट करें</string>
+    
+    <!-- History -->
+    <string name="history_title">इतिहास</string>
+    <string name="backup_date_format">बैकअप लिया गया: %1$s</string>
+    <string name="no_backup_history">कोई बैकअप रिकॉर्ड नहीं मिला</string>
+    <string name="restore_success">पुनर्स्थापना सफल! ऐप पुनरारंभ होगा।</string>
+    <string name="restore_failed">पुनर्स्थापना विफल, फ़ाइल दूषित हो सकती है।</string>
+    <string name="delete_backup_success">बैकअप फ़ाइल सफलतापूर्वक हटा दी गई।</string>
+    <string name="delete_backup_failed">बैकअप फ़ाइल हटाने में विफल।</string>
+    
+    <!-- Restore Confirmation Dialog -->
+    <string name="confirm_restore">पुनर्स्थापना की पुष्टि करें</string>
+    <string name="restore_warning">क्या आप वाकई बैकअप फ़ाइल %1$s से पुनर्स्थापित करना चाहते हैं?\n\nयह ऑपरेशन सभी वर्तमान डेटा को अधिलेखित कर देगा, लेकिन पुनर्स्थापना से पहले वर्तमान डेटा का बैकअप बनाया जाएगा।%2$s</string>
+    <string name="restore_biometric_info">\n\nबैकअप फ़ाइल पुनर्स्थापित करने के बाद, आपको फ़िंगरप्रिंट अनलॉक रीसेट करना होगा</string>
+    <string name="confirm_restore_action">पुनर्स्थापना की पुष्टि करें</string>
+    
+    <!-- Delete Backup Confirmation Dialog -->
+    <string name="confirm_delete_backup">हटाने की पुष्टि करें</string>
+    <string name="delete_backup_warning">क्या आप वाकई बैकअप फ़ाइल \"%1$s\" हटाना चाहते हैं?\n\nएक बार हटाने के बाद, इसे पुनर्प्राप्त नहीं किया जा सकता!</string>
+    <string name="confirm_delete_action">हटाने की पुष्टि करें</string>
+    
+    <!-- Clipboard Messages -->
+    <string name="copied_to_clipboard">%1$s क्लिपबोर्ड पर कॉपी किया गया</string>
+    <string name="cleared_from_clipboard">%1$s क्लिपबोर्ड से हटा दिया गया</string>
+    
+    <!-- General -->
+    <string name="loading">लोड हो रहा है…</string>
+    <string name="error">त्रुटि</string>
+    <string name="back">वापस</string>
+    <string name="data_format">"yyyy-MM-dd HH:mm:ss"</string>
+    <string name="unknown_date">अज्ञात तिथि</string>
+    <string name="biometric_prompt_title">फ़िंगरप्रिंट अनलॉक सक्षम करें</string>
+    <string name="biometric_prompt_subtitle">प्राधिकरण के लिए कृपया अपना फ़िंगरप्रिंट सत्यापित करें</string>
+    <string name="biometric_prompt_negative">रद्द करें</string>
+
+    <!-- Biometric Enrollment -->
+    <string name="enroll_biometric_dialog_title">बायोमेट्रिक नामांकन</string>
+    <string name="enroll_biometric_dialog_message">फ़िंगरप्रिंट अनलॉक का उपयोग करने के लिए, आपको पहले इसे अपने डिवाइस की सेटिंग में सेट करना होगा।</string>
+    <string name="go_to_settings">सेटिंग्स पर जाएं</string>
+    <string name="biometric_not_available">इस डिवाइस पर बायोमेट्रिक प्रमाणीकरण उपलब्ध नहीं है।</string>
+    <string name="biometric_key_invalidated">डिवाइस के बायोमेट्रिक या स्क्रीन लॉक में बदलाव के कारण बायोमेट्रिक अनलॉक फिर से सेट करें।</string>
+    <string name="unknown_error">अज्ञात त्रुटि</string>
+
+    
+    <!-- Password Generator -->
+    <string name="password_generator">पासवर्ड जेनरेटर</string>
+    <string name="generate_password">पासवर्ड जेनरेट करें</string>
+    <string name="password_length">पासवर्ड लंबाई</string>
+    <string name="include_uppercase">बड़े अक्षर शामिल करें</string>
+    <string name="include_lowercase">छोटे अक्षर शामिल करें</string>
+    <string name="include_numbers">संख्याएं शामिल करें</string>
+    <string name="include_symbols">प्रतीक शामिल करें</string>
+    <string name="avoid_confusing">भ्रमित करने वाले अक्षरों से बचें</string>
+    <string name="generated_password">जेनरेट किया गया पासवर्ड</string>
+    <string name="refresh_password">ताज़ा करें</string>
+    <string name="use_password">उपयोग करें</string>
+    <string name="password_copied">पासवर्ड क्लिपबोर्ड पर कॉपी किया गया</string>
+    <string name="password_generator_condition_failed">कम से कम एक शर्त सक्षम करें</string>
+    
+    <!-- Add Password Screen -->
+    <string name="item_details">आइटम विवरण</string>
+    <string name="category">श्रेणी</string>
+    <string name="no_category">कोई श्रेणी नहीं</string>
+    <string name="login_info">लॉगिन जानकारी</string>
+    <string name="check_password_in_database">डेटाबेस में पासवर्ड जांचें</string>
+    <string name="authenticator_key">प्रमाणक कुंजी</string>
+    <string name="setup_authenticator_key">प्रमाणक कुंजी सेटअप करें</string>
+    <string name="autofill_options">ऑटो-फिल विकल्प</string>
+    <string name="website_uri">वेबसाइट (URI)</string>
+    <string name="add_website">वेबसाइट जोड़ें</string>
+
+    <!--TAB -->
+    <string name="tab_home">होम</string>
+    <string name="tab_settings">सेटिंग्स</string>
+    
+    <!-- Category Management -->
+    <string name="category_management">श्रेणी प्रबंधन</string>
+    <string name="add_category">श्रेणी जोड़ें</string>
+    <string name="edit_category">श्रेणी संपादित करें</string>
+    <string name="category_name">श्रेणी का नाम</string>
+    <string name="select_color">रंग चुनें</string>
+    <string name="category_created_success">श्रेणी सफलतापूर्वक बनाई गई</string>
+    <string name="category_updated_success">श्रेणी सफलतापूर्वक अपडेट की गई</string>
+    <string name="category_deleted_success">श्रेणी सफलतापूर्वक हटाई गई</string>
+    <string name="create_category_failed">श्रेणी बनाने में विफल</string>
+    <string name="update_category_failed">श्रेणी अपडेट करने में विफल</string>
+    <string name="delete_category_failed">श्रेणी हटाने में विफल</string>
+    <string name="enter_category_name">कृपया श्रेणी का नाम दर्ज करें</string>
+    <string name="no_categories_manage">कोई श्रेणियां नहीं, होम पेज पर श्रेणियां प्रबंधित करें</string>
+    <string name="select_categories">श्रेणियां चुनें (एकाधिक चयन)</string>
+    <string name="all_categories">सभी श्रेणियां</string>
+    <string name="uncategorized">अवर्गीकृत</string>
+    <string name="favorites">पसंदीदा</string>
+    <plurals name="password_count">
+        <item quantity="one">%1$d पासवर्ड</item>
+        <item quantity="other">%1$d पासवर्ड</item>
+    </plurals>
+    <string name="switch_to_list_view">सूची दृश्य पर जाएं</string>
+    <string name="switch_to_grid_view">ग्रिड दृश्य पर जाएं</string>
+    <string name="select_category">श्रेणी चुनें</string>
+    <string name="manage_categories">श्रेणियां प्रबंधित करें</string>
+    <string name="associated_categories">संबंधित श्रेणियां</string>
+    <string name="categories">श्रेणियां</string>
+    <string name="no_categories_selected">कोई श्रेणी नहीं चुनी गई</string>
+    <string name="remove_category">श्रेणी हटाएं</string>
+    <string name="no_categories_available">कोई श्रेणियां उपलब्ध नहीं</string>
+    <string name="create_new_category">नई श्रेणी बनाएं</string>
+    <string name="add_to_favorites">पसंदीदा में जोड़ें</string>
+    <string name="remove_from_favorites">पसंदीदा से हटाएं</string>
+
+    <!-- Language Settings -->
+    <string name="language">भाषा</string>
+    <string name="language_follow_system">सिस्टम का पालन करें</string>
+    <string name="language_english">अंग्रेज़ी (English)</string>
+    <string name="language_chinese">चीनी (Chinese)</string>
+    <string name="language_korean">कोरियाई (Korean)</string>
+    <string name="language_vietnamese">वियतनामी (Vietnamese)</string>
+    <string name="language_hindi">हिन्दी (Hindi)</string>
+    <string name="language_spanish">स्पेनिश (Spanish)</string>
+    <string name="language_portuguese">पुर्तगाली (Portuguese)</string>
+
+    <!-- Theme Settings -->
+    <string name="theme">थीम</string>
+    <string name="theme_follow_system">सिस्टम का पालन करें</string>
+    <string name="theme_light">लाइट मोड</string>
+    <string name="theme_dark">डार्क मोड</string>
+
+    <!-- About Page -->
+    <string name="about_us">हमारे बारे में</string>
+    <string name="contact_us">संपर्क करें</string>
+    <string name="privacy_policy">गोपनीयता नीति</string>
+    <string name="open_source_licenses">ओपन-सोर्स लाइसेंस</string>
+    <string name="email_copied">ईमेल क्लिपबोर्ड पर कॉपी किया गया</string>
+    <string name="no_email_client">कोई ईमेल ऐप नहीं मिला</string>
+
+    <!-- Attachments -->
+    <string name="attachments">संलग्नक</string>
+    <string name="add_attachment">संलग्नक जोड़ें</string>
+    <string name="remove_attachment">संलग्नक हटाएं</string>
+    <string name="no_attachments">कोई संलग्नक नहीं</string>
+    <string name="attachment_size_exceeded">फ़ाइल का आकार सीमा से अधिक है। वर्तमान: %1$d MB, अधिकतम: %2$d MB</string>
+    <string name="attachment_add_failed">फ़ाइल जोड़ने में विफल</string>
+    <string name="attachment_add_failed_with_reason">फ़ाइल जोड़ने में विफल: %1$s</string>
+
+    <!-- Secure Notes -->
+    <string name="add_secure_note">सुरक्षित नोट जोड़ें</string>
+    <string name="content">सामग्री</string>
+    <string name="content_optional">सामग्री (वैकल्पिक)</string>
+
+    <!-- Type Selection -->
+    <string name="all_types">सभी प्रकार</string>
+    <string name="type_password">पासवर्ड</string>
+    <string name="type_note">सुरक्षित नोट</string>
+    <string name="select_type">प्रकार चुनें</string>
+
+    <!-- Q&A Page -->
+    <string name="qa_title">प्रश्नोत्तर</string>
+    <string name="qa_network_permission_title">क्या PocketVault इंटरनेट का उपयोग करता है?</string>
+    <string name="qa_network_permission_content">नहीं। PocketVault Android इंटरनेट अनुमति नहीं मांगता और इसमें विश्लेषण, विज्ञापन, टेलीमेट्री या क्रैश रिपोर्टिंग SDK नहीं है। वॉल्ट डेटा केवल स्थानीय रूप से संसाधित होता है और तभी ऐप से बाहर जाता है जब आप स्वयं बैकअप निर्यात या साझा करते हैं।</string>
+    <string name="qa_data_security_title">मैं अपना मास्टर पासवर्ड भूल गया। क्या आप इसे मेरे लिए रीसेट कर सकते हैं?</string>
+    <string name="qa_data_security_content">नहीं। PocketVault में कोई खाता, सर्वर, पुनर्प्राप्ति कुंजी या पासवर्ड रीसेट बैकडोर नहीं है। मास्टर पासवर्ड से प्राप्त कुंजी स्थानीय रूप से उस यादृच्छिक कुंजी को खोलती है जो वॉल्ट को एन्क्रिप्ट करती है। यदि मास्टर पासवर्ड खो जाए और बायोमेट्रिक सुविधा उपलब्ध न हो, तो वॉल्ट पुनर्प्राप्त नहीं किया जा सकता। पासवर्ड सुरक्षित रखें। पुराने बैकअप के लिए उनके निर्माण के समय वाला पासवर्ड चाहिए।</string>
+    <string name="qa_offline_usage_title">मेरा डेटा कहाँ संग्रहीत है?</string>
+    <string name="qa_offline_usage_content" formatted="false">वर्तमान वॉल्ट और स्वचालित बैकअप इतिहास PocketVault के निजी ऐप संग्रहण में रहते हैं। ऐप डेटा साफ़ करने या ऐप अनइंस्टॉल करने से ये स्थानीय फ़ाइलें हट जाती हैं। निर्यात या साझा किए गए बैकअप ऐप के नियंत्रण से बाहर होते हैं और हर गंतव्य से अलग हटाने पड़ते हैं।</string>
+    <string name="how_is_my_data_protected_title">मेरा डेटा कैसे सुरक्षित है?</string>
+    <string name="how_is_my_data_protected_content">हम Google Tink क्रिप्टोग्राफ़िक लाइब्रेरी का उपयोग करते हैं।\n • एन्क्रिप्शन: AES-256-GCM-HKDF (Streaming AEAD)।\n • व्युत्पत्ति: नए और पुनः-कुंजीकृत वॉल्ट PBKDF2-SHA256 के 600,000 पुनरावृत्तियों का उपयोग करते हैं।\nमजबूत मास्टर पासवर्ड ऑफ़लाइन प्रयासों की लागत बढ़ाता है, लेकिन कोई सॉफ़्टवेयर या पासवर्ड पूर्ण सुरक्षा की गारंटी नहीं देता।</string>
+
+    <!-- TOTP -->
+    <string name="tab_totp">TOTP</string>
+    <string name="totp_add_entry">प्रमाणक जोड़ें</string>
+    <string name="scan_qr_code">QR कोड स्कैन करें</string>
+    <string name="totp_enter_manually">मैन्युअल रूप से दर्ज करें</string>
+    <string name="totp_edit_entry">प्रमाणक संपादित करें</string>
+    <string name="totp_edit_entry_title">प्रमाणक संपादित करें</string>
+    <string name="totp_edit_entry_description">इस प्रमाणक प्रविष्टि के सेटअप विवरण अपडेट करें।</string>
+    <string name="totp_manual_add_title">प्रमाणक जोड़ें</string>
+    <string name="totp_manual_add_description">जिस सेवा को आप सुरक्षित करना चाहते हैं, उसके द्वारा दिए गए सेटअप विवरण दर्ज करें।</string>
+    <string name="totp_issuer">जारीकर्ता</string>
+    <string name="totp_issuer_hint">उदाहरण के लिए, GitHub</string>
+    <string name="totp_account">खाता</string>
+    <string name="totp_account_hint">उदाहरण के लिए, name@example.com</string>
+    <string name="totp_secret">गुप्त कुंजी</string>
+    <string name="totp_secret_hint">उदाहरण के लिए, JBSWY3DPEHPK3PXP</string>
+    <string name="totp_secret_supporting_text">स्पेस और हाइफ़न स्वीकार किए जाते हैं।</string>
+    <string name="totp_advanced_options">उन्नत विकल्प</string>
+    <string name="totp_algorithm">एल्गोरिदम</string>
+    <string name="totp_digits">कोड अंक</string>
+    <string name="totp_period_seconds">अवधि (सेकंड)</string>
+    <string name="totp_period_supporting_text">15 से 120 सेकंड के बीच मान दर्ज करें।</string>
+    <string name="totp_issuer_required">जारीकर्ता आवश्यक है।</string>
+    <string name="totp_account_required">खाता आवश्यक है।</string>
+    <string name="totp_secret_required">गुप्त कुंजी आवश्यक है।</string>
+    <string name="totp_secret_invalid">एक मान्य Base32 गुप्त कुंजी दर्ज करें।</string>
+    <string name="totp_period_invalid">अवधि 15 से 120 सेकंड के बीच होनी चाहिए।</string>
+    <string name="camera_permission_required">कैमरा अनुमति आवश्यक</string>
+    <string name="camera_permission_rationale">TOTP प्रविष्टियां जोड़ने के लिए QR कोड स्कैन करने के लिए कैमरा अनुमति की आवश्यकता है।</string>
+    <string name="grant_permission">अनुमति दें</string>
+    <string name="totp_empty_message">अभी तक कोई TOTP प्रविष्टि नहीं</string>
+    <string name="totp_empty_hint">अपना पहला 2FA खाता जोड़ने के लिए जोड़ें बटन टैप करें</string>
+    <string name="ok">ठीक है</string>
+    <string name="totp_toggle_visibility">दृश्यता टॉगल करें</string>
+    <string name="totp_copy_code">कोड कॉपी करें</string>
+    <string name="totp_delete">हटाएं</string>
+    <string name="totp_adding_entry">TOTP प्रविष्टि जोड़ा रहा है…</string>
+    <string name="totp_permission_denied_message">TOTP प्रविष्टियां जोड़ने के लिए QR कोड स्कैन करने के लिए कैमरा अनुमति आवश्यक है।\n\nजारी रखने के लिए कृपया ऐप सेटिंग्स में कैमरा अनुमति प्रदान करें।</string>
+    <string name="totp_go_back">वापस जाएं</string>
+    <string name="totp_try_again">पुनः प्रयास करें</string>
+    <string name="totp_more">अधिक विकल्प</string>
+    <string name="totp_edit_title">शीर्षक संपादित करें</string>
+    <string name="totp_edit_title_dialog_title">शीर्षक संपादित करें</string>
+    <string name="totp_edit_title_hint">नया शीर्षक दर्ज करें</string>
+    <string name="totp_title_cannot_be_empty">शीर्षक खाली नहीं हो सकता</string>
+    <string name="save_failed">बदलाव सहेजे नहीं जा सके। पुराना वॉल्ट डेटा बदला नहीं गया है।</string>
+    <string name="operation_failed_try_again">कार्रवाई विफल रही। कृपया पुनः प्रयास करें।</string>
+    <string name="no_app_found">इस फ़ाइल को खोलने के लिए कोई ऐप उपलब्ध नहीं है।</string>
+    <string name="vault_file_corrupted">वॉल्ट या प्रमाणक डेटा क्षतिग्रस्त है और उसे अधिलेखित नहीं किया गया। सत्यापित बैकअप पुनर्स्थापित करें।</string>
+    <string name="vault_integrity_failed">वॉल्ट अखंडता जाँच विफल हुई। डेटा खोला या अधिलेखित नहीं किया गया।</string>
+    <string name="vault_version_unsupported">यह वॉल्ट असमर्थित संस्करण %1$d का उपयोग करता है। HelloPocket अपडेट करके फिर प्रयास करें।</string>
+    <string name="totp_invalid_qr">QR कोड अमान्य है। मान्य TOTP प्रमाणक कोड स्कैन करें।</string>
+    <string name="totp_add_failed">प्रमाणक प्रविष्टि सहेजी नहीं जा सकी।</string>
+    <string name="totp_update_failed">प्रमाणक प्रविष्टि अपडेट नहीं की जा सकी।</string>
+    <string name="totp_entry_not_found">यह प्रमाणक प्रविष्टि अब मौजूद नहीं है।</string>
+    <string name="show_password">पासवर्ड दिखाएँ</string>
+    <string name="hide_password">पासवर्ड छिपाएँ</string>
+    <string name="title_cannot_be_empty">शीर्षक खाली नहीं हो सकता</string>
+</resources>

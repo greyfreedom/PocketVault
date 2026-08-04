@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">PocketVault</string>
+    <string name="version_format">Versión %1$s</string>
+    
+    <!-- Authentication -->
+    <string name="setup_password_title">Establezca su Contraseña Maestra</string>
+    <string name="master_password">Contraseña Maestra</string>
+    <string name="confirm_password">Confirmar Contraseña</string>
+    <string name="password_mismatch_error">Las contraseñas no coinciden</string>
+    <string name="create_vault">Crear Bóveda</string>
+    <string name="import_from_file">O Importar desde Archivo</string>
+    <string name="welcome_back">Bienvenido de nuevo</string>
+    <string name="unlock">Desbloquear</string>
+    <string name="show_hint">Mostrar Pista</string>
+    <string name="hint_prefix">Pista: %1$s</string>
+    <string name="use_master_password">Usar Contraseña Maestra</string>
+    <string name="invalid_password">Contraseña inválida</string>
+    <plurals name="master_password_too_short">
+        <item quantity="one">La contraseña maestra debe tener al menos %1$d carácter</item>
+        <item quantity="many">La contraseña maestra debe tener al menos %1$d caracteres</item>
+        <item quantity="other">La contraseña maestra debe tener al menos %1$d caracteres</item>
+    </plurals>
+    <string name="setup_password_description">Esta contraseña se usará para cifrar todos sus datos. Por favor, manténgala segura y recuérdela.</string>
+    <string name="password_hint">Pista de Contraseña</string>
+    <string name="password_hint_optional">Pista de Contraseña (Opcional)</string>
+    <string name="password_hint_description">Esta pista se guarda en metadatos legibles de la bóveda y se incluye en las copias de seguridad exportadas. No introduzca información sensible.</string>
+    
+    <!-- Biometric -->
+    <string name="fingerprint_unlock_title">Desbloqueo con Huella Digital</string>
+    <string name="fingerprint_unlock_subtitle">Por favor, use su huella digital para desbloquear su bóveda de contraseñas</string>
+    <string name="biometric_setup_success">Desbloqueo con huella digital habilitado</string>
+    <string name="biometric_setup_disabled">Desbloqueo con huella digital deshabilitado</string>
+    <string name="biometric_unavailable_warning">La información biométrica cambió, por favor use la contraseña maestra.</string>
+    <string name="biometric_unlock_failed">Falló el desbloqueo con huella digital, por favor use la contraseña maestra</string>
+
+    
+    <!-- Main Interface -->
+    <string name="edit_mode">Modo Edición</string>
+    <string name="detail">Detalle</string>
+    <string name="add_new_password">Añadir Nueva Contraseña</string>
+    <string name="no_passwords_found">No se encontraron registros de contraseñas</string>
+    <string name="search_passwords">Buscar contraseñas</string>
+    <string name="vault_empty_message">"La bóveda está vacía,\n¡Toque el botón \'+\' en la parte inferior derecha para añadir una nueva contraseña!"</string>
+    <string name="no_search_results">No se encontraron resultados coincidentes</string>
+    
+    <!-- Password Entry -->
+    <string name="title">Título</string>
+    <string name="title_required">Título (Requerido)</string>
+    <string name="username">Nombre de Usuario</string>
+    <string name="username_optional">Nombre de Usuario (Opcional)</string>
+    <string name="password">Contraseña</string>
+    <string name="password_required">Contraseña (Requerida)</string>
+    <string name="notes">Notas</string>
+    <string name="notes_label">Notas</string>
+    <string name="notes_optional">Notas (Opcional)</string>
+    <string name="title_and_password_required">El título y la contraseña son obligatorios</string>
+    <string name="password_hidden">••••••••</string>
+    
+    <!-- Action Buttons -->
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Eliminar</string>
+    <string name="edit">Editar</string>
+    <string name="copy">Copiar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="continue_action">Continuar</string>
+    <string name="done">Hecho</string>
+    
+    <!-- Confirmation Dialog -->
+    <string name="confirm_delete">Confirmar Eliminación</string>
+    <string name="confirm_delete_target_message">¿Está seguro de que desea eliminar %1$s? Esta acción no se puede deshacer.</string>
+    <string name="confirm_delete_message">¿Está seguro de que desea eliminar esta contraseña? Esta acción no se puede deshacer.</string>
+
+    <!-- Change Password -->
+    <string name="change_master_password">Cambiar Contraseña Maestra</string>
+    <string name="current_master_password">Contraseña Maestra Actual</string>
+    <string name="new_password">Nueva Contraseña</string>
+    <string name="confirm_new_password">Confirmar Nueva Contraseña</string>
+    <string name="confirm_change">Confirmar Cambio</string>
+    <string name="password_change_success">Contraseña maestra cambiada con éxito</string>
+    <string name="password_change_success_biometric_disabled">¡Contraseña maestra cambiada con éxito! El desbloqueo con huella digital ha sido deshabilitado, por favor vuelva a habilitarlo en la configuración.</string>
+    <string name="password_mismatch_new">Las nuevas contraseñas no coinciden</string>
+    <string name="current_password_incorrect">La contraseña maestra actual es incorrecta</string>
+    
+    <!-- Settings Page -->
+    <string name="settings">Configuración</string>
+    <string name="enable_fingerprint_unlock">Habilitar Desbloqueo con Huella Digital</string>
+    <string name="export_data">Exportar Datos</string>
+    <string name="import_data">Importar Datos</string>
+    <string name="history">Historial</string>
+    <string name="master_password_hint">Pista de Contraseña Maestra</string>
+    <string name="enter_password_hint">Introducir Pista de Contraseña</string>
+    <string name="password_hint_updated">Pista de contraseña actualizada con éxito</string>
+    
+    <!-- Settings Categories -->
+    <string name="settings_appearance">Apariencia</string>
+    <string name="settings_appearance_desc">Idioma, tema</string>
+    <string name="settings_security">Seguridad</string>
+    <string name="settings_security_desc">Huella digital, contraseña</string>
+    <string name="settings_data">Datos</string>
+    <string name="settings_data_desc">Exportar, importar, compartir</string>
+    <string name="settings_other">Otros</string>
+    <string name="settings_other_desc">Historial, categorías</string>
+    
+    <!-- Import/Export -->
+    <string name="export_success">Exportación exitosa</string>
+    <string name="import_success_restart">¡Importación exitosa! La aplicación se reiniciará para cargar los nuevos datos.</string>
+    <string name="import_success_biometric_reset">¡Importación exitosa! Por favor inicie sesión de nuevo y restablezca el desbloqueo con huella digital.</string>
+    <string name="import_failed">Error al importar: la contraseña maestra es incorrecta o la copia de seguridad no es válida.</string>
+    <string name="import_failed_registration">Error al importar: la contraseña maestra es incorrecta o la copia de seguridad no es válida.</string>
+    <string name="import_master_password_prompt">Introduce la contraseña maestra de esta copia. La bóveda se reemplazará solo después de verificar todos los archivos cifrados.</string>
+    <string name="share_data">Compartir Datos</string>
+    <string name="share_data_security_title">Uso Compartido Seguro</string>
+    <string name="share_data_security_message">El contenido de la bóveda de esta copia de seguridad está cifrado con AES-256-GCM y requiere su contraseña maestra para descifrarlo. La copia también contiene metadatos de configuración legibles, incluida la pista de contraseña. Cualquiera que tenga el archivo puede leer esos metadatos. Guárdelo de forma segura y compártalo solo cuando sea necesario.</string>
+    <string name="got_it">Entendido</string>
+    <string name="generate_file_failed">Falló la generación del archivo</string>
+    
+    <!-- Warning Dialogs -->
+    <string name="important_notice">Aviso Importante</string>
+    <string name="change_password_warning">Después de cambiar la contraseña maestra, todos los archivos de respaldo antiguos no se podrán recuperar con la nueva contraseña. %1$s \n\n¿Está seguro de que desea continuar?</string>
+    <string name="change_password_biometric_info">\n\nDespués de cambiar la contraseña maestra, por favor restablezca el desbloqueo con huella digital</string>
+    <string name="import_data_warning">Después de importar el archivo, todas las contraseñas actuales se sobrescribirán. Pero se creará una copia de seguridad de los datos actuales antes de sobrescribirlos. %1$s \n\n¿Está seguro de que desea continuar?</string>
+    <string name="import_data_biometric_info">\n\nDespués de importar el archivo, por favor restablezca el desbloqueo con huella digital</string>
+    
+    <!-- History -->
+    <string name="history_title">Historial</string>
+    <string name="backup_date_format">Respaldado el: %1$s</string>
+    <string name="no_backup_history">No se encontraron registros de respaldo</string>
+    <string name="restore_success">¡Restauración exitosa! La aplicación se reiniciará.</string>
+    <string name="restore_failed">Restauración fallida, el archivo puede estar dañado.</string>
+    <string name="delete_backup_success">Archivo de respaldo eliminado con éxito.</string>
+    <string name="delete_backup_failed">Falló la eliminación del archivo de respaldo.</string>
+    
+    <!-- Restore Confirmation Dialog -->
+    <string name="confirm_restore">Confirmar Restauración</string>
+    <string name="restore_warning">¿Está seguro de que desea restaurar desde el archivo de respaldo %1$s?\n\nEsta operación sobrescribirá todos los datos actuales, pero se creará una copia de seguridad de los datos actuales antes de la restauración.%2$s</string>
+    <string name="restore_biometric_info">\n\nDespués de restaurar el archivo de respaldo, debe restablecer el desbloqueo con huella digital</string>
+    <string name="confirm_restore_action">Confirmar Restauración</string>
+    
+    <!-- Delete Backup Confirmation Dialog -->
+    <string name="confirm_delete_backup">Confirmar Eliminación</string>
+    <string name="delete_backup_warning">¿Está seguro de que desea eliminar el archivo de respaldo \"%1$s\"?\n\n¡Una vez eliminado, no se puede recuperar!</string>
+    <string name="confirm_delete_action">Confirmar Eliminación</string>
+    
+    <!-- Clipboard Messages -->
+    <string name="copied_to_clipboard">%1$s copiado al portapapeles</string>
+    <string name="cleared_from_clipboard">%1$s borrado del portapapeles</string>
+    
+    <!-- General -->
+    <string name="loading">Cargando…</string>
+    <string name="error">Error</string>
+    <string name="back">Atrás</string>
+    <string name="data_format">"yyyy-MM-dd HH:mm:ss"</string>
+    <string name="unknown_date">Fecha desconocida</string>
+    <string name="biometric_prompt_title">Habilitar Desbloqueo con Huella Digital</string>
+    <string name="biometric_prompt_subtitle">Por favor verifique su huella digital para autorización</string>
+    <string name="biometric_prompt_negative">Cancelar</string>
+
+    <!-- Biometric Enrollment -->
+    <string name="enroll_biometric_dialog_title">Inscripción Biométrica</string>
+    <string name="enroll_biometric_dialog_message">Para usar el desbloqueo con huella digital, primero debe configurarlo en la configuración de su dispositivo.</string>
+    <string name="go_to_settings">Ir a Configuración</string>
+    <string name="biometric_not_available">La autenticación biométrica no está disponible en este dispositivo.</string>
+    <string name="biometric_key_invalidated">Debes configurar de nuevo el desbloqueo biométrico porque cambiaron la biometría o el bloqueo de pantalla del dispositivo.</string>
+    <string name="unknown_error">Error desconocido</string>
+
+    
+    <!-- Password Generator -->
+    <string name="password_generator">Generador de Contraseñas</string>
+    <string name="generate_password">Generar Contraseña</string>
+    <string name="password_length">Longitud de la Contraseña</string>
+    <string name="include_uppercase">Incluir Letras Mayúsculas</string>
+    <string name="include_lowercase">Incluir Letras Minúsculas</string>
+    <string name="include_numbers">Incluir Números</string>
+    <string name="include_symbols">Incluir Símbolos</string>
+    <string name="avoid_confusing">Evitar Caracteres Confusos</string>
+    <string name="generated_password">Contraseña Generada</string>
+    <string name="refresh_password">Actualizar</string>
+    <string name="use_password">Usarla</string>
+    <string name="password_copied">Contraseña copiada al portapapeles</string>
+    <string name="password_generator_condition_failed">Habilite al menos una condición</string>
+    
+    <!-- Add Password Screen -->
+    <string name="item_details">Detalles del Ítem</string>
+    <string name="category">Categoría</string>
+    <string name="no_category">Sin Categoría</string>
+    <string name="login_info">Información de Inicio de Sesión</string>
+    <string name="check_password_in_database">Verificar contraseña en la base de datos</string>
+    <string name="authenticator_key">Clave de Autenticador</string>
+    <string name="setup_authenticator_key">Configurar Clave de Autenticador</string>
+    <string name="autofill_options">Opciones de Autocompletar</string>
+    <string name="website_uri">Sitio Web (URI)</string>
+    <string name="add_website">Añadir Sitio Web</string>
+
+    <!-- TAB -->
+    <string name="tab_home">Inicio</string>
+    <string name="tab_settings">Configuración</string>
+    
+    <!-- Category Management -->
+    <string name="category_management">Gestión de Categorías</string>
+    <string name="add_category">Añadir Categoría</string>
+    <string name="edit_category">Editar Categoría</string>
+    <string name="category_name">Nombre de la Categoría</string>
+    <string name="select_color">Seleccionar Color</string>
+    <string name="category_created_success">Categoría creada con éxito</string>
+    <string name="category_updated_success">Categoría actualizada con éxito</string>
+    <string name="category_deleted_success">Categoría eliminada con éxito</string>
+    <string name="create_category_failed">Falló la creación de la categoría</string>
+    <string name="update_category_failed">Falló la actualización de la categoría</string>
+    <string name="delete_category_failed">Falló la eliminación de la categoría</string>
+    <string name="enter_category_name">Por favor introduzca el nombre de la categoría</string>
+    <string name="no_categories_manage">Sin categorías, gestione las categorías en la página de inicio</string>
+    <string name="select_categories">Seleccionar Categorías (selección múltiple)</string>
+    <string name="all_categories">Todas las Categorías</string>
+    <string name="uncategorized">Sin Categoría</string>
+    <string name="favorites">Favoritos</string>
+    <plurals name="password_count">
+        <item quantity="one">%1$d contraseña</item>
+        <item quantity="many">%1$d contraseñas</item>
+        <item quantity="other">%1$d contraseñas</item>
+    </plurals>
+    <string name="switch_to_list_view">Cambiar a vista de lista</string>
+    <string name="switch_to_grid_view">Cambiar a vista de cuadrícula</string>
+    <string name="select_category">Seleccionar Categoría</string>
+    <string name="manage_categories">Gestionar Categorías</string>
+    <string name="associated_categories">Categorías Asociadas</string>
+    <string name="categories">Categorías</string>
+    <string name="no_categories_selected">No se seleccionaron categorías</string>
+    <string name="remove_category">Eliminar categoría</string>
+    <string name="no_categories_available">No hay categorías disponibles</string>
+    <string name="create_new_category">Crear Nueva Categoría</string>
+    <string name="add_to_favorites">Añadir a favoritos</string>
+    <string name="remove_from_favorites">Eliminar de favoritos</string>
+
+    <!-- Language Settings -->
+    <string name="language">Idioma</string>
+    <string name="language_follow_system">Seguir sistema</string>
+    <string name="language_english">Inglés (English)</string>
+    <string name="language_chinese">Chino (Chinese)</string>
+    <string name="language_korean">Coreano (Korean)</string>
+    <string name="language_vietnamese">Vietnamita (Vietnamese)</string>
+    <string name="language_hindi">Hindi (Hindi)</string>
+    <string name="language_spanish">Español (Spanish)</string>
+    <string name="language_portuguese">Portugués (Portuguese)</string>
+
+    <!-- Theme Settings -->
+    <string name="theme">Tema</string>
+    <string name="theme_follow_system">Seguir sistema</string>
+    <string name="theme_light">Modo Claro</string>
+    <string name="theme_dark">Modo Oscuro</string>
+
+    <!-- About Page -->
+    <string name="about_us">Sobre Nosotros</string>
+    <string name="contact_us">Contáctenos</string>
+    <string name="privacy_policy">Política de Privacidad</string>
+    <string name="open_source_licenses">Licencias de código abierto</string>
+    <string name="email_copied">Correo electrónico copiado al portapapeles</string>
+    <string name="no_email_client">No se encontró aplicación de correo</string>
+
+    <!-- Attachments -->
+    <string name="attachments">Adjuntos</string>
+    <string name="add_attachment">Añadir Adjunto</string>
+    <string name="remove_attachment">Eliminar Adjunto</string>
+    <string name="no_attachments">Sin adjuntos</string>
+    <string name="attachment_size_exceeded">El tamaño del archivo excede el límite. Actual: %1$d MB, Máximo: %2$d MB</string>
+    <string name="attachment_add_failed">Falló la adición del archivo</string>
+    <string name="attachment_add_failed_with_reason">Falló la adición del archivo: %1$s</string>
+
+    <!-- Secure Notes -->
+    <string name="add_secure_note">Añadir Nota Segura</string>
+    <string name="content">Contenido</string>
+    <string name="content_optional">Contenido (Opcional)</string>
+
+    <!-- Type Selection -->
+    <string name="all_types">Todos los Tipos</string>
+    <string name="type_password">Contraseña</string>
+    <string name="type_note">Nota Segura</string>
+    <string name="select_type">Seleccionar Tipo</string>
+
+    <!-- Q&A Page -->
+    <string name="qa_title">Preguntas y Respuestas</string>
+    <string name="qa_network_permission_title">¿PocketVault accede a Internet?</string>
+    <string name="qa_network_permission_content">No. PocketVault no solicita el permiso de Internet de Android ni incluye SDK de análisis, publicidad, telemetría o informes de fallos. Los datos de la bóveda se procesan localmente y solo salen de la aplicación cuando usted exporta o comparte una copia de seguridad.</string>
+    <string name="qa_data_security_title">Olvidé mi Contraseña Maestra. ¿Pueden restablecerla por mí?</string>
+    <string name="qa_data_security_content">No. PocketVault no tiene cuenta, servidor, clave de recuperación ni puerta trasera para restablecer la contraseña. Una clave derivada de su contraseña maestra desempaqueta localmente la clave aleatoria que cifra la bóveda. Si pierde la contraseña maestra y el desbloqueo biométrico no está disponible, la bóveda no puede recuperarse. Guarde la contraseña de forma segura. Las copias antiguas requieren la contraseña con la que fueron creadas.</string>
+    <string name="qa_offline_usage_title">¿Dónde se almacenan mis datos?</string>
+    <string name="qa_offline_usage_content" formatted="false">La bóveda actual y el historial de copias automáticas se guardan en el almacenamiento privado de PocketVault. Borrar los datos de la aplicación o desinstalarla elimina esos archivos locales. Las copias que haya exportado o compartido están fuera del control de la aplicación y deben eliminarse por separado de cada destino.</string>
+    <string name="how_is_my_data_protected_title">¿Cómo están protegidos mis datos?</string>
+    <string name="how_is_my_data_protected_content">Usamos la biblioteca criptográfica Google Tink.\n• Cifrado: AES-256-GCM-HKDF (Streaming AEAD).\n• Derivación: las bóvedas nuevas y con clave renovada usan PBKDF2-SHA256 con 600.000 iteraciones.\nUna contraseña maestra fuerte aumenta considerablemente el coste de los intentos sin conexión, pero ningún software ni contraseña garantiza seguridad absoluta.</string>
+
+    <!-- TOTP -->
+    <string name="tab_totp">TOTP</string>
+    <string name="totp_add_entry">Agregar autenticador</string>
+    <string name="scan_qr_code">Escanear Código QR</string>
+    <string name="totp_enter_manually">Introducir manualmente</string>
+    <string name="totp_edit_entry">Editar autenticador</string>
+    <string name="totp_edit_entry_title">Editar autenticador</string>
+    <string name="totp_edit_entry_description">Actualiza los datos de configuración de esta entrada del autenticador.</string>
+    <string name="totp_manual_add_title">Agregar autenticador</string>
+    <string name="totp_manual_add_description">Introduce los datos de configuración que muestra el servicio que deseas proteger.</string>
+    <string name="totp_issuer">Emisor</string>
+    <string name="totp_issuer_hint">Por ejemplo, GitHub</string>
+    <string name="totp_account">Cuenta</string>
+    <string name="totp_account_hint">Por ejemplo, name@example.com</string>
+    <string name="totp_secret">Clave secreta</string>
+    <string name="totp_secret_hint">Por ejemplo, JBSWY3DPEHPK3PXP</string>
+    <string name="totp_secret_supporting_text">Se aceptan espacios y guiones.</string>
+    <string name="totp_advanced_options">Opciones avanzadas</string>
+    <string name="totp_algorithm">Algoritmo</string>
+    <string name="totp_digits">Dígitos del código</string>
+    <string name="totp_period_seconds">Período (segundos)</string>
+    <string name="totp_period_supporting_text">Introduce un valor entre 15 y 120 segundos.</string>
+    <string name="totp_issuer_required">El emisor es obligatorio.</string>
+    <string name="totp_account_required">La cuenta es obligatoria.</string>
+    <string name="totp_secret_required">La clave secreta es obligatoria.</string>
+    <string name="totp_secret_invalid">Introduce una clave Base32 válida.</string>
+    <string name="totp_period_invalid">El período debe estar entre 15 y 120 segundos.</string>
+    <string name="camera_permission_required">Se requiere permiso de cámara</string>
+    <string name="camera_permission_rationale">Se necesita permiso de cámara para escanear códigos QR y agregar entradas TOTP.</string>
+    <string name="grant_permission">Conceder Permiso</string>
+    <string name="totp_empty_message">Aún no hay entradas TOTP</string>
+    <string name="totp_empty_hint">Toca el botón de agregar para añadir tu primera cuenta de 2FA</string>
+    <string name="ok">OK</string>
+    <string name="totp_toggle_visibility">Alternar visibilidad</string>
+    <string name="totp_copy_code">Copiar código</string>
+    <string name="totp_delete">Eliminar</string>
+    <string name="totp_adding_entry">Añadiendo entrada TOTP…</string>
+    <string name="totp_permission_denied_message">Se requiere permiso de cámara para escanear códigos QR y agregar entradas TOTP.\n\nConcede permiso de cámara en la configuración de la aplicación para continuar.</string>
+    <string name="totp_go_back">Volver</string>
+    <string name="totp_try_again">Intentar de nuevo</string>
+    <string name="totp_more">Más opciones</string>
+    <string name="totp_edit_title">Editar título</string>
+    <string name="totp_edit_title_dialog_title">Editar Título</string>
+    <string name="totp_edit_title_hint">Ingrese el nuevo título</string>
+    <string name="totp_title_cannot_be_empty">El título no puede estar vacío</string>
+    <string name="save_failed">No se pudieron guardar los cambios. Los datos anteriores de la bóveda no se modificaron.</string>
+    <string name="operation_failed_try_again">La operación falló. Inténtalo de nuevo.</string>
+    <string name="no_app_found">No hay ninguna aplicación disponible para abrir este archivo.</string>
+    <string name="vault_file_corrupted">La bóveda o los datos del autenticador están dañados y no se sobrescribieron. Restaura una copia verificada.</string>
+    <string name="vault_integrity_failed">La verificación de integridad de la bóveda falló. Los datos no se abrieron ni sobrescribieron.</string>
+    <string name="vault_version_unsupported">Esta bóveda usa la versión no compatible %1$d. Actualiza HelloPocket e inténtalo de nuevo.</string>
+    <string name="totp_invalid_qr">Código QR no válido. Escanea un código TOTP válido.</string>
+    <string name="totp_add_failed">No se pudo guardar la entrada del autenticador.</string>
+    <string name="totp_update_failed">No se pudo actualizar la entrada del autenticador.</string>
+    <string name="totp_entry_not_found">Esta entrada del autenticador ya no existe.</string>
+    <string name="show_password">Mostrar contraseña</string>
+    <string name="hide_password">Ocultar contraseña</string>
+    <string name="title_cannot_be_empty">El título no puede estar vacío</string>
+</resources>

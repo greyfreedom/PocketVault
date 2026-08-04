@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">PocketVault</string>
+    <string name="version_format">버전 %1$s</string>
+    
+    <!-- Authentication -->
+    <string name="setup_password_title">마스터 비밀번호 설정</string>
+    <string name="master_password">마스터 비밀번호</string>
+    <string name="confirm_password">비밀번호 확인</string>
+    <string name="password_mismatch_error">비밀번호가 일치하지 않습니다</string>
+    <string name="create_vault">보관함 생성</string>
+    <string name="import_from_file">또는 파일에서 가져오기</string>
+    <string name="welcome_back">환영합니다</string>
+    <string name="unlock">잠금 해제</string>
+    <string name="show_hint">힌트 보기</string>
+    <string name="hint_prefix">힌트: %1$s</string>
+    <string name="use_master_password">마스터 비밀번호 사용</string>
+    <string name="invalid_password">잘못된 비밀번호입니다</string>
+    <plurals name="master_password_too_short">
+        <item quantity="other">마스터 비밀번호는 최소 %1$d자 이상이어야 합니다</item>
+    </plurals>
+    <string name="setup_password_description">이 비밀번호는 모든 데이터를 암호화하는 데 사용됩니다. 안전하게 보관하고 기억해 주세요.</string>
+    <string name="password_hint">비밀번호 힌트</string>
+    <string name="password_hint_optional">비밀번호 힌트 (선택 사항)</string>
+    <string name="password_hint_description">이 힌트는 읽을 수 있는 보관함 메타데이터에 저장되며 내보낸 백업에 포함됩니다. 민감한 정보를 입력하지 마세요.</string>
+    
+    <!-- Biometric -->
+    <string name="fingerprint_unlock_title">지문 잠금 해제</string>
+    <string name="fingerprint_unlock_subtitle">비밀번호 보관함의 잠금을 해제하려면 지문을 사용하세요</string>
+    <string name="biometric_setup_success">지문 잠금 해제가 활성화되었습니다</string>
+    <string name="biometric_setup_disabled">지문 잠금 해제가 비활성화되었습니다</string>
+    <string name="biometric_unavailable_warning">생체 인식 정보가 변경되었습니다. 마스터 비밀번호를 사용하세요.</string>
+    <string name="biometric_unlock_failed">지문 잠금 해제 실패, 마스터 비밀번호를 사용하세요</string>
+
+    
+    <!-- Main Interface -->
+    <string name="edit_mode">편집 모드</string>
+    <string name="detail">상세 정보</string>
+    <string name="add_new_password">새 비밀번호 추가</string>
+    <string name="no_passwords_found">비밀번호 기록이 없습니다</string>
+    <string name="search_passwords">비밀번호 검색</string>
+    <string name="vault_empty_message">"보관함이 비어 있습니다.\n우측 하단의 \'+\' 버튼을 눌러 새 비밀번호를 추가하세요!"</string>
+    <string name="no_search_results">일치하는 결과가 없습니다</string>
+    
+    <!-- Password Entry -->
+    <string name="title">제목</string>
+    <string name="title_required">제목 (필수)</string>
+    <string name="username">사용자 이름</string>
+    <string name="username_optional">사용자 이름 (선택 사항)</string>
+    <string name="password">비밀번호</string>
+    <string name="password_required">비밀번호 (필수)</string>
+    <string name="notes">메모</string>
+    <string name="notes_label">메모</string>
+    <string name="notes_optional">메모 (선택 사항)</string>
+    <string name="title_and_password_required">제목과 비밀번호는 필수입니다</string>
+    <string name="password_hidden">••••••••</string>
+    
+    <!-- Action Buttons -->
+    <string name="save">저장</string>
+    <string name="cancel">취소</string>
+    <string name="delete">삭제</string>
+    <string name="edit">편집</string>
+    <string name="copy">복사</string>
+    <string name="confirm">확인</string>
+    <string name="continue_action">계속</string>
+    <string name="done">완료</string>
+    
+    <!-- Confirmation Dialog -->
+    <string name="confirm_delete">삭제 확인</string>
+    <string name="confirm_delete_target_message">%1$s을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</string>
+    <string name="confirm_delete_message">이 비밀번호를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</string>
+
+    <!-- Change Password -->
+    <string name="change_master_password">마스터 비밀번호 변경</string>
+    <string name="current_master_password">현재 마스터 비밀번호</string>
+    <string name="new_password">새 비밀번호</string>
+    <string name="confirm_new_password">새 비밀번호 확인</string>
+    <string name="confirm_change">변경 확인</string>
+    <string name="password_change_success">마스터 비밀번호가 성공적으로 변경되었습니다</string>
+    <string name="password_change_success_biometric_disabled">마스터 비밀번호가 변경되었습니다! 지문 잠금 해제가 비활성화되었으니 설정에서 다시 활성화해 주세요.</string>
+    <string name="password_mismatch_new">새 비밀번호가 일치하지 않습니다</string>
+    <string name="current_password_incorrect">현재 마스터 비밀번호가 올바르지 않습니다</string>
+    
+    <!-- Settings Page -->
+    <string name="settings">설정</string>
+    <string name="enable_fingerprint_unlock">지문 잠금 해제 활성화</string>
+    <string name="export_data">데이터 내보내기</string>
+    <string name="import_data">데이터 가져오기</string>
+    <string name="history">기록</string>
+    <string name="master_password_hint">마스터 비밀번호 힌트</string>
+    <string name="enter_password_hint">비밀번호 힌트 입력</string>
+    <string name="password_hint_updated">비밀번호 힌트가 업데이트되었습니다</string>
+    
+    <!-- Settings Categories -->
+    <string name="settings_appearance">모양</string>
+    <string name="settings_appearance_desc">언어, 테마</string>
+    <string name="settings_security">보안</string>
+    <string name="settings_security_desc">지문, 비밀번호</string>
+    <string name="settings_data">데이터</string>
+    <string name="settings_data_desc">내보내기, 가져오기, 공유</string>
+    <string name="settings_other">기타</string>
+    <string name="settings_other_desc">기록, 카테고리</string>
+    
+    <!-- Import/Export -->
+    <string name="export_success">내보내기 성공</string>
+    <string name="import_success_restart">가져오기 성공! 새 데이터를 로드하기 위해 앱을 다시 시작합니다.</string>
+    <string name="import_success_biometric_reset">가져오기 성공! 다시 로그인하고 지문 잠금 해제를 재설정해 주세요.</string>
+    <string name="import_failed">가져오기에 실패했습니다. 마스터 비밀번호가 틀렸거나 백업 파일이 올바르지 않습니다.</string>
+    <string name="import_failed_registration">가져오기에 실패했습니다. 마스터 비밀번호가 틀렸거나 백업 파일이 올바르지 않습니다.</string>
+    <string name="import_master_password_prompt">이 백업의 마스터 비밀번호를 입력하세요. 모든 암호화 파일을 검증한 후에만 현재 보관함을 교체합니다.</string>
+    <string name="share_data">데이터 공유</string>
+    <string name="share_data_security_title">안전한 공유</string>
+    <string name="share_data_security_message">이 백업의 보관함 내용은 AES-256-GCM으로 암호화되어 있으며 복호화하려면 마스터 비밀번호가 필요합니다. 백업에는 비밀번호 힌트를 포함한 읽을 수 있는 설정 메타데이터도 들어 있습니다. 파일을 가진 사람은 누구나 이 메타데이터를 읽을 수 있습니다. 백업을 안전하게 보관하고 필요한 경우에만 공유하세요.</string>
+    <string name="got_it">알겠습니다</string>
+    <string name="generate_file_failed">파일 생성 실패</string>
+    
+    <!-- Warning Dialogs -->
+    <string name="important_notice">중요 공지</string>
+    <string name="change_password_warning">마스터 비밀번호를 변경한 후에는 이전 백업 파일을 새 비밀번호로 복구할 수 없습니다. %1$s \n\n계속하시겠습니까?</string>
+    <string name="change_password_biometric_info">\n\n마스터 비밀번호 변경 후 지문 잠금 해제를 재설정해 주세요</string>
+    <string name="import_data_warning">파일을 가져온 후에는 현재 모든 비밀번호가 덮어씌워집니다. 하지만 덮어쓰기 전에 현재 데이터의 백업이 생성됩니다. %1$s \n\n계속하시겠습니까?</string>
+    <string name="import_data_biometric_info">\n\n파일 가져오기 후 지문 잠금 해제를 재설정해 주세요</string>
+    
+    <!-- History -->
+    <string name="history_title">기록</string>
+    <string name="backup_date_format">백업 일시: %1$s</string>
+    <string name="no_backup_history">백업 기록이 없습니다</string>
+    <string name="restore_success">복구 성공! 앱이 다시 시작됩니다.</string>
+    <string name="restore_failed">복구 실패, 파일이 손상되었을 수 있습니다.</string>
+    <string name="delete_backup_success">백업 파일이 성공적으로 삭제되었습니다.</string>
+    <string name="delete_backup_failed">백업 파일 삭제 실패.</string>
+    
+    <!-- Restore Confirmation Dialog -->
+    <string name="confirm_restore">복구 확인</string>
+    <string name="restore_warning">백업 파일 %1$s에서 복구하시겠습니까?\n\n이 작업은 현재 모든 데이터를 덮어쓰지만, 복구 전에 현재 데이터의 백업이 생성됩니다.%2$s</string>
+    <string name="restore_biometric_info">\n\n백업 파일 복구 후 지문 잠금 해제를 재설정해야 합니다</string>
+    <string name="confirm_restore_action">복구 확인</string>
+    
+    <!-- Delete Backup Confirmation Dialog -->
+    <string name="confirm_delete_backup">삭제 확인</string>
+    <string name="delete_backup_warning">백업 파일 \"%1$s\"을(를) 삭제하시겠습니까?\n\n삭제하면 복구할 수 없습니다!</string>
+    <string name="confirm_delete_action">삭제 확인</string>
+    
+    <!-- Clipboard Messages -->
+    <string name="copied_to_clipboard">%1$s이(가) 클립보드에 복사되었습니다</string>
+    <string name="cleared_from_clipboard">%1$s이(가) 클립보드에서 삭제되었습니다</string>
+    
+    <!-- General -->
+    <string name="loading">로딩 중…</string>
+    <string name="error">오류</string>
+    <string name="back">뒤로</string>
+    <string name="data_format">"yyyy-MM-dd HH:mm:ss"</string>
+    <string name="unknown_date">알 수 없는 날짜</string>
+    <string name="biometric_prompt_title">지문 잠금 해제 활성화</string>
+    <string name="biometric_prompt_subtitle">인증을 위해 지문을 확인해주세요</string>
+    <string name="biometric_prompt_negative">취소</string>
+
+    <!-- Biometric Enrollment -->
+    <string name="enroll_biometric_dialog_title">생체 인식 등록</string>
+    <string name="enroll_biometric_dialog_message">지문 잠금 해제를 사용하려면 먼저 기기 설정에서 설정해야 합니다.</string>
+    <string name="go_to_settings">설정으로 이동</string>
+    <string name="biometric_not_available">이 기기에서는 생체 인식을 사용할 수 없습니다.</string>
+    <string name="biometric_key_invalidated">기기의 생체 인식 또는 화면 잠금이 변경되어 생체 인식 잠금 해제를 다시 설정해야 합니다.</string>
+    <string name="unknown_error">알 수 없는 오류</string>
+
+    
+    <!-- Password Generator -->
+    <string name="password_generator">비밀번호 생성기</string>
+    <string name="generate_password">비밀번호 생성</string>
+    <string name="password_length">비밀번호 길이</string>
+    <string name="include_uppercase">대문자 포함</string>
+    <string name="include_lowercase">소문자 포함</string>
+    <string name="include_numbers">숫자 포함</string>
+    <string name="include_symbols">특수문자 포함</string>
+    <string name="avoid_confusing">혼동되는 문자 제외</string>
+    <string name="generated_password">생성된 비밀번호</string>
+    <string name="refresh_password">새로 고침</string>
+    <string name="use_password">사용하기</string>
+    <string name="password_copied">비밀번호가 클립보드에 복사되었습니다</string>
+    <string name="password_generator_condition_failed">최소 하나의 조건을 활성화하세요</string>
+    
+    <!-- Add Password Screen -->
+    <string name="item_details">항목 세부 정보</string>
+    <string name="category">카테고리</string>
+    <string name="no_category">카테고리 없음</string>
+    <string name="login_info">로그인 정보</string>
+    <string name="check_password_in_database">데이터베이스에서 비밀번호 확인</string>
+    <string name="authenticator_key">인증키</string>
+    <string name="setup_authenticator_key">인증키 설정</string>
+    <string name="autofill_options">자동 채우기 옵션</string>
+    <string name="website_uri">웹사이트 (URI)</string>
+    <string name="add_website">웹사이트 추가</string>
+
+    <!-- TAB -->
+    <string name="tab_home">홈</string>
+    <string name="tab_settings">설정</string>
+    
+    <!-- Category Management -->
+    <string name="category_management">카테고리 관리</string>
+    <string name="add_category">카테고리 추가</string>
+    <string name="edit_category">카테고리 편집</string>
+    <string name="category_name">카테고리 이름</string>
+    <string name="select_color">색상 선택</string>
+    <string name="category_created_success">카테고리가 성공적으로 생성되었습니다</string>
+    <string name="category_updated_success">카테고리가 성공적으로 업데이트되었습니다</string>
+    <string name="category_deleted_success">카테고리가 성공적으로 삭제되었습니다</string>
+    <string name="create_category_failed">카테고리 생성 실패</string>
+    <string name="update_category_failed">카테고리 업데이트 실패</string>
+    <string name="delete_category_failed">카테고리 삭제 실패</string>
+    <string name="enter_category_name">카테고리 이름을 입력하세요</string>
+    <string name="no_categories_manage">카테고리가 없습니다. 홈 페이지에서 카테고리를 관리하세요</string>
+    <string name="select_categories">카테고리 선택 (다중 선택)</string>
+    <string name="all_categories">모든 카테고리</string>
+    <string name="uncategorized">미분류</string>
+    <string name="favorites">즐겨찾기</string>
+    <plurals name="password_count">
+        <item quantity="other">%1$d개 비밀번호</item>
+    </plurals>
+    <string name="switch_to_list_view">목록 보기로 전환</string>
+    <string name="switch_to_grid_view">그리드 보기로 전환</string>
+    <string name="select_category">카테고리 선택</string>
+    <string name="manage_categories">카테고리 관리</string>
+    <string name="associated_categories">관련 카테고리</string>
+    <string name="categories">카테고리</string>
+    <string name="no_categories_selected">선택된 카테고리 없음</string>
+    <string name="remove_category">카테고리 제거</string>
+    <string name="no_categories_available">사용 가능한 카테고리 없음</string>
+    <string name="create_new_category">새 카테고리 만들기</string>
+    <string name="add_to_favorites">즐겨찾기에 추가</string>
+    <string name="remove_from_favorites">즐겨찾기에서 제거</string>
+
+    <!-- Language Settings -->
+    <string name="language">언어</string>
+    <string name="language_follow_system">시스템 설정 따름</string>
+    <string name="language_english">영어 (English)</string>
+    <string name="language_chinese">중국어 (Chinese)</string>
+    <string name="language_korean">한국어 (Korean)</string>
+    <string name="language_vietnamese">베트남어 (Vietnamese)</string>
+    <string name="language_hindi">힌디어 (Hindi)</string>
+    <string name="language_spanish">스페인어 (Spanish)</string>
+    <string name="language_portuguese">포르투갈어 (Portuguese)</string>
+
+    <!-- Theme Settings -->
+    <string name="theme">테마</string>
+    <string name="theme_follow_system">시스템 설정 따름</string>
+    <string name="theme_light">라이트 모드</string>
+    <string name="theme_dark">다크 모드</string>
+
+    <!-- About Page -->
+    <string name="about_us">앱 정보</string>
+    <string name="contact_us">문의하기</string>
+    <string name="privacy_policy">개인정보 처리방침</string>
+    <string name="open_source_licenses">오픈 소스 라이선스</string>
+    <string name="email_copied">이메일이 클립보드에 복사되었습니다</string>
+    <string name="no_email_client">이메일 앱을 찾을 수 없습니다</string>
+
+    <!-- Attachments -->
+    <string name="attachments">첨부 파일</string>
+    <string name="add_attachment">첨부 파일 추가</string>
+    <string name="remove_attachment">첨부 파일 제거</string>
+    <string name="no_attachments">첨부 파일 없음</string>
+    <string name="attachment_size_exceeded">파일 크기가 제한을 초과했습니다. 현재: %1$d MB, 최대: %2$d MB</string>
+    <string name="attachment_add_failed">파일 추가 실패</string>
+    <string name="attachment_add_failed_with_reason">파일 추가 실패: %1$s</string>
+
+    <!-- Secure Notes -->
+    <string name="add_secure_note">보안 메모 추가</string>
+    <string name="content">내용</string>
+    <string name="content_optional">내용 (선택 사항)</string>
+
+    <!-- Type Selection -->
+    <string name="all_types">모든 유형</string>
+    <string name="type_password">비밀번호</string>
+    <string name="type_note">보안 메모</string>
+    <string name="select_type">유형 선택</string>
+
+    <!-- Q&A Page -->
+    <string name="qa_title">Q&amp;A</string>
+    <string name="qa_network_permission_title">PocketVault는 인터넷에 접속하나요?</string>
+    <string name="qa_network_permission_content">아니요. PocketVault는 Android 인터넷 권한을 요청하지 않으며 분석, 광고, 텔레메트리 또는 비정상 종료 보고 SDK를 포함하지 않습니다. 보관함 데이터는 로컬에서만 처리되며 사용자가 백업을 직접 내보내거나 공유할 때만 앱 밖으로 전달됩니다.</string>
+    <string name="qa_data_security_title">마스터 비밀번호를 잊어버렸습니다. 재설정해 줄 수 있나요?</string>
+    <string name="qa_data_security_content">아니요. PocketVault에는 계정, 서버, 복구 키 또는 비밀번호 재설정 백도어가 없습니다. 마스터 비밀번호에서 파생된 키가 보관함을 암호화하는 임의 키를 기기에서 해제합니다. 마스터 비밀번호를 잃고 생체 인식 간편 잠금 해제를 사용할 수 없으면 보관함을 복구할 수 없습니다. 비밀번호를 안전하게 보관하세요. 이전 백업에는 생성 당시의 비밀번호가 필요합니다.</string>
+    <string name="qa_offline_usage_title">내 데이터는 어디에 저장되나요?</string>
+    <string name="qa_offline_usage_content" formatted="false">현재 보관함과 자동 백업 기록은 PocketVault의 앱 전용 저장소에 보관됩니다. 앱 데이터를 삭제하거나 앱을 제거하면 이러한 로컬 파일이 삭제됩니다. 내보내거나 공유한 백업은 앱의 통제 밖에 있으므로 저장한 모든 위치에서 별도로 삭제해야 합니다.</string>
+    <string name="how_is_my_data_protected_title">내 데이터는 어떻게 보호되나요?</string>
+    <string name="how_is_my_data_protected_content">Google Tink 암호화 라이브러리를 사용합니다.\n • 암호화: AES-256-GCM-HKDF(Streaming AEAD).\n • 키 파생: 새로 만들거나 키를 변경한 보관함은 PBKDF2-SHA256 600,000회를 사용합니다.\n강력한 마스터 비밀번호는 오프라인 공격 비용을 크게 높이지만 어떤 소프트웨어나 비밀번호도 절대적인 보안을 보장할 수 없습니다.</string>
+
+    <!-- TOTP -->
+    <string name="tab_totp">TOTP</string>
+    <string name="totp_add_entry">인증기 추가</string>
+    <string name="scan_qr_code">QR 코드 스캔</string>
+    <string name="totp_enter_manually">직접 입력</string>
+    <string name="totp_edit_entry">인증기 편집</string>
+    <string name="totp_edit_entry_title">인증기 편집</string>
+    <string name="totp_edit_entry_description">이 인증기 항목의 설정 정보를 수정하세요.</string>
+    <string name="totp_manual_add_title">인증기 추가</string>
+    <string name="totp_manual_add_description">보호할 서비스에 표시된 인증기 설정 정보를 입력하세요.</string>
+    <string name="totp_issuer">발급자</string>
+    <string name="totp_issuer_hint">예: GitHub</string>
+    <string name="totp_account">계정</string>
+    <string name="totp_account_hint">예: name@example.com</string>
+    <string name="totp_secret">비밀 키</string>
+    <string name="totp_secret_hint">예: JBSWY3DPEHPK3PXP</string>
+    <string name="totp_secret_supporting_text">공백과 하이픈을 포함해도 됩니다.</string>
+    <string name="totp_advanced_options">고급 옵션</string>
+    <string name="totp_algorithm">알고리즘</string>
+    <string name="totp_digits">코드 자릿수</string>
+    <string name="totp_period_seconds">주기(초)</string>
+    <string name="totp_period_supporting_text">15~120초 사이의 값을 입력하세요.</string>
+    <string name="totp_issuer_required">발급자를 입력하세요.</string>
+    <string name="totp_account_required">계정을 입력하세요.</string>
+    <string name="totp_secret_required">비밀 키를 입력하세요.</string>
+    <string name="totp_secret_invalid">올바른 Base32 비밀 키를 입력하세요.</string>
+    <string name="totp_period_invalid">주기는 15~120초 사이여야 합니다.</string>
+    <string name="camera_permission_required">카메라 권한 필요</string>
+    <string name="camera_permission_rationale">TOTP 항목을 추가하기 위해 QR 코드를 스캔하려면 카메라 권한이 필요합니다.</string>
+    <string name="grant_permission">권한 부여</string>
+    <string name="totp_empty_message">TOTP 항목이 아직 없습니다</string>
+    <string name="totp_empty_hint">추가 버튼을 눌러 첫 번째 2FA 계정을 추가하세요</string>
+    <string name="ok">확인</string>
+    <string name="totp_toggle_visibility">표시 전환</string>
+    <string name="totp_copy_code">코드 복사</string>
+    <string name="totp_delete">삭제</string>
+    <string name="totp_adding_entry">TOTP 항목 추가 중…</string>
+    <string name="totp_permission_denied_message">TOTP 항목을 추가하기 위해 QR 코드를 스캔하려면 카메라 권한이 필요합니다.\n\n계속하려면 앱 설정에서 카메라 권한을 허용해 주세요.</string>
+    <string name="totp_go_back">뒤로</string>
+    <string name="totp_try_again">재시도</string>
+    <string name="totp_more">더보기</string>
+    <string name="totp_edit_title">제목 편집</string>
+    <string name="totp_edit_title_dialog_title">제목 편집</string>
+    <string name="totp_edit_title_hint">새 제목 입력</string>
+    <string name="totp_title_cannot_be_empty">제목을 입력해주세요</string>
+    <string name="save_failed">변경 사항을 저장하지 못했습니다. 기존 보관함 데이터는 변경되지 않았습니다.</string>
+    <string name="operation_failed_try_again">작업에 실패했습니다. 다시 시도해 주세요.</string>
+    <string name="no_app_found">이 파일을 열 수 있는 앱이 없습니다.</string>
+    <string name="vault_file_corrupted">보관함 또는 인증기 데이터가 손상되었으며 덮어쓰지 않았습니다. 검증된 백업을 복원하세요.</string>
+    <string name="vault_integrity_failed">보관함 무결성 검증에 실패했습니다. 데이터를 열거나 덮어쓰지 않았습니다.</string>
+    <string name="vault_version_unsupported">이 보관함은 지원되지 않는 버전 %1$d을(를) 사용합니다. HelloPocket을 업데이트한 후 다시 시도하세요.</string>
+    <string name="totp_invalid_qr">잘못된 QR 코드입니다. 유효한 TOTP 인증 코드를 스캔하세요.</string>
+    <string name="totp_add_failed">인증기 항목을 저장하지 못했습니다.</string>
+    <string name="totp_update_failed">인증기 항목을 업데이트하지 못했습니다.</string>
+    <string name="totp_entry_not_found">이 인증기 항목은 더 이상 존재하지 않습니다.</string>
+    <string name="show_password">비밀번호 표시</string>
+    <string name="hide_password">비밀번호 숨기기</string>
+    <string name="title_cannot_be_empty">제목은 비워 둘 수 없습니다.</string>
+</resources>

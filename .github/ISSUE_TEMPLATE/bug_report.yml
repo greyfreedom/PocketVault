@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible problem without including vault data or secrets.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve PocketVault. Never attach a vault, master password,
+        recovery data, screenshots containing secrets, or signing credentials.
+  - type: input
+    id: version
+    attributes:
+      label: App version and distribution
+      description: For example, 2.4.0 from Google Play or 2.4.0 from GitHub.
+      placeholder: 2.4.0, Google Play
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version and device
+      placeholder: Android 16, Pixel 9
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Add sanitized logs or screenshots only if they contain no sensitive data.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Sensitive-data check
+      options:
+        - label: I have removed vault data, passwords, tokens, personal information, and signing secrets.
+          required: true

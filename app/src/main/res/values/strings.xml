@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">PocketVault</string>
+    <string name="version_format">Version %1$s</string>
+    
+    <!-- Authentication -->
+    <string name="setup_password_title">Set Your Master Password</string>
+    <string name="master_password">Master Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="password_mismatch_error">Passwords do not match</string>
+    <string name="create_vault">Create Vault</string>
+    <string name="import_from_file">Or Import from File</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="unlock">Unlock</string>
+    <string name="show_hint">Show Hint</string>
+    <string name="hint_prefix">Hint: %1$s</string>
+    <string name="use_master_password">Use Master Password</string>
+    <string name="invalid_password">Invalid password</string>
+    <plurals name="master_password_too_short">
+        <item quantity="one">Master password must be at least %1$d character</item>
+        <item quantity="other">Master password must be at least %1$d characters</item>
+    </plurals>
+    <string name="setup_password_description">This password will be used to encrypt all your data. Please keep it safe and remember it.</string>
+    <string name="password_hint">Password Hint</string>
+    <string name="password_hint_optional">Password Hint (Optional)</string>
+    <string name="password_hint_description">This hint is stored in readable vault metadata and is included in exported backups. Do not enter sensitive information.</string>
+    
+    <!-- Biometric -->
+    <string name="fingerprint_unlock_title">Fingerprint Unlock</string>
+    <string name="fingerprint_unlock_subtitle">Please use your fingerprint to unlock your password vault</string>
+    <string name="biometric_setup_success">Fingerprint unlock enabled</string>
+    <string name="biometric_setup_disabled">Fingerprint unlock disabled</string>
+    <string name="biometric_unavailable_warning">Biometric info changed, please use master password.</string>
+    <string name="biometric_unlock_failed">Fingerprint unlock failed, please use master password</string>
+
+    
+    <!-- Main Interface -->
+    <string name="edit_mode">Edit Mode</string>
+    <string name="detail">Detail</string>
+    <string name="add_new_password">Add New Password</string>
+    <string name="no_passwords_found">No password records found</string>
+    <string name="search_passwords">Search passwords</string>
+    <string name="vault_empty_message">The vault is empty,\nTap the \'+\' button in the bottom right to add a new password!</string>
+    <string name="no_search_results">No matching results found</string>
+    
+    <!-- Password Entry -->
+    <string name="title">Title</string>
+    <string name="title_required">Title (Required)</string>
+    <string name="username">Username</string>
+    <string name="username_optional">Username (Optional)</string>
+    <string name="password">Password</string>
+    <string name="password_required">Password (Required)</string>
+    <string name="notes">Notes</string>
+    <string name="notes_label">Notes</string>
+    <string name="notes_optional">Notes (Optional)</string>
+    <string name="title_and_password_required">Title and password are required</string>
+    <string name="password_hidden">••••••••</string>
+    
+    <!-- Action Buttons -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="copy">Copy</string>
+    <string name="confirm">Confirm</string>
+    <string name="continue_action">Continue</string>
+    <string name="done">Done</string>
+    
+    <!-- Confirmation Dialog -->
+    <string name="confirm_delete">Confirm Delete</string>
+    <string name="confirm_delete_target_message">Are you sure you want to delete %1$s? This action cannot be undone.</string>
+    <string name="confirm_delete_message">Are you sure you want to delete this password? This action cannot be undone.</string>
+
+    <!-- Change Password -->
+    <string name="change_master_password">Change Master Password</string>
+    <string name="current_master_password">Current Master Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="confirm_change">Confirm Change</string>
+    <string name="password_change_success">Master password changed successfully</string>
+    <string name="password_change_success_biometric_disabled">Master password changed successfully! Fingerprint unlock has been disabled, please re-enable it in settings.</string>
+    <string name="password_mismatch_new">New passwords do not match</string>
+    <string name="current_password_incorrect">Current master password is incorrect</string>
+    
+    <!-- Settings Page -->
+    <string name="settings">Settings</string>
+    <string name="enable_fingerprint_unlock">Enable Fingerprint Unlock</string>
+    <string name="export_data">Export Data</string>
+    <string name="import_data">Import Data</string>
+    <string name="history">History</string>
+    <string name="master_password_hint">Master Password Hint</string>
+    <string name="enter_password_hint">Enter Password Hint</string>
+    <string name="password_hint_updated">Password Hint updated successfully</string>
+    
+    <!-- Settings Categories -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_appearance_desc">Language, theme</string>
+    <string name="settings_security">Security</string>
+    <string name="settings_security_desc">Fingerprint, password</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_data_desc">Export, import, share</string>
+    <string name="settings_other">Other</string>
+    <string name="settings_other_desc">History, categories</string>
+    
+    <!-- Import/Export -->
+    <string name="export_success">Export successful</string>
+    <string name="import_success_restart">Import successful! App will restart to load new data.</string>
+    <string name="import_success_biometric_reset">Import successful! Please log in again and reset fingerprint unlock.</string>
+    <string name="import_failed">Import failed: the master password is incorrect or the backup file is invalid.</string>
+    <string name="import_failed_registration">Import failed: the master password is incorrect or the backup file is invalid.</string>
+    <string name="import_master_password_prompt">Enter the master password for this backup. The vault will be replaced only after every encrypted file is verified.</string>
+    <string name="share_data">Share Data</string>
+    <string name="share_data_security_title">Secure Sharing</string>
+    <string name="share_data_security_message">Vault contents in this backup are encrypted with AES-256-GCM and require your master password to decrypt. The backup also contains readable configuration metadata, including your password hint. Anyone with the file can read that metadata. Keep the backup secure and share it only when you intend to.</string>
+    <string name="got_it">Got it</string>
+    <string name="generate_file_failed">Generate file failed</string>
+    
+    <!-- Warning Dialogs -->
+    <string name="important_notice">Important Notice</string>
+    <string name="change_password_warning">After changing the master password, all old backup files will not be recoverable with the new password. %1$s \n\nAre you sure you want to continue?</string>
+    <string name="change_password_biometric_info">\n\nAfter changing the master password, please reset fingerprint unlock</string>
+    <string name="import_data_warning">After importing the file, all current passwords will be overwritten. but a backup of current data will be created before overwritten. %1$s \n\nAre you sure you want to continue?</string>
+    <string name="import_data_biometric_info">\n\nAfter importing the file, please reset fingerprint unlock</string>
+    
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="backup_date_format">Backed up on: %1$s</string>
+    <string name="no_backup_history">No backup records found</string>
+    <string name="restore_success">Restore successful! App will restart.</string>
+    <string name="restore_failed">Restore failed, file may be corrupted.</string>
+    <string name="delete_backup_success">Backup file deleted successfully.</string>
+    <string name="delete_backup_failed">Failed to delete backup file.</string>
+    
+    <!-- Restore Confirmation Dialog -->
+    <string name="confirm_restore">Confirm Restore</string>
+    <string name="restore_warning">Are you sure you want to restore from backup file %1$s?\n\nThis operation will overwrite all current data, but a backup of current data will be created before restoration.%2$s</string>
+    <string name="restore_biometric_info">\n\nAfter restoring the backup file, you need to reset fingerprint unlock</string>
+    <string name="confirm_restore_action">Confirm Restore</string>
+    
+    <!-- Delete Backup Confirmation Dialog -->
+    <string name="confirm_delete_backup">Confirm Delete</string>
+    <string name="delete_backup_warning">Are you sure you want to delete backup file \"%1$s\"?\n\nOnce deleted, it cannot be recovered!</string>
+    <string name="confirm_delete_action">Confirm Delete</string>
+    
+    <!-- Clipboard Messages -->
+    <string name="copied_to_clipboard">%1$s copied to clipboard</string>
+    <string name="cleared_from_clipboard">%1$s cleared from clipboard</string>
+    
+    <!-- General -->
+    <string name="loading">Loading…</string>
+    <string name="error">Error</string>
+    <string name="back">Back</string>
+    <string name="data_format">"yyyy-MM-dd HH:mm:ss"</string>
+    <string name="unknown_date">Unknown date</string>
+    <string name="biometric_prompt_title">Enable Fingerprint Unlock</string>
+    <string name="biometric_prompt_subtitle">Please verify your fingerprint for authorization</string>
+    <string name="biometric_prompt_negative">Cancel</string>
+
+    <!-- Biometric Enrollment -->
+    <string name="enroll_biometric_dialog_title">Enroll Biometric</string>
+    <string name="enroll_biometric_dialog_message">To use fingerprint unlock, you need to set it up in your device\'s settings first.</string>
+    <string name="go_to_settings">Go to Settings</string>
+    <string name="biometric_not_available">Biometric authentication is not available on this device.</string>
+    <string name="biometric_key_invalidated">Biometric unlock needs to be set up again because your device biometrics or screen lock changed.</string>
+    <string name="unknown_error">Unknown error</string>
+
+    
+    <!-- Password Generator -->
+    <string name="password_generator">Password Generator</string>
+    <string name="generate_password">Generate Password</string>
+    <string name="password_length">Password Length</string>
+    <string name="include_uppercase">Include Uppercase Letters</string>
+    <string name="include_lowercase">Include Lowercase Letters</string>
+    <string name="include_numbers">Include Numbers</string>
+    <string name="include_symbols">Include Symbols</string>
+    <string name="avoid_confusing">Avoid Confusing Characters</string>
+    <string name="generated_password">Generated Password</string>
+    <string name="refresh_password">Refresh</string>
+    <string name="use_password">Use it</string>
+    <string name="password_copied">Password copied to clipboard</string>
+    <string name="password_generator_condition_failed">Enable at least one condition</string>
+    
+    <!-- Add Password Screen -->
+    <string name="item_details">Item Details</string>
+    <string name="category">Category</string>
+    <string name="no_category">No Category</string>
+    <string name="login_info">Login Info</string>
+    <string name="check_password_in_database">Check password in database</string>
+    <string name="authenticator_key">Authenticator Key</string>
+    <string name="setup_authenticator_key">Setup Authenticator Key</string>
+    <string name="autofill_options">Auto-fill Options</string>
+    <string name="website_uri">Website (URI)</string>
+    <string name="add_website">Add Website</string>
+
+    <!-- TAB -->
+    <string name="tab_home">Home</string>
+    <string name="tab_totp">TOTP</string>
+    <string name="tab_settings">Settings</string>
+    
+    <!-- Category Management -->
+    <string name="category_management">Category Management</string>
+    <string name="add_category">Add Category</string>
+    <string name="edit_category">Edit Category</string>
+    <string name="category_name">Category Name</string>
+    <string name="select_color">Select Color</string>
+    <string name="category_created_success">Category created successfully</string>
+    <string name="category_updated_success">Category updated successfully</string>
+    <string name="category_deleted_success">Category deleted successfully</string>
+    <string name="create_category_failed">Failed to create category</string>
+    <string name="update_category_failed">Failed to update category</string>
+    <string name="delete_category_failed">Failed to delete category</string>
+    <string name="enter_category_name">Please enter category name</string>
+    <string name="no_categories_manage">No categories, manage categories on the home page</string>
+    <string name="select_categories">Select Categories (multiple selection)</string>
+    <string name="all_categories">All Categories</string>
+    <string name="uncategorized">Uncategorized</string>
+    <string name="favorites">Favorites</string>
+    <plurals name="password_count">
+        <item quantity="one">%1$d password</item>
+        <item quantity="other">%1$d passwords</item>
+    </plurals>
+    <string name="switch_to_list_view">Switch to list view</string>
+    <string name="switch_to_grid_view">Switch to grid view</string>
+    <string name="select_category">Select Category</string>
+    <string name="manage_categories">Manage Categories</string>
+    <string name="associated_categories">Associated Categories</string>
+    <string name="categories">Categories</string>
+    <string name="no_categories_selected">No categories selected</string>
+    <string name="remove_category">Remove category</string>
+    <string name="no_categories_available">No categories available</string>
+    <string name="create_new_category">Create New Category</string>
+    <string name="add_to_favorites">Add to favorites</string>
+    <string name="remove_from_favorites">Remove from favorites</string>
+
+    <!-- Language Settings -->
+    <string name="language">Language</string>
+    <string name="language_follow_system">Follow system</string>
+    <string name="language_english">English</string>
+    <string name="language_chinese">Chinese</string>
+    <string name="language_korean">Korean</string>
+    <string name="language_vietnamese">Vietnamese</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_spanish">Spanish</string>
+    <string name="language_portuguese">Portuguese</string>
+
+    <!-- Theme Settings -->
+    <string name="theme">Theme</string>
+    <string name="theme_follow_system">Follow system</string>
+    <string name="theme_light">Light Mode</string>
+    <string name="theme_dark">Dark Mode</string>
+
+    <!-- About Page -->
+    <string name="about_us">About Us</string>
+    <string name="contact_us">Contact Us</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="open_source_licenses">Open-source licenses</string>
+    <string name="email_copied">Email copied to clipboard</string>
+    <string name="no_email_client">No email app found</string>
+
+    <!-- Attachments -->
+    <string name="attachments">Attachments</string>
+    <string name="add_attachment">Add Attachment</string>
+    <string name="remove_attachment">Remove Attachment</string>
+    <string name="no_attachments">No attachments</string>
+    <string name="attachment_size_exceeded">File size exceeds limit. Current: %1$d MB, Maximum: %2$d MB</string>
+    <string name="attachment_add_failed">Failed to add file</string>
+    <string name="attachment_add_failed_with_reason">Failed to add file: %1$s</string>
+
+    <!-- Secure Notes -->
+    <string name="add_secure_note">Add Secure Note</string>
+    <string name="content">Content</string>
+    <string name="content_optional">Content (Optional)</string>
+
+    <!-- Type Selection -->
+    <string name="all_types">All Types</string>
+    <string name="type_password">Password</string>
+    <string name="type_note">Secure Note</string>
+    <string name="select_type">Select Type</string>
+
+    <!-- Q&A Page -->
+    <string name="qa_title">Q&amp;A</string>
+    <string name="qa_network_permission_title">Does PocketVault access the Internet?</string>
+    <string name="qa_network_permission_content">No. PocketVault does not request Android Internet permission and includes no analytics, advertising, telemetry, or crash-reporting SDK. Vault data is processed locally. Data leaves the app only when you explicitly export or share a backup.</string>
+    <string name="qa_data_security_title">I forgot my Master Password. Can you reset it for me?</string>
+    <string name="qa_data_security_content">No. PocketVault has no account, server, recovery key, or password-reset backdoor. A key derived from your master password locally unwraps the random key that encrypts the vault. If you lose the master password and biometric convenience unlock is unavailable, the vault cannot be recovered. Keep the password safe. Older backups require the password that protected them when they were created.</string>
+    <string name="qa_offline_usage_title">Where is my data stored?</string>
+    <string name="qa_offline_usage_content" formatted="false">The current vault and automatic backup history are stored in PocketVault\'s private application storage. Clearing app data or uninstalling removes those local files. Backups you exported or shared are outside the app and must be deleted separately from every destination.</string>
+    <string name="how_is_my_data_protected_title">How is my data protected?</string>
+    <string name="how_is_my_data_protected_content">We use the Google Tink cryptographic library.\n • Encryption: AES-256-GCM-HKDF (Streaming AEAD).\n • Derivation: New and re-keyed vaults use PBKDF2-SHA256 with 600,000 iterations.\nA strong master password makes offline attempts substantially more expensive, but no software or password can guarantee absolute security.</string>
+
+    <!-- TOTP -->
+    <string name="totp_add_entry">Add authenticator</string>
+    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="totp_enter_manually">Enter manually</string>
+    <string name="totp_edit_entry">Edit authenticator</string>
+    <string name="totp_edit_entry_title">Edit authenticator</string>
+    <string name="totp_edit_entry_description">Update the setup details for this authenticator entry.</string>
+    <string name="totp_manual_add_title">Add authenticator</string>
+    <string name="totp_manual_add_description">Enter the setup details shown by the service you want to protect.</string>
+    <string name="totp_issuer">Issuer</string>
+    <string name="totp_issuer_hint">For example, GitHub</string>
+    <string name="totp_account">Account</string>
+    <string name="totp_account_hint">For example, name@example.com</string>
+    <string name="totp_secret">Secret key</string>
+    <string name="totp_secret_hint">For example, JBSWY3DPEHPK3PXP</string>
+    <string name="totp_secret_supporting_text">Spaces and hyphens are accepted.</string>
+    <string name="totp_advanced_options">Advanced options</string>
+    <string name="totp_algorithm">Algorithm</string>
+    <string name="totp_digits">Code digits</string>
+    <string name="totp_period_seconds">Period (seconds)</string>
+    <string name="totp_period_supporting_text">Enter a value from 15 to 120 seconds.</string>
+    <string name="totp_issuer_required">Issuer is required.</string>
+    <string name="totp_account_required">Account is required.</string>
+    <string name="totp_secret_required">Secret key is required.</string>
+    <string name="totp_secret_invalid">Enter a valid Base32 secret key.</string>
+    <string name="totp_period_invalid">Period must be between 15 and 120 seconds.</string>
+    <string name="camera_permission_required">Camera permission required</string>
+    <string name="camera_permission_rationale">Camera permission is needed to scan QR codes for adding TOTP entries.</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="totp_empty_message">No TOTP entries yet</string>
+    <string name="totp_empty_hint">Tap the add button to add your first 2FA account</string>
+    <string name="ok">OK</string>
+    <string name="totp_toggle_visibility">Toggle visibility</string>
+    <string name="totp_copy_code">Copy code</string>
+    <string name="totp_delete">Delete</string>
+    <string name="totp_adding_entry">Adding TOTP entry…</string>
+    <string name="totp_permission_denied_message">Camera permission is required to scan QR codes for adding TOTP entries.\n\nPlease grant camera permission in app settings to continue.</string>
+    <string name="totp_go_back">Go Back</string>
+    <string name="totp_try_again">Try Again</string>
+    <string name="totp_more">More options</string>
+    <string name="totp_edit_title">Edit title</string>
+    <string name="totp_edit_title_dialog_title">Edit Title</string>
+    <string name="totp_edit_title_hint">Enter new title</string>
+    <string name="totp_title_cannot_be_empty">Title cannot be empty</string>
+    <string name="save_failed">Could not save changes. Your previous vault data is unchanged.</string>
+    <string name="operation_failed_try_again">Operation failed. Please try again.</string>
+    <string name="no_app_found">No app is available to open this file.</string>
+    <string name="vault_file_corrupted">The vault or authenticator data is damaged. It has not been overwritten. Restore a verified backup or keep the files for recovery.</string>
+    <string name="vault_integrity_failed">Vault integrity verification failed. The data has not been opened or overwritten.</string>
+    <string name="vault_version_unsupported">This vault uses unsupported version %1$d. Update HelloPocket before trying again.</string>
+    <string name="totp_invalid_qr">Invalid QR code. Scan a valid TOTP authenticator code.</string>
+    <string name="totp_add_failed">Could not save the authenticator entry.</string>
+    <string name="totp_update_failed">Could not update the authenticator entry.</string>
+    <string name="totp_entry_not_found">This authenticator entry no longer exists.</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="title_cannot_be_empty">Title cannot be empty</string>
+</resources>
