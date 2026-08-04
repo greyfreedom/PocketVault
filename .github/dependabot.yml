@@ -4,11 +4,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    # 关闭常规版本升级 PR；安全漏洞更新仍由仓库的 Dependabot 安全设置控制。
+    open-pull-requests-limit: 0
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
-
+    # 关闭常规版本升级 PR；安全漏洞更新仍由仓库的 Dependabot 安全设置控制。
+    open-pull-requests-limit: 0
