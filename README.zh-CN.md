@@ -7,8 +7,19 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/greyfreedom/PocketVault/actions/workflows/ci.yml"><img src="https://github.com/greyfreedom/PocketVault/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://github.com/greyfreedom/PocketVault/tags"><img src="https://img.shields.io/github/v/tag/greyfreedom/PocketVault?sort=semver&amp;label=version" alt="版本"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/greyfreedom/PocketVault" alt="Apache-2.0 许可证"></a>
+  <a href="./app/build.gradle.kts"><img src="https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&amp;logoColor=white" alt="Android 7.0 或更高版本"></a>
+  <a href="./SECURITY.md"><img src="https://img.shields.io/badge/network%20permission-none-2ea44f" alt="无网络权限"></a>
+</p>
+
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.turisla.hellopocket"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-cn_badge_web_generic.png" alt="在 Google Play 获取" width="200"></a>
+</p>
+
+<p align="center">
   <a href="README.md">English</a> · <strong>简体中文</strong> ·
-  <a href="https://play.google.com/store/apps/details?id=com.turisla.hellopocket">Google Play</a> ·
   <a href="../../releases">GitHub Releases</a> ·
   <a href="docs/privacy_policy.html">隐私政策</a> · <a href="SECURITY.md">安全政策</a> ·
   <a href="CONTRIBUTING.md">参与贡献</a> · <a href="LICENSE">Apache-2.0</a>
@@ -21,7 +32,7 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 保险库数据在设备上加密和处理。只有当用户主动选择导出或分享备份时，数据才会交给 Android 系统文件选择器或分享面板所选的目标应用。
 
 > [!IMPORTANT]
-> 开源和离线运行能够降低风险，但不代表“绝对安全”。使用前请阅读[安全模型与限制](#安全模型与限制)和 [SECURITY.md](SECURITY.md)。本项目尚未经过独立的专业安全审计。
+> 开源和离线运行能够降低风险，但不代表“绝对安全”。使用前请阅读[安全模型与限制](#安全模型与限制)和 [SECURITY.md](SECURITY.md)。
 
 > [!NOTE]
 > 本仓库中的严格离线声明适用于 2.4.0 及更高版本。商店发布过渡期间，Google Play 可能暂时仍提供旧版本；请核对已安装版本及其对应源码 tag。迁移说明见[更新日志](CHANGELOG.md)。
