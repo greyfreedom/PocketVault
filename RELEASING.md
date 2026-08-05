@@ -33,6 +33,24 @@ shasum -a 256 app-googlePlay-release.aab PocketVault-universal.apk
 apksigner verify --verbose --print-certs PocketVault-universal.apk
 ```
 
+The repository also provides a reusable verifier and GitHub Release publisher. Place the exact uploaded AAB and the Play Console Universal APK in `app/googlePlay/release/` using the standard names, then run:
+
+```bash
+# Verify artifacts and generate release notes without uploading anything.
+./scripts/publish-github-release.sh
+
+# After reviewing the generated notes, publish the GitHub Release and attach only the APK.
+./scripts/publish-github-release.sh --publish
+```
+
+The script derives the expected package, version code, version name, and tag from `app/build.gradle.kts`. It verifies archive integrity, the AAB upload signature, the APK signature, package/version metadata, the offline manifest, the source tag, and the Play App Signing certificate before calculating hashes. The configured Play App Signing certificate SHA-256 fingerprint is:
+
+```text
+80:D6:DE:92:50:30:84:33:55:BE:73:7D:49:F8:F6:A4:16:85:5A:B6:CD:59:44:5A:AC:93:F2:7C:64:10:E7:F1
+```
+
+Publishing requires the GitHub CLI. Install it once with `brew install gh`, authenticate with `gh auth login`, and continue using the same script for later releases. Use `--help` to see custom artifact and release-note options.
+
 Never upload a locally generated APK signed with the upload key, another release key, or a debug key. Even with the same package name, a different certificate is not the same Android application identity and cannot update the Google Play installation.
 
 The upload certificate and Play App Signing certificate may be different. The fingerprint communicated to users must be the Play App Signing certificate shown by Play Console, because both Google Play and the downloadable Universal APK use that installed-app identity.
