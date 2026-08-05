@@ -88,8 +88,6 @@ fun HomePage(
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsStateWithLifecycle()
     val selectedItemType by viewModel.selectedItemType.collectAsStateWithLifecycle()
     val isGridView by viewModel.isGridView.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-
     LaunchedEffect(viewModel, context) {
         viewModel.repositoryErrorEvents.collect { event ->
             android.widget.Toast.makeText(
@@ -106,7 +104,6 @@ fun HomePage(
         selectedCategoryId = selectedCategoryId,
         selectedItemType = selectedItemType,
         isGridView = isGridView,
-        searchQuery = searchQuery,
         onPasswordClick = { entry -> navController.navigate(RouteDetail(id = entry.id)) },
         onDeletePassword = viewModel::deletePassword,
         onCategorySelected = viewModel::onCategorySelected,
@@ -125,7 +122,6 @@ private fun HomePageContent(
     selectedCategoryId: String,
     selectedItemType: VaultItemType?,
     isGridView: Boolean,
-    searchQuery: String,
     onPasswordClick: (PasswordEntry) -> Unit,
     onDeletePassword: (String) -> Unit,
     onCategorySelected: (String) -> Unit,
@@ -172,7 +168,6 @@ private fun HomePageContent(
         } else {
             PasswordListView(
                 passwordEntries = passwordEntries,
-                searchQuery = searchQuery,
                 onPasswordClick = onPasswordClick,
                 onPasswordDelete = { entryToDelete = it },
                 onFavoriteToggle = onToggleFavorite,
@@ -413,7 +408,6 @@ private fun CategoryGridItem(
 @Composable
 private fun PasswordListView(
     passwordEntries: List<PasswordEntry>,
-    searchQuery: String,
     onPasswordClick: (PasswordEntry) -> Unit,
     onPasswordDelete: (PasswordEntry) -> Unit,
     onFavoriteToggle: (String) -> Unit,
@@ -427,13 +421,8 @@ private fun PasswordListView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            val text = if (searchQuery.isEmpty()) {
-                stringResource(R.string.vault_empty_message)
-            } else {
-                stringResource(R.string.no_search_results)
-            }
             Text(
-                text = text,
+                text = stringResource(R.string.vault_empty_message),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

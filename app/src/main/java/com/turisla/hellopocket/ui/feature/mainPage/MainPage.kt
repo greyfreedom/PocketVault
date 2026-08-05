@@ -1,6 +1,5 @@
 package com.turisla.hellopocket.ui.feature.mainPage
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,12 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.NoteAlt
@@ -40,17 +35,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -60,14 +51,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.turisla.hellopocket.R
@@ -78,6 +65,7 @@ import com.turisla.hellopocket.router.RouteAddPassword
 import com.turisla.hellopocket.router.RouteAddSecureNote
 import com.turisla.hellopocket.router.RouteAddTotpManual
 import com.turisla.hellopocket.router.RouteCategoryManagement
+import com.turisla.hellopocket.router.RouteSearch
 import com.turisla.hellopocket.router.RouteTotpScanner
 import com.turisla.hellopocket.ui.feature.home.AddPasswordDialog
 import com.turisla.hellopocket.ui.feature.home.HomePage
@@ -92,20 +80,9 @@ import org.koin.androidx.compose.koinViewModel
 fun MainPage(navController: NavController, viewModel: HomePageViewModel = koinViewModel()) {
     val context = LocalContext.current
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-    var isSearching by remember { mutableStateOf(false) }
     var showAddMenu by remember { mutableStateOf(false) }  // 提升状态到顶层
     var showTotpAddMenu by remember { mutableStateOf(false) }
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val filteredEntries by viewModel.filteredPasswordEntries.collectAsStateWithLifecycle()
-
-    val onToggleSearch = {
-        isSearching = !isSearching
-        if (!isSearching) {
-            viewModel.onSearchQueryChanged("")
-        }
-    }
-
-    BackHandler(enabled = isSearching, onBack = onToggleSearch)
 
     val navItemList = remember(LocalConfiguration.current) {
         listOf(
@@ -120,8 +97,12 @@ fun MainPage(navController: NavController, viewModel: HomePageViewModel = koinVi
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 when (selectedTab) {
-                    0 -> SearchTopAppBar(
-                        isSearching = isSearching, searchQuery = searchQuery, onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) }, onToggleSearch = onToggleSearch
+                    0 -> HomeTopAppBar(
+                        onSearchClick = {
+                            navController.navigate(RouteSearch) {
+                                launchSingleTop = true
+                            }
+                        }
                     )
                     1 -> TopAppBar(
                         title = { Text(stringResource(R.string.tab_totp)) },
@@ -162,8 +143,6 @@ fun MainPage(navController: NavController, viewModel: HomePageViewModel = koinVi
                             selected = selectedTab == index,
                             onClick = {
                                 if (index != selectedTab) {
-                                    isSearching = false // Reset search when switching tabs
-                                    viewModel.onSearchQueryChanged("")
                                     showAddMenu = false
                                     showTotpAddMenu = false
                                 }
@@ -188,7 +167,9 @@ fun MainPage(navController: NavController, viewModel: HomePageViewModel = koinVi
             floatingActionButton = {
                 // 主页和 TOTP Tab 都显示添加按钮，并按当前类型提供对应的添加方式。
                 AnimatedVisibility(
-                    visible = !isSearching && (selectedTab == 0 || selectedTab == 1), enter = fadeIn(), exit = fadeOut()
+                    visible = selectedTab == 0 || selectedTab == 1,
+                    enter = fadeIn(),
+                    exit = fadeOut()
                 ) {
                     Box {
                         FloatingActionButton(
@@ -384,62 +365,19 @@ private fun MainScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchTopAppBar(
-    isSearching: Boolean, searchQuery: String, onSearchQueryChanged: (String) -> Unit, onToggleSearch: () -> Unit) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(isSearching) {
-        if (isSearching) {
-            focusRequester.requestFocus()
-        }
-    }
-
+private fun HomeTopAppBar(onSearchClick: () -> Unit) {
     TopAppBar(
         title = {
-        if (isSearching) {
-            TextField(
-                value = searchQuery,
-                onValueChange = { onSearchQueryChanged(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                placeholder = { Text(stringResource(R.string.search_passwords), color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                singleLine = true,
-                shape = RoundedCornerShape(8.dp),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                    focusedContainerColor = MaterialTheme.colorScheme.background,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() })
-            )
-        } else {
             Text(stringResource(id = R.string.app_name), color = MaterialTheme.colorScheme.onSurface)
-        }
-    }, navigationIcon = {
-        if (isSearching) {
-            IconButton(onClick = onToggleSearch) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+        },
+        actions = {
+            IconButton(onClick = onSearchClick) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search_vault)
+                )
             }
-        }
-    }, actions = {
-        if (isSearching) {
-            if (searchQuery.isNotEmpty()) {
-                IconButton(onClick = { onSearchQueryChanged("") }) {
-                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.search_passwords))
-                }
-            }
-        } else {
-            IconButton(onClick = {
-                onToggleSearch()
-            }) {
-                Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search_passwords))
-            }
-        }
-    }, colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }

@@ -39,9 +39,16 @@
     <string name="detail">详情</string>
     <string name="add_new_password">添加新密码</string>
     <string name="no_passwords_found">暂无密码记录</string>
-    <string name="search_passwords">搜索密码</string>
+    <string name="search_vault">搜索保险库</string>
+    <string name="search_hint">标题、账号或备注</string>
+    <string name="search_empty_message">可按标题、账号或备注查找密码和安全笔记。</string>
     <string name="vault_empty_message">保险库是空的，\n点击右下角 \'+\' 添加一个新密码吧！</string>
     <string name="no_search_results">没有找到匹配的结果</string>
+    <string name="search_no_results_hint">试试其他标题、账号或备注关键词。</string>
+    <string name="clear_search">清除搜索</string>
+    <plurals name="search_result_count">
+        <item quantity="other">%1$d 个结果</item>
+    </plurals>
 
     <!-- 密码条目 -->
     <string name="title">标题</string>

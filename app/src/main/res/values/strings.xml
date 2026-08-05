@@ -40,9 +40,17 @@
     <string name="detail">Detail</string>
     <string name="add_new_password">Add New Password</string>
     <string name="no_passwords_found">No password records found</string>
-    <string name="search_passwords">Search passwords</string>
+    <string name="search_vault">Search vault</string>
+    <string name="search_hint">Title, account, or notes</string>
+    <string name="search_empty_message">Find passwords and secure notes by title, account, or notes.</string>
     <string name="vault_empty_message">The vault is empty,\nTap the \'+\' button in the bottom right to add a new password!</string>
     <string name="no_search_results">No matching results found</string>
+    <string name="search_no_results_hint">Try another title, account, or note keyword.</string>
+    <string name="clear_search">Clear search</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d result</item>
+        <item quantity="other">%1$d results</item>
+    </plurals>
     
     <!-- Password Entry -->
     <string name="title">Title</string>

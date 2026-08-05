@@ -7,6 +7,7 @@ import com.turisla.hellopocket.ui.feature.category.CategoryManagementViewModel
 import com.turisla.hellopocket.ui.feature.detail.DetailEditDraftViewModel
 import com.turisla.hellopocket.ui.feature.detail.DetailViewModel
 import com.turisla.hellopocket.ui.feature.home.HomePageViewModel
+import com.turisla.hellopocket.ui.feature.search.SearchViewModel
 import com.turisla.hellopocket.ui.feature.settings.ChangePasswordViewModel
 import com.turisla.hellopocket.ui.feature.settings.HistoryViewModel
 import com.turisla.hellopocket.ui.feature.settings.SettingsPageViewModel
@@ -21,6 +22,7 @@ val viewModelsModule = module {
     // MainViewModel 有多个依赖，为了清晰，我们使用标准方式定义
     viewModel { MainViewModel(get(), get(), get(), get()) }
     viewModelOf(::HomePageViewModel)
+    viewModelOf(::SearchViewModel)
     viewModelOf(::AddPasswordDraftViewModel)
     viewModelOf(::AddSecureNoteDraftViewModel)
     viewModel { SettingsPageViewModel(get(), get(), get(), get()) }

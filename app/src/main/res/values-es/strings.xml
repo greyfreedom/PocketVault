@@ -41,9 +41,18 @@
     <string name="detail">Detalle</string>
     <string name="add_new_password">Añadir Nueva Contraseña</string>
     <string name="no_passwords_found">No se encontraron registros de contraseñas</string>
-    <string name="search_passwords">Buscar contraseñas</string>
+    <string name="search_vault">Buscar en la bóveda</string>
+    <string name="search_hint">Título, cuenta o notas</string>
+    <string name="search_empty_message">Busca contraseñas y notas seguras por título, cuenta o notas.</string>
     <string name="vault_empty_message">"La bóveda está vacía,\n¡Toque el botón \'+\' en la parte inferior derecha para añadir una nueva contraseña!"</string>
     <string name="no_search_results">No se encontraron resultados coincidentes</string>
+    <string name="search_no_results_hint">Prueba con otro título, cuenta o término de notas.</string>
+    <string name="clear_search">Borrar búsqueda</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d resultado</item>
+        <item quantity="many">%1$d resultados</item>
+        <item quantity="other">%1$d resultados</item>
+    </plurals>
     
     <!-- Password Entry -->
     <string name="title">Título</string>

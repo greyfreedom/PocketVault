@@ -40,9 +40,17 @@
     <string name="detail">विवरण</string>
     <string name="add_new_password">नया पासवर्ड जोड़ें</string>
     <string name="no_passwords_found">कोई पासवर्ड रिकॉर्ड नहीं मिला</string>
-    <string name="search_passwords">पासवर्ड खोजें</string>
+    <string name="search_vault">वॉल्ट में खोजें</string>
+    <string name="search_hint">शीर्षक, खाता या नोट्स</string>
+    <string name="search_empty_message">शीर्षक, खाते या नोट्स से पासवर्ड और सुरक्षित नोट खोजें।</string>
     <string name="vault_empty_message">"वॉल्ट खाली है,\nनया पासवर्ड जोड़ने के लिए नीचे दाईं ओर \'+\' बटन टैप करें!"</string>
     <string name="no_search_results">कोई मेल खाते परिणाम नहीं मिले</string>
+    <string name="search_no_results_hint">कोई दूसरा शीर्षक, खाता या नोट का कीवर्ड आज़माएँ।</string>
+    <string name="clear_search">खोज साफ़ करें</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d परिणाम</item>
+        <item quantity="other">%1$d परिणाम</item>
+    </plurals>
     
     <!-- Password Entry -->
     <string name="title">शीर्षक</string>

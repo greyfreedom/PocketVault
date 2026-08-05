@@ -12,6 +12,9 @@ data object RouteUnlock
 data object RouteMainPage
 
 @Serializable
+data object RouteSearch
+
+@Serializable
 data class RouteDetail(val id: String)
 
 @Serializable
