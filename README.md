@@ -7,8 +7,19 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/greyfreedom/PocketVault/actions/workflows/ci.yml"><img src="https://github.com/greyfreedom/PocketVault/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://github.com/greyfreedom/PocketVault/tags"><img src="https://img.shields.io/github/v/tag/greyfreedom/PocketVault?sort=semver&amp;label=version" alt="Version"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/greyfreedom/PocketVault" alt="Apache-2.0 License"></a>
+  <a href="./app/build.gradle.kts"><img src="https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&amp;logoColor=white" alt="Android 7.0 or later"></a>
+  <a href="./SECURITY.md"><img src="https://img.shields.io/badge/network%20permission-none-2ea44f" alt="No Internet permission"></a>
+</p>
+
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.turisla.hellopocket"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" width="200"></a>
+</p>
+
+<p align="center">
   <strong>English</strong> · <a href="README.zh-CN.md">简体中文</a> ·
-  <a href="https://play.google.com/store/apps/details?id=com.turisla.hellopocket">Google Play</a> ·
   <a href="../../releases">GitHub Releases</a> ·
   <a href="docs/privacy_policy.html">Privacy</a> · <a href="SECURITY.md">Security</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> · <a href="LICENSE">Apache-2.0</a>
@@ -21,7 +32,7 @@ PocketVault is a local Android password manager. It does not request `android.pe
 Vault data is encrypted and processed on the device. Data leaves the app only when the user explicitly exports or shares a backup through an Android system destination.
 
 > [!IMPORTANT]
-> Open source and offline operation reduce risk but do not guarantee absolute security. PocketVault has not undergone an independent professional security audit. Read the [security model and limitations](#security-model-and-limitations) and [SECURITY.md](SECURITY.md) before relying on it for sensitive data.
+> Open source and offline operation reduce risk but do not guarantee absolute security. Read the [security model and limitations](#security-model-and-limitations) and [SECURITY.md](SECURITY.md) before relying on it for sensitive data.
 
 > [!NOTE]
 > The strict-offline declarations in this repository describe version 2.4.0 and later. During the store rollout, Google Play may temporarily offer an earlier version; check the installed version and its corresponding source tag. See the [changelog](CHANGELOG.md) for the transition.
