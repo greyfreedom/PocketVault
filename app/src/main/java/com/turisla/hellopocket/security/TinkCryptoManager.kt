@@ -1,17 +1,15 @@
 package com.turisla.hellopocket.security
 
-import android.content.Context
 import android.util.Base64
 import com.google.crypto.tink.Aead
-import com.google.crypto.tink.BinaryKeysetReader
-import com.google.crypto.tink.BinaryKeysetWriter
-import com.google.crypto.tink.CleartextKeysetHandle
+import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.KeyTemplates
 import com.google.crypto.tink.KeysetHandle
+import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.StreamingAead
+import com.google.crypto.tink.TinkProtoKeysetFormat
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.streamingaead.StreamingAeadConfig
-import java.io.ByteArrayOutputStream
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -20,15 +18,15 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
-class TinkCryptoManager(private val context: Context) {
+class TinkCryptoManager {
 
     companion object {
         const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
-        const val LEGACY_KDF_ITERATIONS = 100_000
         const val DEFAULT_KDF_ITERATIONS = 600_000
         private const val KEY_LENGTH = 256
         private const val GCM_TAG_LENGTH = 128
         private const val AES_GCM_ALGORITHM = "AES/GCM/NoPadding"
+        private val EMPTY_ASSOCIATED_DATA = ByteArray(0)
         
         init {
             try {
@@ -60,10 +58,14 @@ class TinkCryptoManager(private val context: Context) {
     ): String {
         val masterKey = deriveKey(password, salt, iterations)
         val aead = AesGcmJceAead(masterKey)
-        
-        val outputStream = ByteArrayOutputStream()
-        keysetHandle.write(BinaryKeysetWriter.withOutputStream(outputStream), aead)
-        return Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+
+        val encryptedKeyset = TinkProtoKeysetFormat.serializeEncryptedKeyset(
+            keysetHandle,
+            aead,
+            EMPTY_ASSOCIATED_DATA,
+            RegistryConfiguration.get(),
+        )
+        return Base64.encodeToString(encryptedKeyset, Base64.NO_WRAP)
     }
 
     /**
@@ -73,13 +75,18 @@ class TinkCryptoManager(private val context: Context) {
         encryptedKeysetBase64: String,
         password: String,
         salt: ByteArray,
-        iterations: Int = LEGACY_KDF_ITERATIONS
+        iterations: Int = DEFAULT_KDF_ITERATIONS
     ): KeysetHandle {
         val masterKey = deriveKey(password, salt, iterations)
         val aead = AesGcmJceAead(masterKey)
         
         val encryptedKeyset = Base64.decode(encryptedKeysetBase64, Base64.NO_WRAP)
-        return KeysetHandle.read(BinaryKeysetReader.withBytes(encryptedKeyset), aead)
+        return TinkProtoKeysetFormat.parseEncryptedKeyset(
+            encryptedKeyset,
+            aead,
+            EMPTY_ASSOCIATED_DATA,
+            RegistryConfiguration.get(),
+        )
     }
 
     /**
@@ -87,7 +94,10 @@ class TinkCryptoManager(private val context: Context) {
      * 用于所有数据的流式加密/解密
      */
     fun getStreamingAead(keysetHandle: KeysetHandle): StreamingAead {
-        return keysetHandle.getPrimitive(StreamingAead::class.java)
+        return keysetHandle.getPrimitive(
+            RegistryConfiguration.get(),
+            StreamingAead::class.java,
+        )
     }
 
     /**
@@ -95,16 +105,22 @@ class TinkCryptoManager(private val context: Context) {
      * 注意：返回的是明文密钥集，必须立即用生物识别密钥加密
      */
     fun writeKeysetToBytes(keysetHandle: KeysetHandle): ByteArray {
-        val outputStream = ByteArrayOutputStream()
-        CleartextKeysetHandle.write(keysetHandle, BinaryKeysetWriter.withOutputStream(outputStream))
-        return outputStream.toByteArray()
+        return TinkProtoKeysetFormat.serializeKeyset(
+            keysetHandle,
+            InsecureSecretKeyAccess.get(),
+            RegistryConfiguration.get(),
+        )
     }
 
     /**
      * 从字节反序列化密钥集（用于生物识别）
      */
     fun readKeysetFromBytes(bytes: ByteArray): KeysetHandle {
-        return CleartextKeysetHandle.read(BinaryKeysetReader.withBytes(bytes))
+        return TinkProtoKeysetFormat.parseKeyset(
+            bytes,
+            InsecureSecretKeyAccess.get(),
+            RegistryConfiguration.get(),
+        )
     }
 
     fun generateSalt(): ByteArray {
@@ -114,7 +130,7 @@ class TinkCryptoManager(private val context: Context) {
     }
 
     private fun deriveKey(password: String, salt: ByteArray, iterations: Int): javax.crypto.SecretKey {
-        require(iterations in LEGACY_KDF_ITERATIONS..5_000_000) { "Invalid KDF iteration count" }
+        require(iterations in DEFAULT_KDF_ITERATIONS..5_000_000) { "Invalid KDF iteration count" }
         val passwordChars = password.toCharArray()
         val spec = PBEKeySpec(passwordChars, salt, iterations, KEY_LENGTH)
         return try {

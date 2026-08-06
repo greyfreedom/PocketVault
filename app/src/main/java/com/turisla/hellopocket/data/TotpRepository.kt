@@ -93,7 +93,7 @@ class TotpRepository(
                         require(totpEntries.entriesCount <= MAX_TOTP_ENTRY_COUNT) {
                             "Vault contains too many TOTP entries"
                         }
-                        if (totpEntries.schemaVersion !in 0..CURRENT_SCHEMA_VERSION) {
+                        if (totpEntries.schemaVersion != CURRENT_SCHEMA_VERSION) {
                             return@withContext VaultLoadResult.UnsupportedVersion(totpEntries.schemaVersion)
                         }
                         totpEntries.entriesList

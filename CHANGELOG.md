@@ -2,7 +2,7 @@
 
 All notable changes to PocketVault will be documented in this file.
 
-## [2.4.0] - Unreleased
+## [2.4.0] - Released
 
 ### Added
 

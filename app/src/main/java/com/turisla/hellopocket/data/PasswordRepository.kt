@@ -19,9 +19,7 @@ import com.turisla.hellopocket.model.TotpEntry
 import com.turisla.hellopocket.model.VaultConfig
 import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.model.VaultLoadResult
-import com.turisla.hellopocket.model.VaultManifest
 import com.turisla.hellopocket.model.VaultManifestV2
-import com.turisla.hellopocket.security.CryptoManager
 import com.turisla.hellopocket.security.TinkCryptoManager
 import com.turisla.hellopocket.security.VaultSessionGuard
 import com.google.crypto.tink.Aead
@@ -58,38 +56,27 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.SecretKey
-import javax.crypto.spec.GCMParameterSpec
 
 data class ChangePasswordResult(val success: Boolean, val biometricsWereDisabled: Boolean)
 data class ImportDataFileResult(val success: Boolean, val biometricsWereDisabled: Boolean)
 data class VaultEncryptionContext(
     val keysetHandle: KeysetHandle,
     val vaultId: String,
-    val associatedDataVersion: Int
 ) {
     fun associatedData(logicalName: String): ByteArray {
-        return if (associatedDataVersion >= 1) {
-            "hellopocket|$vaultId|$logicalName".toByteArray(Charsets.UTF_8)
-        } else {
-            ByteArray(0)
-        }
+        return "hellopocket|$vaultId|$logicalName".toByteArray(Charsets.UTF_8)
     }
 }
 
 class PasswordRepository(
     private val context: Context,
-    @Deprecated("Use tinkCryptoManager") private val cryptoManager: CryptoManager,
     private val tinkCryptoManager: TinkCryptoManager,
     private val sessionGuard: VaultSessionGuard,
 ) {
 
     companion object {
-        const val VAULT_VERSION_V1 = 1
         const val VAULT_VERSION_V2 = 2
         const val VAULT_DIRECTORY_NAME = "hellopocket_vault"
-        const val MANIFEST_FILE_NAME = "manifest.json" // V1
         const val VAULT_CONFIG_FILE_NAME = "vault_v2.json" // V2
         const val MANIFEST_DATA_FILE = "manifest.dat" // V2: 加密的manifest
         const val PASSWORDS_DATA_FILE = "passwords.dat"
@@ -100,7 +87,8 @@ class PasswordRepository(
         const val CURRENT_SCHEMA_VERSION = 1 // Protobuf schema 版本
 
         private const val SALT_SIZE_BYTES = 16
-        private const val IV_SIZE_BYTES = 12
+        private const val LEGACY_VAULT_VERSION = 1
+        private const val LEGACY_MANIFEST_FILE_NAME = "manifest.json"
 
         private const val BACKUP_FILE_PREFIX = "pocketvault_backup_"
         private const val BACKUP_FILE_SUFFIX = ".hpb"
@@ -129,8 +117,6 @@ class PasswordRepository(
         private const val MAX_ATTACHMENT_COUNT = 5_000
         private const val MAX_TOTP_ENTRY_COUNT = 10_000
         private const val PROTOBUF_RECURSION_LIMIT = 100
-        private const val AES_GCM_ALGORITHM = "AES/GCM/NoPadding"
-        private const val GCM_TAG_LENGTH = 128
         private val DISCARDING_OUTPUT = object : OutputStream() {
             override fun write(value: Int) = Unit
             override fun write(buffer: ByteArray, offset: Int, length: Int) = Unit
@@ -139,7 +125,7 @@ class PasswordRepository(
 
 
     private val vaultDir = File(context.filesDir, VAULT_DIRECTORY_NAME)
-    private val manifestFile = File(vaultDir, MANIFEST_FILE_NAME) // V1
+    private val legacyManifestFile = File(vaultDir, LEGACY_MANIFEST_FILE_NAME)
     private val vaultConfigFile = File(vaultDir, VAULT_CONFIG_FILE_NAME) // V2
 
     private val prefs = context.getSharedPreferences(BIOMETRIC_PREFS, Context.MODE_PRIVATE)
@@ -157,13 +143,7 @@ class PasswordRepository(
     val isBiometricEnabled: StateFlow<Boolean> = _isBiometricEnabled.asStateFlow()
 
     @Volatile
-    private var inMemoryKey: SecretKey? = null // V1 only
-    
-    @Volatile
     private var streamingAeadKeysetHandle: KeysetHandle? = null // V2 only (唯一的密钥集)
-
-    @Volatile
-    private var manifest: VaultManifest? = null // V1 only
     
     @Volatile
     private var vaultConfig: VaultConfig? = null // V2 only
@@ -202,23 +182,6 @@ class PasswordRepository(
         val config: VaultConfig,
         val keyset: KeysetHandle,
         val manifest: VaultManifestV2,
-    )
-
-    private data class V1MigrationSnapshot(
-        val key: SecretKey,
-        val passwords: List<PasswordEntry>,
-        val categories: List<Category>,
-        val attachments: List<AttachmentManifestEntry>,
-    )
-
-    private data class LegacyAssociatedDataUpgradeSnapshot(
-        val epoch: Long,
-        val config: VaultConfig,
-        val keyset: KeysetHandle,
-        val manifest: VaultManifestV2,
-        val passwords: List<PasswordEntry>,
-        val categories: List<Category>,
-        val attachments: List<AttachmentManifestEntry>,
     )
 
     private fun captureActiveVaultWriteSession(): VaultWriteSession? = synchronized(vaultSessionLock) {
@@ -282,17 +245,10 @@ class PasswordRepository(
 
     fun isVaultInitialized(): Boolean {
         if (recoveryFailed && vaultDir.exists()) return true
-        // V2 必须具备完整的核心文件，不能只凭 config 判断已初始化
-        if (vaultConfigFile.isFile) {
-            return listOf(PASSWORDS_DATA_FILE, CATEGORIES_DATA_FILE, MANIFEST_DATA_FILE)
-                .all { File(vaultDir, it).isFile }
-        }
-        // Fallback to V1
-        return vaultDir.exists() && manifestFile.exists() && vaultDir.isDirectory
+        if (!vaultDir.isDirectory) return false
+        // 旧格式仍识别为“已初始化”，以便明确拒绝，而不是误入新建流程覆盖用户数据。
+        return vaultConfigFile.isFile || legacyManifestFile.isFile
     }
-    
-    private fun isV2Vault(): Boolean = vaultConfigFile.exists()
-    private fun isV1Vault(): Boolean = manifestFile.exists() && !vaultConfigFile.exists()
 
     /**
      * 清理未被目录事务引用的 setup / migration / import 暂存目录。
@@ -342,7 +298,7 @@ class PasswordRepository(
                     vaultId = vaultId,
                     associatedDataVersion = 1
                 )
-                val encryptionContext = VaultEncryptionContext(keyset, vaultId, 1)
+                val encryptionContext = VaultEncryptionContext(keyset, vaultId)
                 val streamingAead = tinkCryptoManager.getStreamingAead(keyset)
                 val defaultCategories = createDefaultCategories()
 
@@ -411,22 +367,11 @@ class PasswordRepository(
     suspend fun loadAndDecryptData(masterPassword: String): VaultLoadResult = withContext(Dispatchers.IO) {
         if (recoveryFailed) return@withContext VaultLoadResult.FileCorrupted
         if (!isVaultInitialized()) return@withContext VaultLoadResult.FileCorrupted
-        val loadSession = captureLoadSession()
-        
-        return@withContext when {
-            isV2Vault() -> loadV2Vault(masterPassword, loadSession)
-            isV1Vault() -> {
-                // Load V1 then migrate to V2
-                when (val v1Result = loadV1Vault(masterPassword, loadSession)) {
-                    is VaultLoadResult.Success -> {
-                    loggerI("V1 vault loaded successfully, starting migration to V2...")
-                        migrateV1ToV2(masterPassword, loadSession)
-                    }
-                    else -> v1Result
-                }
-            }
-            else -> VaultLoadResult.FileCorrupted
+        if (!vaultConfigFile.isFile) {
+            return@withContext VaultLoadResult.UnsupportedVersion(LEGACY_VAULT_VERSION)
         }
+        val loadSession = captureLoadSession()
+        return@withContext loadV2Vault(masterPassword, loadSession)
     }
     
     private suspend fun loadV2Vault(
@@ -453,8 +398,8 @@ class PasswordRepository(
                 return@withContext VaultLoadResult.WrongPassword
             }
             
-            // 2. 验证完整性哈希（如果存在）
-            if (!verifyVaultIntegrity(config.integrityHash)) {
+            // 2. 验证公开完整性哈希；当前格式不允许缺失。
+            if (!verifyVaultIntegrity(config.integrityHash.orEmpty())) {
                 loggerI("Vault integrity check failed!")
                 return@withContext VaultLoadResult.IntegrityCheckFailed
             }
@@ -471,14 +416,6 @@ class PasswordRepository(
                 return@withContext VaultLoadResult.SessionInvalidated
             }
 
-            if (!upgradeLegacyAssociatedDataIfNeeded()) {
-                lock()
-                return@withContext VaultLoadResult.FileCorrupted
-            }
-            if (!upgradeAuthenticatedSnapshotMetadataIfNeeded()) {
-                lock()
-                return@withContext VaultLoadResult.FileCorrupted
-            }
             return@withContext if (isLoadSessionCurrent(loadSession, keyset)) {
                 VaultLoadResult.Success
             } else {
@@ -494,49 +431,12 @@ class PasswordRepository(
             return@withContext VaultLoadResult.FileCorrupted
         }
     }
-
-    
-    @Deprecated("For V1 vault only")
-    private suspend fun loadV1Vault(
-        masterPassword: String,
-        loadSession: LoadSession,
-    ): VaultLoadResult = withContext(Dispatchers.IO) {
-        try {
-            require(manifestFile.length() <= MAX_MANIFEST_PLAINTEXT_BYTES) { "V1 manifest is too large" }
-            val manifestBytes = manifestFile.readBytes()
-            if (manifestBytes.size < SALT_SIZE_BYTES + IV_SIZE_BYTES) {
-                return@withContext VaultLoadResult.FileCorrupted
-            }
-
-            val salt = manifestBytes.copyOfRange(0, SALT_SIZE_BYTES)
-            val key = cryptoManager.deriveKey(masterPassword, salt)
-
-            // 验证密钥是否正确 (通过解密 manifest)
-            val manifestJson = decryptManifest(manifestBytes, key)
-                ?: return@withContext VaultLoadResult.WrongPassword
-            val loadedManifest = Json.decodeFromString<VaultManifest>(manifestJson)
-
-            // 验证 salt 一致性
-            val manifestSalt = Base64.decode(loadedManifest.salt, Base64.NO_WRAP)
-            if (!salt.contentEquals(manifestSalt)) return@withContext VaultLoadResult.FileCorrupted
-
-            return@withContext loadVaultInternalV1(key, loadedManifest, loadSession)
-        } catch (error: CancellationException) {
-            lock()
-            throw error
-        } catch (e: Exception) {
-            loggerE(e)
-            lock()
-            return@withContext VaultLoadResult.FileCorrupted
-        }
-    }
-
     /**
      * 使用 Keyset 的字节表示来加载 V2 保险库（用于生物识别解锁）
      */
     suspend fun loadDataWithKeysetBytes(keysetBytes: ByteArray): VaultLoadResult = withContext(Dispatchers.IO) {
         if (recoveryFailed) return@withContext VaultLoadResult.FileCorrupted
-        if (!isV2Vault()) return@withContext VaultLoadResult.FileCorrupted
+        if (!vaultConfigFile.isFile) return@withContext VaultLoadResult.FileCorrupted
         val loadSession = captureLoadSession()
         try {
             // 1. 从字节恢复 Keyset
@@ -545,7 +445,7 @@ class PasswordRepository(
             val configJson = readUtf8FileWithLimit(vaultConfigFile, MAX_VAULT_CONFIG_BYTES)
             val config = Json.decodeFromString<VaultConfig>(configJson)
             validateVaultConfig(config)?.let { return@withContext it }
-            if (!verifyVaultIntegrity(config.integrityHash)) {
+            if (!verifyVaultIntegrity(config.integrityHash.orEmpty())) {
                 return@withContext VaultLoadResult.IntegrityCheckFailed
             }
 
@@ -559,14 +459,6 @@ class PasswordRepository(
             currentCoroutineContext().ensureActive()
             if (!publishLoadedV2(loadSession, config, keyset, loadedData)) {
                 return@withContext VaultLoadResult.SessionInvalidated
-            }
-            if (!upgradeLegacyAssociatedDataIfNeeded()) {
-                lock()
-                return@withContext VaultLoadResult.FileCorrupted
-            }
-            if (!upgradeAuthenticatedSnapshotMetadataIfNeeded()) {
-                lock()
-                return@withContext VaultLoadResult.FileCorrupted
             }
             return@withContext if (isLoadSessionCurrent(loadSession, keyset)) {
                 VaultLoadResult.Success
@@ -597,7 +489,6 @@ class PasswordRepository(
             val encryptionContext = VaultEncryptionContext(
                 keyset,
                 config.vaultId,
-                config.associatedDataVersion
             )
             // 1. 流式加载 Manifest (获取附件列表)
             val manifest = loadManifestV2FromStream(streamingAead, encryptionContext)
@@ -605,10 +496,10 @@ class PasswordRepository(
             require(manifest.attachments.size <= MAX_ATTACHMENT_COUNT) {
                 "Vault contains too many attachments"
             }
-            if (manifest.schemaVersion !in 0..CURRENT_SCHEMA_VERSION) {
+            if (manifest.schemaVersion != CURRENT_SCHEMA_VERSION) {
                 return@withContext VaultLoadResult.UnsupportedVersion(manifest.schemaVersion) to null
             }
-            if (config.associatedDataVersion >= 1 && manifest.vaultId != config.vaultId) {
+            if (manifest.vaultId != config.vaultId) {
                 return@withContext VaultLoadResult.FileCorrupted to null
             }
             if (!verifyConfigBinding(manifest, config)) {
@@ -634,7 +525,7 @@ class PasswordRepository(
             require(loadedPasswords.entriesCount <= MAX_PASSWORD_ENTRY_COUNT) {
                 "Vault contains too many password entries"
             }
-            if (loadedPasswords.schemaVersion !in 0..CURRENT_SCHEMA_VERSION) {
+            if (loadedPasswords.schemaVersion != CURRENT_SCHEMA_VERSION) {
                 return@withContext VaultLoadResult.UnsupportedVersion(loadedPasswords.schemaVersion) to null
             }
 
@@ -654,7 +545,7 @@ class PasswordRepository(
             require(loadedCategories.categoriesCount <= MAX_CATEGORY_COUNT) {
                 "Vault contains too many categories"
             }
-            if (loadedCategories.schemaVersion !in 0..CURRENT_SCHEMA_VERSION) {
+            if (loadedCategories.schemaVersion != CURRENT_SCHEMA_VERSION) {
                 return@withContext VaultLoadResult.UnsupportedVersion(loadedCategories.schemaVersion) to null
             }
 
@@ -676,83 +567,6 @@ class PasswordRepository(
         }
     }
 
-    /** 内部核心加载逻辑，复用于主密码解锁和生物识别解锁 (V1 only) */
-    @Deprecated("For V1 vault only")
-    private suspend fun loadVaultInternalV1(
-        key: SecretKey,
-        loadedManifest: VaultManifest,
-        loadSession: LoadSession,
-    ): VaultLoadResult = withContext(Dispatchers.IO) {
-        try {
-            // 加载密码
-            val loadedPasswordEntries: List<PasswordEntry>
-            val passwordsFileName = loadedManifest.dataFiles["passwords"]
-            if (passwordsFileName != null) {
-                val dataFile = File(vaultDir, passwordsFileName)
-                require(dataFile.isFile) { "V1 password file is missing" }
-                val decryptedBytes = decryptDataFile(dataFile, key, MAX_PASSWORDS_PLAINTEXT_BYTES)
-                    ?: error("V1 password file cannot be decrypted")
-                val passwords = parseProtobufWithLimits(
-                    ByteArrayInputStream(decryptedBytes),
-                    MAX_PASSWORDS_PLAINTEXT_BYTES
-                ) { PasswordEntries.parseFrom(it) }
-                require(passwords.entriesCount <= MAX_PASSWORD_ENTRY_COUNT)
-                loadedPasswordEntries = passwords.entriesList
-            } else {
-                loadedPasswordEntries = emptyList()
-            }
-
-            // 加载分类
-            val loadedCategories: List<Category>
-            val categoriesFileName = loadedManifest.dataFiles["categories"]
-            if (categoriesFileName != null) {
-                val dataFile = File(vaultDir, categoriesFileName)
-                require(dataFile.isFile) { "V1 category file is missing" }
-                val decryptedBytes = decryptDataFile(dataFile, key, MAX_CATEGORIES_PLAINTEXT_BYTES)
-                    ?: error("V1 category file cannot be decrypted")
-                val categories = parseProtobufWithLimits(
-                    ByteArrayInputStream(decryptedBytes),
-                    MAX_CATEGORIES_PLAINTEXT_BYTES
-                ) { Categories.parseFrom(it) }
-                require(categories.categoriesCount <= MAX_CATEGORY_COUNT)
-                loadedCategories = categories.categoriesList
-            } else {
-                // 向后兼容，如果 manifest 中没有分类文件，则创建默认分类
-                loadedCategories = createDefaultCategories()
-            }
-
-            require(loadedManifest.attachments.size <= MAX_ATTACHMENT_COUNT)
-            VaultSemanticValidator.validateCore(
-                passwords = loadedPasswordEntries,
-                categories = loadedCategories,
-                attachments = loadedManifest.attachments,
-            )
-            currentCoroutineContext().ensureActive()
-            val published = sessionGuard.publishIfValid(loadSession.guardToken) {
-                synchronized(vaultSessionLock) {
-                    check(sessionEpoch == loadSession.repositoryEpoch) { "Vault session changed" }
-                    this@PasswordRepository.manifest = loadedManifest
-                    this@PasswordRepository.inMemoryKey = key
-                    _passwordEntries.value = loadedPasswordEntries
-                    _categories.value = loadedCategories
-                    _attachments.value = loadedManifest.attachments
-                }
-            }
-            return@withContext if (published) {
-                VaultLoadResult.Success
-            } else {
-                VaultLoadResult.SessionInvalidated
-            }
-        } catch (error: CancellationException) {
-            lock()
-            throw error
-        } catch (e: Exception) {
-            loggerE(e)
-            lock()
-            return@withContext VaultLoadResult.FileCorrupted
-        }
-    }
-    
     private suspend fun updateAndSaveChanges() {
         persistVaultState(_passwordEntries.value, _categories.value, _attachments.value)
     }
@@ -770,7 +584,7 @@ class PasswordRepository(
             val config = writeSession.config
             val keyset = writeSession.keyset
             val streamingAead = tinkCryptoManager.getStreamingAead(keyset)
-            val encryptionContext = VaultEncryptionContext(keyset, config.vaultId, config.associatedDataVersion)
+            val encryptionContext = VaultEncryptionContext(keyset, config.vaultId)
 
             val passwordTarget = File(vaultDir, PASSWORDS_DATA_FILE)
             val categoryTarget = File(vaultDir, CATEGORIES_DATA_FILE)
@@ -878,7 +692,6 @@ class PasswordRepository(
             val encryptionContext = VaultEncryptionContext(
                 keyset,
                 config.vaultId,
-                config.associatedDataVersion,
             )
 
             val totpTarget = File(vaultDir, TOTP_DATA_FILE)
@@ -968,8 +781,6 @@ class PasswordRepository(
                     vaultConfig = config
                     streamingAeadKeysetHandle = keyset
                     vaultManifestV2 = data.manifest
-                    inMemoryKey = null
-                    manifest = null
                     _passwordEntries.value = data.passwords
                     _categories.value = data.categories
                     _attachments.value = data.manifest.attachments
@@ -997,10 +808,6 @@ class PasswordRepository(
         sessionGuard.invalidate()
         vaultSessionCommitGate.withLock {
             sessionEpoch++
-            // V1
-            inMemoryKey = null
-            manifest = null
-            // V2
             streamingAeadKeysetHandle = null
             vaultConfig = null
             vaultManifestV2 = null
@@ -1011,198 +818,7 @@ class PasswordRepository(
         _categories.value = emptyList()
         _attachments.value = emptyList()
     }
-    
-    /**
-     * V1到V2迁移逻辑（全流式加密）
-     * 假设V1数据已经加载到内存中
-     */
-    private suspend fun migrateV1ToV2(
-        masterPassword: String,
-        loadSession: LoadSession,
-    ): VaultLoadResult = withContext(Dispatchers.IO) {
-        saveMutex.withLock {
-            val stagedDir = File(context.filesDir, ".$VAULT_DIRECTORY_NAME.migration-${UUID.randomUUID()}")
-            try {
-            loggerI("Starting V1 to V2 migration (All-Streaming)...")
 
-            if (!sessionGuard.publishIfValid(loadSession.guardToken) {}) {
-                return@withContext VaultLoadResult.SessionInvalidated
-            }
-            // 1. 在锁库使用的同一临界区内冻结 V1 明文快照，避免锁库后读到空 StateFlow。
-            val v1Snapshot = synchronized(vaultSessionLock) {
-                if (sessionEpoch != loadSession.repositoryEpoch) {
-                    return@withContext VaultLoadResult.SessionInvalidated
-                }
-                V1MigrationSnapshot(
-                    key = inMemoryKey ?: return@withContext VaultLoadResult.SessionInvalidated,
-                    passwords = _passwordEntries.value,
-                    categories = _categories.value,
-                    attachments = _attachments.value,
-                )
-            }
-            val passwords = v1Snapshot.passwords
-            val categories = v1Snapshot.categories
-            val attachments = v1Snapshot.attachments
-            
-            // 2. 生成V2密钥体系（只有一个StreamingAead Key）
-            val salt = tinkCryptoManager.generateSalt()
-            val keyset = tinkCryptoManager.generateVaultKeyset()
-            val encryptedKeyset = tinkCryptoManager.encryptKeyset(
-                keyset,
-                masterPassword,
-                salt,
-                TinkCryptoManager.DEFAULT_KDF_ITERATIONS
-            )
-            val vaultId = UUID.randomUUID().toString()
-            
-            val newVaultConfig = VaultConfig(
-                version = VAULT_VERSION_V2,
-                salt = Base64.encodeToString(salt, Base64.NO_WRAP),
-                encryptedKeyset = encryptedKeyset,
-                kdfAlgorithm = TinkCryptoManager.PBKDF2_ALGORITHM,
-                kdfIterations = TinkCryptoManager.DEFAULT_KDF_ITERATIONS,
-                vaultId = vaultId,
-                associatedDataVersion = 1
-            )
-            
-            val streamingAead = tinkCryptoManager.getStreamingAead(keyset)
-            val encryptionContext = VaultEncryptionContext(keyset, vaultId, 1)
-            stagedDir.mkdirs()
-            val stagedAttachmentsDir = File(stagedDir, ATTACHMENTS_DIR).apply { mkdirs() }
-            
-            // 3. 在独立目录内写入完整 V2 数据，旧保险库在验收前保持不变。
-            writeEncryptedMessage(
-                File(stagedDir, PASSWORDS_DATA_FILE),
-                PasswordEntries.newBuilder()
-                    .setSchemaVersion(CURRENT_SCHEMA_VERSION)
-                    .addAllEntries(passwords)
-                    .build(),
-                streamingAead,
-                encryptionContext.associatedData(PASSWORDS_DATA_FILE)
-            )
-            writeEncryptedMessage(
-                File(stagedDir, CATEGORIES_DATA_FILE),
-                Categories.newBuilder()
-                    .setSchemaVersion(CURRENT_SCHEMA_VERSION)
-                    .addAllCategories(categories)
-                    .build(),
-                streamingAead,
-                encryptionContext.associatedData(CATEGORIES_DATA_FILE)
-            )
-            
-            // V1 附件以 AES-GCM 单文件保存，迁移时逐个流式解密并用新 Keyset 重加密。
-            val oldKey = v1Snapshot.key
-            val oldAttachmentsDir = File(vaultDir, ATTACHMENTS_DIR)
-            attachments.forEach { attachment ->
-                val source = File(oldAttachmentsDir, attachment.encryptedFileName)
-                if (!source.isFile) error("Missing V1 attachment: ${attachment.id}")
-                reencryptV1File(
-                    source,
-                    File(stagedAttachmentsDir, attachment.encryptedFileName),
-                    oldKey,
-                    streamingAead,
-                    encryptionContext.associatedData("attachment:${attachment.id}")
-                )
-                val sourceThumbnail = File(oldAttachmentsDir, "${attachment.id}_thumb.dat")
-                if (sourceThumbnail.isFile) {
-                    reencryptV1File(
-                        sourceThumbnail,
-                        File(stagedAttachmentsDir, sourceThumbnail.name),
-                        oldKey,
-                        streamingAead,
-                        encryptionContext.associatedData("attachment-thumbnail:${attachment.id}")
-                    )
-                }
-            }
-
-            val migratedMetadata = calculateSnapshotMetadata(
-                mapOf(
-                    PASSWORDS_DATA_FILE to File(stagedDir, PASSWORDS_DATA_FILE),
-                    CATEGORIES_DATA_FILE to File(stagedDir, CATEGORIES_DATA_FILE),
-                )
-            )
-            val newManifest = VaultManifestV2(
-                schemaVersion = CURRENT_SCHEMA_VERSION,
-                vaultId = vaultId,
-                createdAt = System.currentTimeMillis(),
-                attachments = attachments,
-                fileDigests = migratedMetadata.digests,
-                fileSizes = migratedMetadata.sizes,
-                configBinding = calculateConfigBinding(newVaultConfig),
-            )
-            writeEncryptedManifest(
-                File(stagedDir, MANIFEST_DATA_FILE),
-                newManifest,
-                streamingAead,
-                encryptionContext.associatedData(MANIFEST_DATA_FILE)
-            )
-            val completedConfig = newVaultConfig.copy(
-                integrityHash = calculateVaultIntegrityHash(stagedDir)
-                    ?: error("Failed to hash migrated vault")
-            )
-            writePlainTextSynced(
-                File(stagedDir, VAULT_CONFIG_FILE_NAME),
-                Json.encodeToString(completedConfig)
-            )
-
-            currentCoroutineContext().ensureActive()
-            if (!sessionGuard.publishIfValid(loadSession.guardToken) {}) {
-                return@withContext VaultLoadResult.SessionInvalidated
-            }
-            backupCurrentVault()
-            currentCoroutineContext().ensureActive()
-            if (!sessionGuard.publishIfValid(loadSession.guardToken) {}) {
-                return@withContext VaultLoadResult.SessionInvalidated
-            }
-            runVaultMutationForSession(
-                expectedEpoch = loadSession.repositoryEpoch,
-                isContextCurrent = { inMemoryKey === v1Snapshot.key },
-                mutation = { VaultFileTransaction.replaceDirectory(vaultDir, stagedDir) },
-            )
-            
-            // 8. 仅当解锁会话仍在前台且未被锁定时更新内存状态。
-            val published = publishLoadedV2(
-                loadSession = loadSession,
-                config = completedConfig,
-                keyset = keyset,
-                data = LoadedVaultData(newManifest, passwords, categories),
-            )
-            disableBiometricUnlock()
-            loggerI("Migration to V2 completed successfully!")
-            return@withContext if (published) {
-                VaultLoadResult.Success
-            } else {
-                VaultLoadResult.SessionInvalidated
-            }
-        } catch (error: CancellationException) {
-            lock()
-            throw error
-        } catch (e: Exception) {
-            loggerE(e)
-            lock()
-            return@withContext VaultLoadResult.FileCorrupted
-        } finally {
-            stagedDir.deleteRecursively()
-        }
-        }
-    }
-
-    private fun decryptDataFile(file: File, key: SecretKey, maxPlaintextBytes: Long): ByteArray? {
-        return try {
-            require(file.length() <= maxPlaintextBytes + IV_SIZE_BYTES + 16L) {
-                "Legacy encrypted file is too large"
-            }
-            val fileBytes = file.readBytes()
-            if (fileBytes.isEmpty() || fileBytes.size < IV_SIZE_BYTES) return null
-            val iv = fileBytes.copyOfRange(0, IV_SIZE_BYTES)
-            val ciphertext = fileBytes.copyOfRange(IV_SIZE_BYTES, fileBytes.size)
-            cryptoManager.decrypt(iv, ciphertext, key)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    
     private fun writeEncryptedMessage(
         target: File,
         message: com.google.protobuf.MessageLite,
@@ -1282,303 +898,16 @@ class PasswordRepository(
         if (config.kdfAlgorithm != TinkCryptoManager.PBKDF2_ALGORITHM) {
             return VaultLoadResult.FileCorrupted
         }
-        if (config.kdfIterations !in TinkCryptoManager.LEGACY_KDF_ITERATIONS..5_000_000) {
+        if (config.kdfIterations !in TinkCryptoManager.DEFAULT_KDF_ITERATIONS..5_000_000) {
             return VaultLoadResult.FileCorrupted
         }
-        if (config.associatedDataVersion !in 0..1) return VaultLoadResult.FileCorrupted
-        if (config.associatedDataVersion >= 1 && config.vaultId.isBlank()) {
+        if (config.associatedDataVersion != 1 || config.vaultId.isBlank()) {
+            return VaultLoadResult.FileCorrupted
+        }
+        if (config.integrityHash.isNullOrBlank()) {
             return VaultLoadResult.FileCorrupted
         }
         return null
-    }
-
-    /**
-     * 旧 V2 保险库使用空关联数据。首次成功解锁后，在同一事务中升级核心文件、TOTP 和附件，
-     * 让每份密文都绑定到 vaultId 与逻辑文件名，防止同 key 下的替换。
-     */
-    private suspend fun upgradeLegacyAssociatedDataIfNeeded(): Boolean = withContext(Dispatchers.IO) {
-        val upgradeSnapshot = synchronized(vaultSessionLock) {
-            val config = vaultConfig ?: return@withContext false
-            if (config.associatedDataVersion >= 1 && config.vaultId.isNotBlank()) {
-                return@withContext true
-            }
-            LegacyAssociatedDataUpgradeSnapshot(
-                epoch = sessionEpoch,
-                config = config,
-                keyset = streamingAeadKeysetHandle ?: return@withContext false,
-                manifest = vaultManifestV2 ?: return@withContext false,
-                passwords = _passwordEntries.value,
-                categories = _categories.value,
-                attachments = _attachments.value,
-            )
-        }
-
-        return@withContext try {
-            saveMutex.withLock {
-                val keyset = upgradeSnapshot.keyset
-                val streamingAead = tinkCryptoManager.getStreamingAead(keyset)
-                val newVaultId = UUID.randomUUID().toString()
-                val newConfigBase = upgradeSnapshot.config.copy(
-                    vaultId = newVaultId,
-                    associatedDataVersion = 1,
-                )
-                val newContext = VaultEncryptionContext(keyset, newVaultId, 1)
-
-                val writes = mutableListOf<VaultFileTransaction.PendingWrite>()
-                val pendingByName = mutableMapOf<String, File>()
-                fun pendingFor(target: File): File {
-                    val pending = VaultFileTransaction.createPendingFile(target)
-                    writes += VaultFileTransaction.PendingWrite(target, pending)
-                    pendingByName[target.name] = pending
-                    return pending
-                }
-
-                val passwordTarget = File(vaultDir, PASSWORDS_DATA_FILE)
-                val categoryTarget = File(vaultDir, CATEGORIES_DATA_FILE)
-                val manifestTarget = File(vaultDir, MANIFEST_DATA_FILE)
-                writeEncryptedMessage(
-                    pendingFor(passwordTarget),
-                    PasswordEntries.newBuilder()
-                        .setSchemaVersion(CURRENT_SCHEMA_VERSION)
-                        .addAllEntries(upgradeSnapshot.passwords)
-                        .build(),
-                    streamingAead,
-                    newContext.associatedData(PASSWORDS_DATA_FILE)
-                )
-                writeEncryptedMessage(
-                    pendingFor(categoryTarget),
-                    Categories.newBuilder()
-                        .setSchemaVersion(CURRENT_SCHEMA_VERSION)
-                        .addAllCategories(upgradeSnapshot.categories)
-                        .build(),
-                    streamingAead,
-                    newContext.associatedData(CATEGORIES_DATA_FILE)
-                )
-                val attachmentDir = File(vaultDir, ATTACHMENTS_DIR)
-                upgradeSnapshot.attachments.forEach { attachment ->
-                    val source = File(attachmentDir, attachment.encryptedFileName)
-                    if (!source.isFile) error("Missing attachment during vault upgrade: ${attachment.id}")
-                    reencryptStreamingFile(
-                        source,
-                        pendingFor(source),
-                        streamingAead,
-                        ByteArray(0),
-                        newContext.associatedData("attachment:${attachment.id}")
-                    )
-                    val thumbnail = File(attachmentDir, "${attachment.id}_thumb.dat")
-                    if (thumbnail.isFile) {
-                        reencryptStreamingFile(
-                            thumbnail,
-                            pendingFor(thumbnail),
-                            streamingAead,
-                            ByteArray(0),
-                            newContext.associatedData("attachment-thumbnail:${attachment.id}")
-                        )
-                    }
-                }
-
-                val totpTarget = File(vaultDir, TOTP_DATA_FILE)
-                if (totpTarget.isFile) {
-                    reencryptStreamingFile(
-                        totpTarget,
-                        pendingFor(totpTarget),
-                        streamingAead,
-                        ByteArray(0),
-                        newContext.associatedData(TOTP_DATA_FILE)
-                    )
-                }
-
-                val snapshotFiles = mutableMapOf(
-                    PASSWORDS_DATA_FILE to pendingByName.getValue(PASSWORDS_DATA_FILE),
-                    CATEGORIES_DATA_FILE to pendingByName.getValue(CATEGORIES_DATA_FILE),
-                )
-                pendingByName[TOTP_DATA_FILE]?.let { snapshotFiles[TOTP_DATA_FILE] = it }
-                val snapshotMetadata = calculateSnapshotMetadata(snapshotFiles)
-                val newManifest = upgradeSnapshot.manifest.copy(
-                    schemaVersion = CURRENT_SCHEMA_VERSION,
-                    vaultId = newVaultId,
-                    generation = upgradeSnapshot.manifest.generation + 1,
-                    fileDigests = snapshotMetadata.digests,
-                    fileSizes = snapshotMetadata.sizes,
-                    configBinding = calculateConfigBinding(newConfigBase),
-                )
-                writeEncryptedManifest(
-                    pendingFor(manifestTarget),
-                    newManifest,
-                    streamingAead,
-                    newContext.associatedData(MANIFEST_DATA_FILE)
-                )
-
-                val completedConfig = newConfigBase.copy(
-                    integrityHash = calculateVaultIntegrityHash(
-                        mapOf(
-                            PASSWORDS_DATA_FILE to pendingByName.getValue(PASSWORDS_DATA_FILE),
-                            CATEGORIES_DATA_FILE to pendingByName.getValue(CATEGORIES_DATA_FILE),
-                            MANIFEST_DATA_FILE to pendingByName.getValue(MANIFEST_DATA_FILE)
-                        )
-                    ) ?: error("Failed to hash upgraded vault")
-                )
-                val configTarget = File(vaultDir, VAULT_CONFIG_FILE_NAME)
-                writePlainTextSynced(pendingFor(configTarget), Json.encodeToString(completedConfig))
-
-                try {
-                    currentCoroutineContext().ensureActive()
-                    commitVaultTransactionForSession(
-                        expectedEpoch = upgradeSnapshot.epoch,
-                        expectedKeyset = keyset,
-                        writes = writes,
-                        onCommitted = {
-                            vaultConfig = completedConfig
-                            vaultManifestV2 = newManifest
-                        },
-                    )
-                } finally {
-                    writes.forEach { it.pending.delete() }
-                }
-            }
-            true
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            loggerE(error)
-            false
-        }
-    }
-
-    /**
-     * 兼容旧 V2：首次成功解锁后，把当前核心密文摘要写进加密清单。
-     */
-    private suspend fun upgradeAuthenticatedSnapshotMetadataIfNeeded(): Boolean = withContext(Dispatchers.IO) {
-        return@withContext try {
-            saveMutex.withLock {
-                val writeSession = captureActiveVaultWriteSession()
-                    ?: throw CancellationException("Vault is locked")
-                val currentManifest = writeSession.manifest
-                if (
-                    currentManifest.fileDigests.isNotEmpty() &&
-                    currentManifest.fileSizes.isNotEmpty() &&
-                    currentManifest.configBinding.isNotBlank()
-                ) {
-                    return@withContext true
-                }
-                val config = writeSession.config
-                val keyset = writeSession.keyset
-                val snapshotFiles = mutableMapOf(
-                    PASSWORDS_DATA_FILE to File(vaultDir, PASSWORDS_DATA_FILE),
-                    CATEGORIES_DATA_FILE to File(vaultDir, CATEGORIES_DATA_FILE),
-                )
-                File(vaultDir, TOTP_DATA_FILE).takeIf(File::isFile)?.let {
-                    snapshotFiles[TOTP_DATA_FILE] = it
-                }
-                val snapshotMetadata = calculateSnapshotMetadata(snapshotFiles)
-                val newManifest = currentManifest.copy(
-                    schemaVersion = CURRENT_SCHEMA_VERSION,
-                    vaultId = config.vaultId,
-                    generation = currentManifest.generation + 1,
-                    fileDigests = snapshotMetadata.digests,
-                    fileSizes = snapshotMetadata.sizes,
-                    configBinding = calculateConfigBinding(config),
-                )
-                val streamingAead = tinkCryptoManager.getStreamingAead(keyset)
-                val encryptionContext = VaultEncryptionContext(
-                    keyset,
-                    config.vaultId,
-                    config.associatedDataVersion,
-                )
-                val manifestTarget = File(vaultDir, MANIFEST_DATA_FILE)
-                val configTarget = File(vaultDir, VAULT_CONFIG_FILE_NAME)
-                val manifestPending = VaultFileTransaction.createPendingFile(manifestTarget)
-                val configPending = VaultFileTransaction.createPendingFile(configTarget)
-                try {
-                    writeEncryptedManifest(
-                        manifestPending,
-                        newManifest,
-                        streamingAead,
-                        encryptionContext.associatedData(MANIFEST_DATA_FILE),
-                    )
-                    val completedConfig = config.copy(
-                        integrityHash = calculateVaultIntegrityHash(
-                            mapOf(
-                                PASSWORDS_DATA_FILE to File(vaultDir, PASSWORDS_DATA_FILE),
-                                CATEGORIES_DATA_FILE to File(vaultDir, CATEGORIES_DATA_FILE),
-                                MANIFEST_DATA_FILE to manifestPending,
-                            )
-                        ) ?: error("Failed to hash authenticated snapshot")
-                    )
-                    writePlainTextSynced(configPending, Json.encodeToString(completedConfig))
-                    currentCoroutineContext().ensureActive()
-                    commitVaultTransactionForSession(
-                        expectedEpoch = writeSession.epoch,
-                        expectedKeyset = keyset,
-                        writes = listOf(
-                            VaultFileTransaction.PendingWrite(manifestTarget, manifestPending),
-                            VaultFileTransaction.PendingWrite(configTarget, configPending),
-                        ),
-                        onCommitted = {
-                            vaultManifestV2 = newManifest
-                            vaultConfig = completedConfig
-                        },
-                    )
-                } finally {
-                    manifestPending.delete()
-                    configPending.delete()
-                }
-            }
-            true
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            loggerE(error)
-            false
-        }
-    }
-
-    private fun reencryptStreamingFile(
-        source: File,
-        target: File,
-        streamingAead: StreamingAead,
-        oldAssociatedData: ByteArray,
-        newAssociatedData: ByteArray
-    ) {
-        FileInputStream(source).use { encryptedInput ->
-            streamingAead.newDecryptingStream(encryptedInput, oldAssociatedData).use { plainInput ->
-                writeEncryptedStream(target, streamingAead, newAssociatedData) { encryptedOutput ->
-                    plainInput.copyTo(encryptedOutput)
-                }
-            }
-        }
-    }
-
-    private fun reencryptV1File(
-        source: File,
-        target: File,
-        oldKey: SecretKey,
-        streamingAead: StreamingAead,
-        associatedData: ByteArray
-    ) {
-        require(source.length() > IV_SIZE_BYTES + 16) { "V1 encrypted file is too short" }
-        FileInputStream(source).use { input ->
-            val iv = ByteArray(IV_SIZE_BYTES)
-            require(input.read(iv) == IV_SIZE_BYTES) { "V1 encrypted file has an invalid IV" }
-            val cipher = Cipher.getInstance(AES_GCM_ALGORITHM).apply {
-                init(Cipher.DECRYPT_MODE, oldKey, GCMParameterSpec(GCM_TAG_LENGTH, iv))
-            }
-            CipherInputStream(input, cipher).use { plainInput ->
-                writeEncryptedStream(target, streamingAead, associatedData) { encryptedOutput ->
-                    plainInput.copyTo(encryptedOutput)
-                }
-            }
-        }
-    }
-
-    private fun decryptManifest(manifestBytes: ByteArray, key: SecretKey): String? {
-        return try {
-            val iv = manifestBytes.copyOfRange(SALT_SIZE_BYTES, SALT_SIZE_BYTES + IV_SIZE_BYTES)
-            val ciphertext = manifestBytes.copyOfRange(SALT_SIZE_BYTES + IV_SIZE_BYTES, manifestBytes.size)
-            cryptoManager.decrypt(iv, ciphertext, key).toString(Charsets.UTF_8)
-        } catch (e: Exception) {
-            null
-        }
     }
 
     suspend fun addEntry(
@@ -1850,12 +1179,13 @@ class PasswordRepository(
                 } ?: error("Cannot open import source")
 
                 val importedConfig = validateImportedVault(tempVaultDir)
-                if (importedConfig.integrityHash != null) {
-                    val currentHash = calculateVaultIntegrityHash(tempVaultDir)
-                    val legacyHash = calculateLegacyVaultIntegrityHash(tempVaultDir)
-                    require(importedConfig.integrityHash == currentHash || importedConfig.integrityHash == legacyHash) {
-                        "Imported vault failed its integrity check"
-                    }
+                require(
+                    base64DigestMatches(
+                        importedConfig.integrityHash.orEmpty(),
+                        calculateVaultIntegrityHash(tempVaultDir),
+                    )
+                ) {
+                    "Imported vault failed its integrity check"
                 }
                 // 在替换现有保险库前，必须用导入文件自己的主密码完成真实解密和认证校验。
                 validateImportedVaultCryptographically(tempVaultDir, importedConfig, masterPassword)
@@ -1935,7 +1265,6 @@ class PasswordRepository(
         val encryptionContext = VaultEncryptionContext(
             keysetHandle = keyset,
             vaultId = config.vaultId,
-            associatedDataVersion = config.associatedDataVersion
         )
 
         val importedManifest = decryptImportedFile(
@@ -1947,12 +1276,10 @@ class PasswordRepository(
                 readUtf8WithLimit(input, MAX_MANIFEST_PLAINTEXT_BYTES)
             )
         }
-        require(importedManifest.schemaVersion in 0..CURRENT_SCHEMA_VERSION) {
+        require(importedManifest.schemaVersion == CURRENT_SCHEMA_VERSION) {
             "Imported manifest schema is unsupported"
         }
-        if (config.associatedDataVersion >= 1) {
-            require(importedManifest.vaultId == config.vaultId) { "Imported vault id does not match" }
-        }
+        require(importedManifest.vaultId == config.vaultId) { "Imported vault id does not match" }
         require(importedManifest.attachments.size <= MAX_ATTACHMENT_COUNT) {
             "Imported vault contains too many attachments"
         }
@@ -1975,7 +1302,7 @@ class PasswordRepository(
         require(importedPasswords.entriesCount <= MAX_PASSWORD_ENTRY_COUNT) {
             "Imported vault contains too many password entries"
         }
-        require(importedPasswords.schemaVersion in 0..CURRENT_SCHEMA_VERSION) {
+        require(importedPasswords.schemaVersion == CURRENT_SCHEMA_VERSION) {
             "Imported password schema is unsupported"
         }
 
@@ -1991,7 +1318,7 @@ class PasswordRepository(
         require(importedCategories.categoriesCount <= MAX_CATEGORY_COUNT) {
             "Imported vault contains too many categories"
         }
-        require(importedCategories.schemaVersion in 0..CURRENT_SCHEMA_VERSION) {
+        require(importedCategories.schemaVersion == CURRENT_SCHEMA_VERSION) {
             "Imported category schema is unsupported"
         }
 
@@ -2036,7 +1363,7 @@ class PasswordRepository(
             require(importedTotp.entriesCount <= MAX_TOTP_ENTRY_COUNT) {
                 "Imported vault contains too many TOTP entries"
             }
-            require(importedTotp.schemaVersion in 0..CURRENT_SCHEMA_VERSION) {
+            require(importedTotp.schemaVersion == CURRENT_SCHEMA_VERSION) {
                 "Imported TOTP schema is unsupported"
             }
             importedTotp.entriesList
@@ -2176,7 +1503,6 @@ class PasswordRepository(
         val encryptionContext = VaultEncryptionContext(
             keyset,
             configBase.vaultId,
-            configBase.associatedDataVersion,
         )
         val manifestTarget = File(vaultDir, MANIFEST_DATA_FILE)
         val configTarget = File(vaultDir, VAULT_CONFIG_FILE_NAME)
@@ -2908,8 +2234,6 @@ class PasswordRepository(
         manifest: VaultManifestV2,
         directory: File,
     ): Boolean {
-        // 旧保险库没有认证快照；成功解锁后会立即升级。
-        if (manifest.fileDigests.isEmpty() && manifest.fileSizes.isEmpty()) return true
         if (manifest.fileDigests.isEmpty() || manifest.fileSizes.isEmpty()) return false
 
         return try {
@@ -2923,10 +2247,10 @@ class PasswordRepository(
             }
             expectedNames.all { logicalName ->
                 val file = File(directory, logicalName)
+                if (!file.isFile) return@all false
                 val expectedDigest = Base64.decode(manifest.fileDigests.getValue(logicalName), Base64.NO_WRAP)
                 val actualDigest = Base64.decode(calculateFileDigest(file), Base64.NO_WRAP)
-                file.isFile &&
-                    file.length() == manifest.fileSizes.getValue(logicalName) &&
+                file.length() == manifest.fileSizes.getValue(logicalName) &&
                     MessageDigest.isEqual(expectedDigest, actualDigest)
             }
         } catch (error: Exception) {
@@ -2952,8 +2276,7 @@ class PasswordRepository(
     }
 
     private fun verifyConfigBinding(manifest: VaultManifestV2, config: VaultConfig): Boolean {
-        // 兼容旧清单；首次成功解锁后会写入绑定。
-        if (manifest.configBinding.isBlank()) return true
+        if (manifest.configBinding.isBlank()) return false
         return try {
             MessageDigest.isEqual(
                 Base64.decode(manifest.configBinding, Base64.NO_WRAP),
@@ -3006,39 +2329,21 @@ class PasswordRepository(
         }
     }
     
-    /**
-     * 验证保险库数据的完整性
-     * @param expectedHash 期望的哈希值（来自 vault_v2.json）
-     * @return true 如果哈希匹配或 expectedHash 为 null（兼容旧版本）
-     */
-    private fun verifyVaultIntegrity(expectedHash: String?): Boolean {
-        // 如果没有期望的哈希值（旧版本保险库），跳过验证
-        if (expectedHash == null) return true
-        
-        val actualHash = calculateVaultIntegrityHash() ?: return false
-        if (actualHash == expectedHash) return true
-        // 兼容 2.1.0 及以前仅串接密文字节的历史 hash；成功解锁后会升级为新格式。
-        return calculateLegacyVaultIntegrityHash() == expectedHash
+    /** 验证公开配置中的保险库完整性摘要。 */
+    private fun verifyVaultIntegrity(expectedHash: String): Boolean {
+        return base64DigestMatches(expectedHash, calculateVaultIntegrityHash())
     }
 
-    private fun calculateLegacyVaultIntegrityHash(baseDir: File = vaultDir): String? {
+    private fun base64DigestMatches(expectedHash: String, actualHash: String?): Boolean {
+        if (expectedHash.isBlank() || actualHash.isNullOrBlank()) return false
         return try {
-            val digest = MessageDigest.getInstance("SHA-256")
-            listOf(PASSWORDS_DATA_FILE, CATEGORIES_DATA_FILE, MANIFEST_DATA_FILE).forEach { fileName ->
-                val file = File(baseDir, fileName)
-                if (!file.isFile) return null
-                FileInputStream(file).use { input ->
-                    val buffer = ByteArray(64 * 1024)
-                    var count: Int
-                    while (input.read(buffer).also { count = it } != -1) {
-                        digest.update(buffer, 0, count)
-                    }
-                }
-            }
-            Base64.encodeToString(digest.digest(), Base64.NO_WRAP)
+            MessageDigest.isEqual(
+                Base64.decode(expectedHash, Base64.NO_WRAP),
+                Base64.decode(actualHash, Base64.NO_WRAP),
+            )
         } catch (error: Exception) {
             loggerE(error)
-            null
+            false
         }
     }
 
@@ -3050,6 +2355,6 @@ class PasswordRepository(
     fun getVaultEncryptionContext(): VaultEncryptionContext? {
         val keyset = streamingAeadKeysetHandle ?: return null
         val config = vaultConfig ?: return null
-        return VaultEncryptionContext(keyset, config.vaultId, config.associatedDataVersion)
+        return VaultEncryptionContext(keyset, config.vaultId)
     }
 }

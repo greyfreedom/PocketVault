@@ -4,17 +4,17 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project Overview
 
-HelloPocket is an Android password manager built with Kotlin and Jetpack Compose. It uses Google Tink for encryption (AES-256-GCM-HKDF-1MB) with PBKDF2 key derivation (600,000 iterations for new vaults; 100,000 retained only for legacy compatibility). The app follows an offline-first architecture with MVVM pattern and Koin for dependency injection.
+HelloPocket is an Android password manager built with Kotlin and Jetpack Compose. It uses Google Tink for encryption (AES-256-GCM-HKDF-1MB) with PBKDF2 key derivation (600,000 iterations). The app follows an offline-first architecture with MVVM pattern and Koin for dependency injection.
 
 ## 协作备忘录 (重要)
 
 ### 你需要注意的协作历史和重要结论
 
 1.  **核心架构 - 数据可移植性**:
-    *   项目**不使用数据库**，而是采用一种名为 **“保险库目录” (Vault Bundle)** 的存储模型。这是一个结构化的目录 (`hellopocket_vault`)，其中包含：一个核心的`manifest.json`清单文件、多个独立加密的数据文件（如`passwords.dat`, `categories.dat`）以及一个用于存放附件的子目录。
+    *   项目**不使用数据库**，而是采用一种名为 **“保险库目录” (Vault Bundle)** 的存储模型。这是一个结构化的目录 (`hellopocket_vault`)，其中包含：公开配置 `vault_v2.json`、加密清单 `manifest.dat`、多个独立加密的数据文件（如 `passwords.dat`, `categories.dat`）以及附件子目录。
 
 2.  **安全模型**:
-    *   **主密码是唯一信源**: 主密码和 `vault_v2.json` 中的随机盐通过 PBKDF2-HMAC-SHA256（新保险库 600,000 次；旧保险库最低兼容 100,000 次）派生密钥加密密钥，用于包装随机生成的 `StreamingAead Keyset`；项目只持久化加密后的 Keyset，绝不存储主密码、派生密钥或明文 Keyset。
+    *   **主密码是唯一信源**: 主密码和 `vault_v2.json` 中的随机盐通过 PBKDF2-HMAC-SHA256（600,000 次）派生密钥加密密钥，用于包装随机生成的 `StreamingAead Keyset`；项目只持久化加密后的 Keyset，绝不存储主密码、派生密钥或明文 Keyset。
     *   **Google Tink 加密**: 采用 Google Tink 库的 `StreamingAead` (AES-256-GCM-HKDF-1MB) 流式认证加密方案。
     *   **流式加密优势**: 使用流式加密避免将整个附件同时加载到内存；可处理的实际大小仍受设备存储、Android 平台和应用安全限制影响。
     *   **数据完整性保护**: 内置 SHA-256 完整性校验，确保保险库数据未被篡改。同时 GCM 模式本身也提供认证加密 (AEAD)。
