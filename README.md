@@ -131,7 +131,7 @@ Requirements:
 
 - Android Studio or Android SDK Command-line Tools;
 - Android SDK 36;
-- JDK 17;
+- JDK 17 toolchain; Gradle can run on JDK 17–25 (Android Studio's bundled JBR 25 is verified);
 - Git.
 
 No Firebase configuration or `google-services.json` is required:

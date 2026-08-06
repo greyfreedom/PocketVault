@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.protobuf)
@@ -77,17 +76,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
     }
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("build/generated/source/proto/main/java", "build/generated/source/proto/main/kotlin", "src/main/java")
-        }
+}
+
+java {
+    // Gradle 由 Android Studio 的 JDK 运行，源码编译固定使用稳定的 JDK 17 工具链。
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 

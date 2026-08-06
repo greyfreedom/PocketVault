@@ -122,7 +122,7 @@ com.turisla.hellopocket/
 
 ### Technology Stack
 
-- Kotlin 2.2.10, Android Gradle Plugin 8.10.1
+- Kotlin 2.3.21, Android Gradle Plugin 9.3.1, Gradle 9.5.1
 - Jetpack Compose BOM for UI
 - Koin for dependency injection
 - Google Tink for encryption
@@ -145,4 +145,5 @@ com.turisla.hellopocket/
 
 - Min SDK: 24 (Android Nougat)
 - Target SDK: 36
-- JDK: 17
+- Gradle runtime: JDK 17–25（本地 Android Studio 使用内置 JBR 25）
+- Java/Kotlin toolchain: JDK 17，字节码目标保持 Java 11

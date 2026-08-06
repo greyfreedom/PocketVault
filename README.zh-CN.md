@@ -131,7 +131,7 @@ GitHub 附件必须是从 Play Console 下载的已签名 Universal APK，不能
 
 - Android Studio 或 Android SDK Command-line Tools；
 - Android SDK 36；
-- JDK 17；
+- JDK 17 编译工具链；Gradle 可运行于 JDK 17–25（已验证 Android Studio 内置 JBR 25）；
 - Git。
 
 克隆仓库后无需 Firebase 配置，也不需要 `google-services.json`：
