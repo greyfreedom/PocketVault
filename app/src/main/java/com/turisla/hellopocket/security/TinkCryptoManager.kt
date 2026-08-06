@@ -22,7 +22,9 @@ class TinkCryptoManager {
 
     companion object {
         const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
+        const val LEGACY_V2_KDF_ITERATIONS = 100_000
         const val DEFAULT_KDF_ITERATIONS = 600_000
+        private const val MAX_KDF_ITERATIONS = 5_000_000
         private const val KEY_LENGTH = 256
         private const val GCM_TAG_LENGTH = 128
         private const val AES_GCM_ALGORITHM = "AES/GCM/NoPadding"
@@ -56,16 +58,30 @@ class TinkCryptoManager {
         salt: ByteArray,
         iterations: Int = DEFAULT_KDF_ITERATIONS
     ): String {
+        return Base64.encodeToString(
+            encryptKeysetBytes(keysetHandle, password, salt, iterations),
+            Base64.NO_WRAP,
+        )
+    }
+
+    internal fun encryptKeysetBytes(
+        keysetHandle: KeysetHandle,
+        password: String,
+        salt: ByteArray,
+        iterations: Int = DEFAULT_KDF_ITERATIONS,
+    ): ByteArray {
+        require(isKdfIterationCountSupportedForEncryption(iterations)) {
+            "Invalid KDF iteration count for encryption"
+        }
         val masterKey = deriveKey(password, salt, iterations)
         val aead = AesGcmJceAead(masterKey)
 
-        val encryptedKeyset = TinkProtoKeysetFormat.serializeEncryptedKeyset(
+        return TinkProtoKeysetFormat.serializeEncryptedKeyset(
             keysetHandle,
             aead,
             EMPTY_ASSOCIATED_DATA,
             RegistryConfiguration.get(),
         )
-        return Base64.encodeToString(encryptedKeyset, Base64.NO_WRAP)
     }
 
     /**
@@ -77,10 +93,22 @@ class TinkCryptoManager {
         salt: ByteArray,
         iterations: Int = DEFAULT_KDF_ITERATIONS
     ): KeysetHandle {
+        val encryptedKeyset = Base64.decode(encryptedKeysetBase64, Base64.NO_WRAP)
+        return decryptKeysetBytes(encryptedKeyset, password, salt, iterations)
+    }
+
+    internal fun decryptKeysetBytes(
+        encryptedKeyset: ByteArray,
+        password: String,
+        salt: ByteArray,
+        iterations: Int = DEFAULT_KDF_ITERATIONS,
+    ): KeysetHandle {
+        require(isKdfIterationCountSupportedForDecryption(iterations)) {
+            "Invalid KDF iteration count for decryption"
+        }
         val masterKey = deriveKey(password, salt, iterations)
         val aead = AesGcmJceAead(masterKey)
         
-        val encryptedKeyset = Base64.decode(encryptedKeysetBase64, Base64.NO_WRAP)
         return TinkProtoKeysetFormat.parseEncryptedKeyset(
             encryptedKeyset,
             aead,
@@ -129,8 +157,15 @@ class TinkCryptoManager {
         return salt
     }
 
+    internal fun isKdfIterationCountSupportedForEncryption(iterations: Int): Boolean {
+        return iterations in DEFAULT_KDF_ITERATIONS..MAX_KDF_ITERATIONS
+    }
+
+    internal fun isKdfIterationCountSupportedForDecryption(iterations: Int): Boolean {
+        return iterations in LEGACY_V2_KDF_ITERATIONS..MAX_KDF_ITERATIONS
+    }
+
     private fun deriveKey(password: String, salt: ByteArray, iterations: Int): javax.crypto.SecretKey {
-        require(iterations in DEFAULT_KDF_ITERATIONS..5_000_000) { "Invalid KDF iteration count" }
         val passwordChars = password.toCharArray()
         val spec = PBEKeySpec(passwordChars, salt, iterations, KEY_LENGTH)
         return try {

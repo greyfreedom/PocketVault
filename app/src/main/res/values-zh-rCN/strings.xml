@@ -344,6 +344,8 @@
     <string name="no_app_found">没有可用于打开此文件的应用。</string>
     <string name="vault_file_corrupted">保险库或验证器数据已损坏，应用没有覆盖原文件。请恢复可信备份，或保留文件以便恢复。</string>
     <string name="vault_integrity_failed">保险库完整性校验失败，数据没有被打开或覆盖。</string>
+    <string name="vault_upgrade_failed">早期 V2 保险库未能安全完成升级。原数据没有被覆盖。请确认存储空间充足，并使用主密码重试。</string>
+    <string name="vault_upgrade_requires_master_password">此早期 V2 保险库需要完成一次性安全升级。请使用主密码解锁，生物识别无法执行这次升级。</string>
     <string name="vault_version_unsupported">此保险库使用尚不支持的版本 %1$d，请更新 HelloPocket 后重试。</string>
     <string name="totp_invalid_qr">二维码无效，请扫描有效的 TOTP 验证器二维码。</string>
     <string name="totp_add_failed">无法保存验证器条目。</string>

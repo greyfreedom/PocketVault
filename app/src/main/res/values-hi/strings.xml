@@ -347,6 +347,8 @@
     <string name="no_app_found">इस फ़ाइल को खोलने के लिए कोई ऐप उपलब्ध नहीं है।</string>
     <string name="vault_file_corrupted">वॉल्ट या प्रमाणक डेटा क्षतिग्रस्त है और उसे अधिलेखित नहीं किया गया। सत्यापित बैकअप पुनर्स्थापित करें।</string>
     <string name="vault_integrity_failed">वॉल्ट अखंडता जाँच विफल हुई। डेटा खोला या अधिलेखित नहीं किया गया।</string>
+    <string name="vault_upgrade_failed">पुराने V2 वॉल्ट का सुरक्षित अपग्रेड पूरा नहीं हो सका। मूल डेटा अधिलेखित नहीं किया गया। खाली स्टोरेज जाँचें और मास्टर पासवर्ड से फिर प्रयास करें।</string>
+    <string name="vault_upgrade_requires_master_password">इस पुराने V2 वॉल्ट को एक बार का सुरक्षा अपग्रेड चाहिए। मास्टर पासवर्ड से अनलॉक करें; बायोमेट्रिक अनलॉक यह अपग्रेड नहीं कर सकता।</string>
     <string name="vault_version_unsupported">यह वॉल्ट असमर्थित संस्करण %1$d का उपयोग करता है। HelloPocket अपडेट करके फिर प्रयास करें।</string>
     <string name="totp_invalid_qr">QR कोड अमान्य है। मान्य TOTP प्रमाणक कोड स्कैन करें।</string>
     <string name="totp_add_failed">प्रमाणक प्रविष्टि सहेजी नहीं जा सकी।</string>

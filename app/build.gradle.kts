@@ -23,8 +23,8 @@ android {
         applicationId = "com.turisla.hellopocket"
         minSdk = 24
         targetSdk = 36
-        versionCode = 10
-        versionName = "2.5.0"
+        versionCode = 11
+        versionName = "2.5.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -105,6 +105,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.biometric.ktx)
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

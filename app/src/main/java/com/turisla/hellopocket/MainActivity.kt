@@ -136,6 +136,9 @@ class MainActivity : AppCompatActivity() {
                         is MainPageInfo.ImportDataFailed -> {
                             Toast.makeText(this@MainActivity, getString(R.string.import_failed_registration), Toast.LENGTH_SHORT).show()
                         }
+                        is MainPageInfo.ImportUpgradeFailed -> {
+                            Toast.makeText(this@MainActivity, getString(R.string.vault_upgrade_failed), Toast.LENGTH_LONG).show()
+                        }
                         is MainPageInfo.VaultSetupFailed -> {
                             Toast.makeText(this@MainActivity, getString(R.string.save_failed), Toast.LENGTH_SHORT).show()
                         }
@@ -264,6 +267,10 @@ private fun AppNavigation(viewModel: MainViewModel) {
             val vaultErrorMessage = when (val state = uiState) {
                 UiState.FileCorrupted -> stringResource(R.string.vault_file_corrupted)
                 UiState.IntegrityCheckFailed -> stringResource(R.string.vault_integrity_failed)
+                UiState.UpgradeFailed -> stringResource(R.string.vault_upgrade_failed)
+                UiState.UpgradeRequiresMasterPassword -> {
+                    stringResource(R.string.vault_upgrade_requires_master_password)
+                }
                 is UiState.UnsupportedVersion -> stringResource(R.string.vault_version_unsupported, state.version)
                 else -> null
             }

@@ -344,6 +344,8 @@
     <string name="no_app_found">이 파일을 열 수 있는 앱이 없습니다.</string>
     <string name="vault_file_corrupted">보관함 또는 인증기 데이터가 손상되었으며 덮어쓰지 않았습니다. 검증된 백업을 복원하세요.</string>
     <string name="vault_integrity_failed">보관함 무결성 검증에 실패했습니다. 데이터를 열거나 덮어쓰지 않았습니다.</string>
+    <string name="vault_upgrade_failed">이전 V2 보관함의 보안 업그레이드를 안전하게 완료하지 못했습니다. 원본 데이터는 덮어쓰지 않았습니다. 저장 공간을 확인한 뒤 마스터 비밀번호로 다시 시도하세요.</string>
+    <string name="vault_upgrade_requires_master_password">이전 V2 보관함은 일회성 보안 업그레이드가 필요합니다. 생체 인증으로는 업그레이드할 수 없으므로 마스터 비밀번호로 잠금을 해제하세요.</string>
     <string name="vault_version_unsupported">이 보관함은 지원되지 않는 버전 %1$d을(를) 사용합니다. HelloPocket을 업데이트한 후 다시 시도하세요.</string>
     <string name="totp_invalid_qr">잘못된 QR 코드입니다. 유효한 TOTP 인증 코드를 스캔하세요.</string>
     <string name="totp_add_failed">인증기 항목을 저장하지 못했습니다.</string>

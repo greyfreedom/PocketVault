@@ -347,6 +347,8 @@
     <string name="no_app_found">No app is available to open this file.</string>
     <string name="vault_file_corrupted">The vault or authenticator data is damaged. It has not been overwritten. Restore a verified backup or keep the files for recovery.</string>
     <string name="vault_integrity_failed">Vault integrity verification failed. The data has not been opened or overwritten.</string>
+    <string name="vault_upgrade_failed">The early V2 vault could not be safely upgraded. The original data was not overwritten. Check free storage and try again with the master password.</string>
+    <string name="vault_upgrade_requires_master_password">This older V2 vault needs a one-time security upgrade. Unlock with the master password; biometric unlock cannot perform the upgrade.</string>
     <string name="vault_version_unsupported">This vault uses unsupported version %1$d. Update HelloPocket before trying again.</string>
     <string name="totp_invalid_qr">Invalid QR code. Scan a valid TOTP authenticator code.</string>
     <string name="totp_add_failed">Could not save the authenticator entry.</string>

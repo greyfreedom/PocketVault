@@ -19,6 +19,7 @@ coil = "2.7.0"
 zxing = "4.3.0"
 onetimepassword="2.4.1"
 accompanist="0.37.3"
+robolectric="4.16.1"
 
 [libraries]
 androidx-biometric-ktx = { group = "androidx.biometric", name = "biometric-ktx", version.ref = "biometric" }
@@ -60,6 +61,7 @@ zxing-android-embedded = { group = "com.journeyapps", name = "zxing-android-embe
 kotlin-onetimepassword = { group = "dev.turingcomplete", name = "kotlin-onetimepassword", version.ref = "onetimepassword" }
 
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

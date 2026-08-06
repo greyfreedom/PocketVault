@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.data.PasswordRepository
 import com.turisla.hellopocket.data.TotpRepository
+import com.turisla.hellopocket.data.ImportDataFailureReason
 import com.turisla.hellopocket.data.UserPreferencesRepository
 import com.turisla.hellopocket.security.BiometricCipherManager
 import kotlinx.coroutines.delay
@@ -194,7 +195,13 @@ class SettingsPageViewModel(
                 if (importResult.success) {
                     _event.value = Event.ImportSuccess(importResult.biometricsWereDisabled)
                 } else {
-                    _event.value = Event.ImportFailed
+                    _event.value = if (
+                        importResult.failureReason == ImportDataFailureReason.UPGRADE_FAILED
+                    ) {
+                        Event.ImportUpgradeFailed
+                    } else {
+                        Event.ImportFailed
+                    }
                 }
             } finally {
                 _isLoading.value = false
@@ -218,6 +225,7 @@ class SettingsPageViewModel(
         data object ExportFailed : Event()
         data class ImportSuccess(val biometricsWereDisabled: Boolean) : Event()
         data object ImportFailed : Event()
+        data object ImportUpgradeFailed : Event()
         data object ShowEnrollBiometricDialog : Event()
         data class ShowBiometricError(val message: String) : Event()
         data class ShareFile(val file: java.io.File) : Event()

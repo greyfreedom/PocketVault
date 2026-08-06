@@ -38,12 +38,6 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 > [!IMPORTANT]
 > 开源和离线运行能够降低风险，但不代表“绝对安全”。使用前请阅读[安全模型与限制](#安全模型与限制)和 [SECURITY.md](SECURITY.md)。
 
-> [!NOTE]
-> 本仓库中的严格离线声明适用于 2.4.0 及更高版本。商店发布过渡期间，Google Play 可能暂时仍提供旧版本；请核对已安装版本及其对应源码 tag。迁移说明见[更新日志](CHANGELOG.md)。
-
-> [!WARNING]
-> 2.5.0 仅接受当前带完整认证信息的 V2 保险库格式。缺少当前完整性、绑定或 KDF 元数据的 V1 和早期 V2 保险库会被拒绝，不再原地迁移。旧版本用户应先使用 2.4.0 解锁保险库并导出一份新的 `.hpb` 备份；在卸载或替换 2.4.0 前，请保留原始数据并确认新备份可用。
-
 ## 核心特性
 
 - **严格离线**：没有网络权限，没有 Firebase、广告、用户行为统计或远程日志。
@@ -61,16 +55,16 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 截图使用演示数据，不包含真实凭据。点击任意截图可打开 [`pictures/zh`](pictures/zh/) 中的原图。
 
 <p align="center">
-  <a href="./pictures/zh/listpass.png"><img src="./pictures/zh/listpass.png" alt="密码列表" width="210"></a>
-  <a href="./pictures/zh/addpass.png"><img src="./pictures/zh/addpass.png" alt="添加密码" width="210"></a>
-  <a href="./pictures/zh/addnote.png"><img src="./pictures/zh/addnote.png" alt="添加安全笔记" width="210"></a>
-  <a href="./pictures/zh/addcategory.png"><img src="./pictures/zh/addcategory.png" alt="创建分类" width="210"></a>
+  <a href="./pictures/zh/listpass.png"><img src="./pictures/zh/listpass.png" alt="密码列表" width="200"></a>
+  <a href="./pictures/zh/addpass.png"><img src="./pictures/zh/addpass.png" alt="添加密码" width="200"></a>
+  <a href="./pictures/zh/addnote.png"><img src="./pictures/zh/addnote.png" alt="添加安全笔记" width="200"></a>
+  <a href="./pictures/zh/addcategory.png"><img src="./pictures/zh/addcategory.png" alt="创建分类" width="200"></a>
 </p>
 
 <p align="center">
-  <a href="./pictures/zh/listtotp.png"><img src="./pictures/zh/listtotp.png" alt="TOTP 验证码列表" width="210"></a>
-  <a href="./pictures/zh/addtotp.png"><img src="./pictures/zh/addtotp.png" alt="添加 TOTP 验证码" width="210"></a>
-  <a href="./pictures/zh/genpass.png"><img src="./pictures/zh/genpass.png" alt="密码生成器" width="210"></a>
+  <a href="./pictures/zh/listtotp.png"><img src="./pictures/zh/listtotp.png" alt="TOTP 验证码列表" width="200"></a>
+  <a href="./pictures/zh/addtotp.png"><img src="./pictures/zh/addtotp.png" alt="添加 TOTP 验证码" width="200"></a>
+  <a href="./pictures/zh/genpass.png"><img src="./pictures/zh/genpass.png" alt="密码生成器" width="200"></a>
 </p>
 
 ## 安全设计
@@ -78,7 +72,7 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 PocketVault 采用“主密码包装随机数据密钥”的设计：
 
 1. 新建保险库时生成随机盐和随机 Google Tink `StreamingAead` Keyset。
-2. 使用 PBKDF2-HMAC-SHA256 从主密码派生密钥加密密钥。新建和改密后的保险库使用 600,000 次迭代，受支持的保险库配置也必须声明不低于该工作因子。
+2. 使用 PBKDF2-HMAC-SHA256 从主密码派生密钥加密密钥。新建、改密和当前格式保险库使用 600,000 次迭代；历史 100,000 次参数只允许在一次性认证迁移中读取，绝不会用于新写入。
 3. 派生密钥只用于包装随机 Keyset；主密码、派生密钥和明文 Keyset 都不会持久化。
 4. 密码、分类、TOTP、清单和附件使用 Google Tink Streaming AEAD（AES-256-GCM-HKDF）加密。
 5. 修改主密码时只重新包装 Keyset，不需要重新加密全部保险库内容。
@@ -97,7 +91,7 @@ PocketVault 采用“主密码包装随机数据密钥”的设计：
 - 加密后的 Tink Keyset；
 - 版本、保险库标识和完整性绑定所需元数据。
 
-请勿在密码提示中填写敏感信息，并妥善保存导出的备份。受支持的备份仍需要创建它时使用的主密码；从 2.5.0 开始，备份必须已经采用上文所述的当前认证 V2 格式。应用没有账号、托管密钥或主密码找回服务。
+请勿在密码提示中填写敏感信息，并妥善保存导出的备份。受支持的备份仍需要创建它时使用的主密码；2.5.1 可以先认证并标准化早期 V2 备份再导入，V1 备份仍不受支持。应用没有账号、托管密钥或主密码找回服务。
 
 ## 安全模型与限制
 

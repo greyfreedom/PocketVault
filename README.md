@@ -38,12 +38,6 @@ Vault data is encrypted and processed on the device. Data leaves the app only wh
 > [!IMPORTANT]
 > Open source and offline operation reduce risk but do not guarantee absolute security. Read the [security model and limitations](#security-model-and-limitations) and [SECURITY.md](SECURITY.md) before relying on it for sensitive data.
 
-> [!NOTE]
-> The strict-offline declarations in this repository describe version 2.4.0 and later. During the store rollout, Google Play may temporarily offer an earlier version; check the installed version and its corresponding source tag. See the [changelog](CHANGELOG.md) for the transition.
-
-> [!WARNING]
-> Version 2.5.0 accepts only the current authenticated V2 vault format. V1 vaults and early V2 vaults that lack current integrity, binding, or KDF metadata are rejected instead of being migrated in place. Before updating an older installation, unlock it with 2.4.0 and export a fresh `.hpb` backup. Keep the original data and verify the new backup before uninstalling or replacing 2.4.0.
-
 ## Features
 
 - **Strictly offline** — no Internet permission, Firebase, advertising, usage analytics, or remote logging.
@@ -61,16 +55,16 @@ Vault data is encrypted and processed on the device. Data leaves the app only wh
 The screenshots contain demonstration data only. Click any screenshot to open the original image from [`pictures/en`](pictures/en/).
 
 <p align="center">
-  <a href="./pictures/en/listpass.png"><img src="./pictures/en/listpass.png" alt="Password list" width="210"></a>
-  <a href="./pictures/en/addpass.png"><img src="./pictures/en/addpass.png" alt="Add password" width="210"></a>
-  <a href="./pictures/en/addnote.png"><img src="./pictures/en/addnote.png" alt="Add secure note" width="210"></a>
-  <a href="./pictures/en/addcategory.png"><img src="./pictures/en/addcategory.png" alt="Create category" width="210"></a>
+  <a href="./pictures/en/listpass.png"><img src="./pictures/en/listpass.png" alt="Password list" width="200"></a>
+  <a href="./pictures/en/addpass.png"><img src="./pictures/en/addpass.png" alt="Add password" width="200"></a>
+  <a href="./pictures/en/addnote.png"><img src="./pictures/en/addnote.png" alt="Add secure note" width="200"></a>
+  <a href="./pictures/en/addcategory.png"><img src="./pictures/en/addcategory.png" alt="Create category" width="200"></a>
 </p>
 
 <p align="center">
-  <a href="./pictures/en/listtotp.png"><img src="./pictures/en/listtotp.png" alt="TOTP code list" width="210"></a>
-  <a href="./pictures/en/addtotp.png"><img src="./pictures/en/addtotp.png" alt="Add TOTP entry" width="210"></a>
-  <a href="./pictures/en/genpass.png"><img src="./pictures/en/genpass.png" alt="Password generator" width="210"></a>
+  <a href="./pictures/en/listtotp.png"><img src="./pictures/en/listtotp.png" alt="TOTP code list" width="200"></a>
+  <a href="./pictures/en/addtotp.png"><img src="./pictures/en/addtotp.png" alt="Add TOTP entry" width="200"></a>
+  <a href="./pictures/en/genpass.png"><img src="./pictures/en/genpass.png" alt="Password generator" width="200"></a>
 </p>
 
 ## Security design
@@ -78,7 +72,7 @@ The screenshots contain demonstration data only. Click any screenshot to open th
 PocketVault uses a master-password-wrapped random data key:
 
 1. A new vault receives a random salt and a random Google Tink `StreamingAead` keyset.
-2. PBKDF2-HMAC-SHA256 derives a key-encryption key from the master password. New and re-keyed vaults use 600,000 iterations, and supported vault configurations must declare at least that work factor.
+2. PBKDF2-HMAC-SHA256 derives a key-encryption key from the master password. New, re-keyed, and current-format vaults use 600,000 iterations. The historical 100,000-iteration V2 parameter is read only during a one-time authenticated migration and is never used for new writes.
 3. The derived key wraps the random keyset. The master password, derived key, and plaintext keyset are not persisted.
 4. Passwords, categories, TOTP entries, manifests, and attachments are encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF.
 5. Changing the master password re-wraps the keyset instead of re-encrypting every vault file.
@@ -97,7 +91,7 @@ Its readable `vault_v2.json` configuration includes:
 - the encrypted Tink keyset;
 - version, vault identifier, and integrity-binding metadata.
 
-Do not place sensitive information in a password hint, and store exported backups securely. A supported backup requires the password that protected it when it was created. Beginning with 2.5.0, backups must already use the current authenticated V2 format described above. PocketVault has no account, escrow key, or master-password recovery service.
+Do not place sensitive information in a password hint, and store exported backups securely. A supported backup requires the password that protected it when it was created. Version 2.5.1 can authenticate and normalize early V2 backups before import; V1 backups remain unsupported. PocketVault has no account, escrow key, or master-password recovery service.
 
 ## Security model and limitations
 

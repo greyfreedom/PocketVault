@@ -77,7 +77,7 @@
     <p>PocketVault uses the following protections:</p>
     <ul>
         <li>Google Tink Streaming AEAD using AES-256-GCM-HKDF for encrypted vault files.</li>
-        <li>PBKDF2-HMAC-SHA256 with 600,000 iterations for new and re-keyed vaults; supported vault configurations must declare at least that work factor.</li>
+        <li>PBKDF2-HMAC-SHA256 with 600,000 iterations for new, re-keyed, and current-format vaults. The historical 100,000-iteration V2 parameter is read only during an authenticated one-time migration and is not used for new writes.</li>
         <li>A randomly generated Streaming AEAD keyset wrapped by a key derived from the master password. The master password and derived key are not persisted.</li>
         <li>Android Keystore protection for the optional biometric convenience key.</li>
         <li>Authenticated encryption, integrity validation, application sandboxing, screenshot protection, automatic locking, and timed clipboard clearing.</li>
@@ -87,7 +87,7 @@
     <h2>5. Data Backup and Restoration</h2>
     <p>You are responsible for protecting exported backups and remembering the applicable master password. PocketVault has no account, recovery service, escrow key, or master-password reset mechanism. Losing the master password can make the encrypted vault permanently inaccessible.</p>
     <p>Changing the master password does not rewrite backups you exported earlier. An older backup must be opened with the password that protected it when it was created.</p>
-    <p>Beginning with version 2.5.0, PocketVault accepts only the current authenticated V2 vault format. V1 and early V2 backups must first be migrated and freshly exported with version 2.4.0.</p>
+    <p>Version 2.5.1 can authenticate and normalize early V2 vaults and backups. For an installed legacy V2 vault, the app verifies the data, creates an automatic encrypted backup, and atomically activates the current format. V1 remains unsupported. PocketVault does not transmit the vault or backup during this local process.</p>
 
     <h2>6. Data Retention and Deletion</h2>
     <p>Vault data and automatic backup history remain in the app's private storage until you delete app data or uninstall PocketVault. Exported backups are outside the app's control and must be deleted separately from every location to which you saved or shared them.</p>
