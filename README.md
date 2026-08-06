@@ -25,6 +25,10 @@
   <a href="CONTRIBUTING.md">Contributing</a> · <a href="LICENSE">Apache-2.0</a>
 </p>
 
+<p align="center">
+  <a href="./pictures/en/banner.png"><img src="./pictures/en/banner.png" alt="PocketVault product overview" width="900"></a>
+</p>
+
 ---
 
 PocketVault is a local Android password manager. It does not request `android.permission.INTERNET`, contains no analytics, advertising, telemetry, or crash-reporting SDK, and has no PocketVault account or remote backend.
@@ -57,16 +61,16 @@ Vault data is encrypted and processed on the device. Data leaves the app only wh
 The screenshots contain demonstration data only. Click any screenshot to open the original image from [`pictures/en`](pictures/en/).
 
 <p align="center">
-  <a href="./pictures/en/listpass.jpeg"><img src="./pictures/en/listpass.jpeg" alt="Password list" width="210"></a>
-  <a href="./pictures/en/search.jpeg"><img src="./pictures/en/search.jpeg" alt="Local search" width="210"></a>
-  <a href="./pictures/en/addpass.jpeg"><img src="./pictures/en/addpass.jpeg" alt="Add password" width="210"></a>
-  <a href="./pictures/en/gene.jpeg"><img src="./pictures/en/gene.jpeg" alt="Password generator" width="210"></a>
+  <a href="./pictures/en/listpass.png"><img src="./pictures/en/listpass.png" alt="Password list" width="210"></a>
+  <a href="./pictures/en/addpass.png"><img src="./pictures/en/addpass.png" alt="Add password" width="210"></a>
+  <a href="./pictures/en/addnote.png"><img src="./pictures/en/addnote.png" alt="Add secure note" width="210"></a>
+  <a href="./pictures/en/addcategory.png"><img src="./pictures/en/addcategory.png" alt="Create category" width="210"></a>
 </p>
 
 <p align="center">
-  <a href="./pictures/en/listcategory.jpeg"><img src="./pictures/en/listcategory.jpeg" alt="Category filter" width="210"></a>
-  <a href="./pictures/en/category.jpeg"><img src="./pictures/en/category.jpeg" alt="Category management" width="210"></a>
-  <a href="./pictures/en/fingerprint.jpeg"><img src="./pictures/en/fingerprint.jpeg" alt="Biometric unlock" width="210"></a>
+  <a href="./pictures/en/listtotp.png"><img src="./pictures/en/listtotp.png" alt="TOTP code list" width="210"></a>
+  <a href="./pictures/en/addtotp.png"><img src="./pictures/en/addtotp.png" alt="Add TOTP entry" width="210"></a>
+  <a href="./pictures/en/genpass.png"><img src="./pictures/en/genpass.png" alt="Password generator" width="210"></a>
 </p>
 
 ## Security design

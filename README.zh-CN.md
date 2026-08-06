@@ -25,6 +25,10 @@
   <a href="CONTRIBUTING.md">参与贡献</a> · <a href="LICENSE">Apache-2.0</a>
 </p>
 
+<p align="center">
+  <a href="./pictures/zh/banner.png"><img src="./pictures/zh/banner.png" alt="口袋密本产品概览" width="900"></a>
+</p>
+
 ---
 
 PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密码管理器。应用不申请 `android.permission.INTERNET`，不包含广告、分析、遥测或崩溃上报 SDK，也没有账号系统和远程服务器。
@@ -57,16 +61,16 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 截图使用演示数据，不包含真实凭据。点击任意截图可打开 [`pictures/zh`](pictures/zh/) 中的原图。
 
 <p align="center">
-  <a href="./pictures/zh/listpass.jpeg"><img src="./pictures/zh/listpass.jpeg" alt="密码列表" width="210"></a>
-  <a href="./pictures/zh/search.jpeg"><img src="./pictures/zh/search.jpeg" alt="本地搜索" width="210"></a>
-  <a href="./pictures/zh/addpass.jpeg"><img src="./pictures/zh/addpass.jpeg" alt="添加密码" width="210"></a>
-  <a href="./pictures/zh/gene.jpeg"><img src="./pictures/zh/gene.jpeg" alt="密码生成器" width="210"></a>
+  <a href="./pictures/zh/listpass.png"><img src="./pictures/zh/listpass.png" alt="密码列表" width="210"></a>
+  <a href="./pictures/zh/addpass.png"><img src="./pictures/zh/addpass.png" alt="添加密码" width="210"></a>
+  <a href="./pictures/zh/addnote.png"><img src="./pictures/zh/addnote.png" alt="添加安全笔记" width="210"></a>
+  <a href="./pictures/zh/addcategory.png"><img src="./pictures/zh/addcategory.png" alt="创建分类" width="210"></a>
 </p>
 
 <p align="center">
-  <a href="./pictures/zh/list_category.jpeg"><img src="./pictures/zh/list_category.jpeg" alt="分类筛选" width="210"></a>
-  <a href="./pictures/zh/category.jpeg"><img src="./pictures/zh/category.jpeg" alt="分类管理" width="210"></a>
-  <a href="./pictures/zh/fingerprint.jpeg"><img src="./pictures/zh/fingerprint.jpeg" alt="生物识别解锁" width="210"></a>
+  <a href="./pictures/zh/listtotp.png"><img src="./pictures/zh/listtotp.png" alt="TOTP 验证码列表" width="210"></a>
+  <a href="./pictures/zh/addtotp.png"><img src="./pictures/zh/addtotp.png" alt="添加 TOTP 验证码" width="210"></a>
+  <a href="./pictures/zh/genpass.png"><img src="./pictures/zh/genpass.png" alt="密码生成器" width="210"></a>
 </p>
 
 ## 安全设计
