@@ -5,18 +5,32 @@ Google Play and this repository's GitHub Releases distribute one official applic
 ## Before a release
 
 1. Confirm the new `versionCode` is greater than every artifact in every Play Console track.
-2. Update `versionName`, `CHANGELOG.md`, the privacy policy revision date, and supported-version documentation.
-3. Run compilation, unit tests, lint, and a signed upgrade test over the latest production version using a synthetic vault.
-4. Verify passwords, secure notes, TOTP, categories, attachments, biometrics, password changes, export, import, and backup restoration after the upgrade.
-5. Confirm the merged release manifest contains no Internet or network-state permission and no Firebase or Crashlytics component.
-6. Review runtime dependencies and update `THIRD_PARTY_NOTICES.md` and the in-app notices.
-7. Confirm that GitHub will receive only the Play-generated Universal APK—not a locally signed APK.
+2. Update `versionName`, `CHANGELOG.md`, the privacy policy revision date, supported-version documentation, localized Play release notes, and store screenshots when the UI has materially changed.
+3. Keep `CHANGELOG.md` marked `Unreleased` during candidate work; replace it with the actual publication date before creating the signed source tag.
+4. Run the repository checks, including the release R8 and resource-optimization path:
+
+   ```bash
+   ./gradlew :app:compileGooglePlayDebugKotlin
+   ./gradlew :app:testGooglePlayDebugUnitTest
+   ./gradlew :app:lintGooglePlayRelease
+   ./gradlew :app:optimizeGooglePlayReleaseResources
+   cmp app/src/main/assets/privacy_policy.html docs/privacy_policy.html
+   ```
+
+5. Perform a Play-signed upgrade test over the latest production version using a synthetic vault. A debug build is a separate application and is not an upgrade-path test.
+6. Verify passwords, secure notes, TOTP, categories, attachments, biometrics, password changes, export, import, automatic backup, and backup restoration after the upgrade.
+7. For a release that changes vault compatibility, verify both paths: the newest supported vault and backup must open successfully, while deliberately unsupported formats must fail without modifying the original data.
+8. Confirm the merged release manifest contains no Internet or network-state permission and no Firebase or Crashlytics component.
+9. Review runtime dependencies and update `THIRD_PARTY_NOTICES.md` and the in-app notices when a dependency family or license changes.
+10. Confirm that GitHub will receive only the Play-generated Universal APK—not a locally signed APK.
+
+The version-specific candidate checklist for this release is [`docs/release-checklists/2.5.0.md`](docs/release-checklists/2.5.0.md), and copy-ready Play Console text is in [`docs/release-notes/2.5.0.md`](docs/release-notes/2.5.0.md).
 
 ## Source and artifact traceability
 
 For each production release:
 
-1. Create a signed Git tag matching the version, such as `v2.4.0`.
+1. Create a signed Git tag matching the version, such as `v2.5.0`.
 2. Build the `googlePlayRelease` AAB from that exact tag with the untracked upload-signing configuration.
 3. Record the AAB SHA-256 digest, then upload that exact AAB to Google Play.
 4. In Play Console, open **Test and release → Latest releases and bundles**, select the uploaded bundle, open **Downloads**, and download the signed Universal APK.

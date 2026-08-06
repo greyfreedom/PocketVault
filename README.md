@@ -37,12 +37,15 @@ Vault data is encrypted and processed on the device. Data leaves the app only wh
 > [!NOTE]
 > The strict-offline declarations in this repository describe version 2.4.0 and later. During the store rollout, Google Play may temporarily offer an earlier version; check the installed version and its corresponding source tag. See the [changelog](CHANGELOG.md) for the transition.
 
+> [!WARNING]
+> Version 2.5.0 accepts only the current authenticated V2 vault format. V1 vaults and early V2 vaults that lack current integrity, binding, or KDF metadata are rejected instead of being migrated in place. Before updating an older installation, unlock it with 2.4.0 and export a fresh `.hpb` backup. Keep the original data and verify the new backup before uninstalling or replacing 2.4.0.
+
 ## Features
 
 - **Strictly offline** — no Internet permission, Firebase, advertising, usage analytics, or remote logging.
 - **Passwords and secure notes** — store credentials, notes, categories, favorites, and encrypted attachments locally.
 - **TOTP codes** — add entries manually or scan a QR code locally with the optional camera permission.
-- **Local organization** — categories, favorites, list/grid layouts, and real-time home-screen search.
+- **Local organization** — categories, favorites, list/grid layouts, and a dedicated search screen covering titles, accounts, password notes, and secure-note content.
 - **Password generator** — configurable length, character sets, confusing-character exclusion, and passphrases.
 - **Biometric convenience unlock** — protected by a local Android Keystore wrapping key.
 - **Backup and restore** — encrypted import/export plus a bounded automatic history of up to 5 backups and 1 GiB total.
@@ -71,7 +74,7 @@ The screenshots contain demonstration data only. Click any screenshot to open th
 PocketVault uses a master-password-wrapped random data key:
 
 1. A new vault receives a random salt and a random Google Tink `StreamingAead` keyset.
-2. PBKDF2-HMAC-SHA256 derives a key-encryption key from the master password. New and re-keyed vaults use 600,000 iterations; lower historical parameters remain only for compatible legacy vaults.
+2. PBKDF2-HMAC-SHA256 derives a key-encryption key from the master password. New and re-keyed vaults use 600,000 iterations, and supported vault configurations must declare at least that work factor.
 3. The derived key wraps the random keyset. The master password, derived key, and plaintext keyset are not persisted.
 4. Passwords, categories, TOTP entries, manifests, and attachments are encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF.
 5. Changing the master password re-wraps the keyset instead of re-encrypting every vault file.
@@ -90,7 +93,7 @@ Its readable `vault_v2.json` configuration includes:
 - the encrypted Tink keyset;
 - version, vault identifier, and integrity-binding metadata.
 
-Do not place sensitive information in a password hint, and store exported backups securely. An older backup requires the password that protected it when it was created. PocketVault has no account, escrow key, or master-password recovery service.
+Do not place sensitive information in a password hint, and store exported backups securely. A supported backup requires the password that protected it when it was created. Beginning with 2.5.0, backups must already use the current authenticated V2 format described above. PocketVault has no account, escrow key, or master-password recovery service.
 
 ## Security model and limitations
 
