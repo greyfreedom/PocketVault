@@ -38,10 +38,18 @@
     <string name="edit_mode">편집 모드</string>
     <string name="detail">상세 정보</string>
     <string name="add_new_password">새 비밀번호 추가</string>
+    <string name="add_item">추가</string>
     <string name="no_passwords_found">비밀번호 기록이 없습니다</string>
-    <string name="search_passwords">비밀번호 검색</string>
+    <string name="search_vault">보관함 검색</string>
+    <string name="search_hint">제목, 계정 또는 메모</string>
+    <string name="search_empty_message">제목, 계정 또는 메모로 비밀번호와 보안 메모를 찾으세요.</string>
     <string name="vault_empty_message">"보관함이 비어 있습니다.\n우측 하단의 \'+\' 버튼을 눌러 새 비밀번호를 추가하세요!"</string>
     <string name="no_search_results">일치하는 결과가 없습니다</string>
+    <string name="search_no_results_hint">다른 제목, 계정 또는 메모 키워드를 사용해 보세요.</string>
+    <string name="clear_search">검색어 지우기</string>
+    <plurals name="search_result_count">
+        <item quantity="other">%1$d개 결과</item>
+    </plurals>
     
     <!-- Password Entry -->
     <string name="title">제목</string>

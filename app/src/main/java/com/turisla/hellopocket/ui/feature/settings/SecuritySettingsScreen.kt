@@ -25,6 +25,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -114,12 +115,19 @@ fun SecuritySettingsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.settings_security)) }, navigationIcon = {
+            TopAppBar(title = {
+                Text(
+                    stringResource(R.string.settings_security),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-            })
-        }) { paddingValues ->
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+            ))
+        }, containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -127,29 +135,35 @@ fun SecuritySettingsScreen(
         ) {
             item { SettingsDivider() }
             item {
-                SettingsListItem(
-                    title = stringResource(R.string.enable_fingerprint_unlock), icon = Icons.Outlined.Fingerprint, trailingContent = {
-                        Switch(
-                            checked = isBiometricEnabled, onCheckedChange = {
-                                viewModel.onBiometricUnlockToggled(it)
-                            })
-                    })
-            }
-            item { SettingsDivider() }
-            item {
-                SettingsListItem(
-                    title = stringResource(R.string.change_master_password), icon = Icons.Outlined.Lock, onClick = {
-                        showChangePasswordWarning = true
-                    })
-            }
-            item { SettingsDivider() }
-            item {
-                SettingsListItem(
-                    title = stringResource(R.string.master_password_hint),
-                    description = passwordHint?.takeIf(String::isNotBlank)
-                        ?: stringResource(R.string.password_hint_optional),
-                    icon = Icons.AutoMirrored.Outlined.HelpOutline,
-                    onClick = { showPasswordHintDialog = true })
+                SettingsGroup {
+                    SettingsListItem(
+                        title = stringResource(R.string.enable_fingerprint_unlock),
+                        icon = Icons.Outlined.Fingerprint,
+                        trailingContent = {
+                            Switch(
+                                checked = isBiometricEnabled,
+                                onCheckedChange = viewModel::onBiometricUnlockToggled,
+                            )
+                        },
+                        inGroup = true,
+                    )
+                    SettingsGroupDivider()
+                    SettingsListItem(
+                        title = stringResource(R.string.change_master_password),
+                        icon = Icons.Outlined.Lock,
+                        onClick = { showChangePasswordWarning = true },
+                        inGroup = true,
+                    )
+                    SettingsGroupDivider()
+                    SettingsListItem(
+                        title = stringResource(R.string.master_password_hint),
+                        description = passwordHint?.takeIf(String::isNotBlank)
+                            ?: stringResource(R.string.password_hint_optional),
+                        icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                        onClick = { showPasswordHintDialog = true },
+                        inGroup = true,
+                    )
+                }
             }
             item { SettingsDivider() }
         }
@@ -166,8 +180,8 @@ private fun ChangePasswordWarningDialog(
     val additionInfo = if (isBiometricEnabled) biometricInfo else ""
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         icon = { Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
         title = { Text(stringResource(R.string.important_notice), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
         text = { Text(stringResource(R.string.change_password_warning, additionInfo), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
@@ -179,8 +193,8 @@ private fun ChangePasswordWarningDialog(
 private fun EnrollBiometricDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = { Text(stringResource(R.string.enroll_biometric_dialog_title)) },
         text = { Text(stringResource(R.string.enroll_biometric_dialog_message)) },
         confirmButton = { Button(onClick = onConfirm) { Text(stringResource(R.string.go_to_settings)) } },
@@ -197,8 +211,8 @@ private fun PasswordHintDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = { Text(stringResource(R.string.enter_password_hint)) },
         text = {
             OutlinedTextField(
@@ -208,6 +222,7 @@ private fun PasswordHintDialog(
                 supportingText = { Text(stringResource(R.string.password_hint_description)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                shape = MaterialTheme.shapes.medium,
             )
         },
         confirmButton = {

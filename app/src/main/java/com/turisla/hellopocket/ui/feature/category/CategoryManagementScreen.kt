@@ -1,6 +1,7 @@
 package com.turisla.hellopocket.ui.feature.category
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +37,8 @@ import com.turisla.hellopocket.ui.feature.common.ConfirmDeleteDialog
 import org.koin.androidx.compose.koinViewModel
 import androidx.core.graphics.toColorInt
 import com.turisla.hellopocket.ui.feature.common.getCategoryDisplayName
+import com.turisla.hellopocket.ui.feature.common.AppIconTile
+import com.turisla.hellopocket.ui.feature.common.LoadingOverlay
 
 /**
  * 分类管理页面
@@ -48,12 +51,16 @@ fun CategoryManagementScreen(
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val event by viewModel.event.collectAsStateWithLifecycle()
+    val isMutating by viewModel.isMutating.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<Category?>(null) }
     var categoryToDelete by remember { mutableStateOf<Category?>(null) }
+
+    // 分类写入依赖当前页面 ViewModel，提交期间禁止返回和重复操作。
+    BackHandler(enabled = isMutating) {}
 
     // 监听事件
     LaunchedEffect(event) {
@@ -122,49 +129,58 @@ fun CategoryManagementScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.category_management),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.titleLarge,
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = onNavigateBack, enabled = !isMutating) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }, actions = {
-                    IconButton(onClick = {
-                        showAddDialog = true
-                    }) {
+                    IconButton(
+                        onClick = { showAddDialog = true },
+                        enabled = !isMutating,
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_category))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.background,
                 )
             )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+                .padding(paddingValues),
         ) {
-            items(categories, key = { it.id }) { category ->
-                CategoryItem(
-                    category = category,
-                    passwordCount = viewModel.getCategoryPasswordCount(category.id),
-                    isDefaultCategory = viewModel.isDefaultCategory(category.id),
-                    onEdit = {
-                        editingCategory = category
-                        showEditDialog = true
-                    },
-                    onDelete = {
-                        categoryToDelete = category
-                    }
-                )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 12.dp),
+            ) {
+                items(categories, key = { it.id }) { category ->
+                    CategoryItem(
+                        category = category,
+                        passwordCount = viewModel.getCategoryPasswordCount(category.id),
+                        isDefaultCategory = viewModel.isDefaultCategory(category.id),
+                        enabled = !isMutating,
+                        onEdit = {
+                            editingCategory = category
+                            showEditDialog = true
+                        },
+                        onDelete = {
+                            categoryToDelete = category
+                        },
+                    )
+                }
+            }
+            if (isMutating) {
+                LoadingOverlay()
             }
         }
     }
@@ -178,26 +194,34 @@ private fun CategoryItem(
     category: Category,
     passwordCount: Int,
     isDefaultCategory: Boolean,
+    enabled: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var showActions by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 分类颜色指示器
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(Color(category.color.toColorInt()))
-            )
+            AppIconTile(
+                containerColor = Color(category.color.toColorInt()).copy(alpha = 0.18f),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(18.dp)
+                        .clip(CircleShape)
+                        .background(Color(category.color.toColorInt())),
+                )
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -205,7 +229,7 @@ private fun CategoryItem(
                 Text(
                     text = getCategoryDisplayName(category),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = pluralStringResource(R.plurals.password_count, passwordCount, passwordCount),
@@ -216,20 +240,52 @@ private fun CategoryItem(
 
             // 操作按钮
             if (!isDefaultCategory) {
-                IconButton(onClick = onEdit) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.edit_category),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                Box {
+                    IconButton(
+                        onClick = { showActions = true },
+                        enabled = enabled,
+                    ) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.totp_more),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showActions,
+                        onDismissRequest = { showActions = false },
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.edit_category)) },
+                            leadingIcon = {
+                                Icon(Icons.Default.Edit, contentDescription = null)
+                            },
+                            onClick = {
+                                showActions = false
+                                onEdit()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    stringResource(R.string.delete),
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                )
+                            },
+                            onClick = {
+                                showActions = false
+                                onDelete()
+                            },
+                        )
+                    }
                 }
             }
         }

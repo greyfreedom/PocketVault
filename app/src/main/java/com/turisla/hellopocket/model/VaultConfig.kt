@@ -14,11 +14,10 @@ data class VaultConfig(
     val integrityHash: String? = null, // Base64 编码的 SHA-256 哈希，校验 passwords.dat + categories.dat + manifest.dat
     val passwordHint: String? = null, // 主密码提示
     val kdfAlgorithm: String = "PBKDF2WithHmacSHA256",
-    // 旧配置没有该字段时按历史参数解锁；新建和改密时写入更高工作因子
-    val kdfIterations: Int = 100_000,
-    val vaultId: String = "",
-    // 0 表示旧版空关联数据，1 表示密文已绑定到保险库和逻辑文件名
-    val associatedDataVersion: Int = 0
+    val kdfIterations: Int,
+    val vaultId: String,
+    // 当前格式固定为 1：密文绑定到保险库和逻辑文件名。
+    val associatedDataVersion: Int,
 )
 
 
@@ -29,13 +28,13 @@ data class VaultConfig(
 @Serializable
 data class VaultManifestV2(
     val schemaVersion: Int = 1,
-    val vaultId: String = "",
+    val vaultId: String,
     val generation: Long = 0,
     val createdAt: Long = 0L,
     val attachments: List<AttachmentManifestEntry> = emptyList(),
     // 核心密文摘要位于加密清单内，防止攻击者重算公开 hash 后拼接历史文件。
-    val fileDigests: Map<String, String> = emptyMap(),
-    val fileSizes: Map<String, Long> = emptyMap(),
+    val fileDigests: Map<String, String>,
+    val fileSizes: Map<String, Long>,
     // 绑定盐、KDF、加密 Keyset 和密码提示；阻止只回滚明文配置来撤销改密。
-    val configBinding: String = "",
+    val configBinding: String,
 )

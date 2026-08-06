@@ -6,6 +6,8 @@ PocketVault stores highly sensitive data. Security reports are welcome, but plea
 
 Security fixes are provided for the latest official version distributed through Google Play and this repository's GitHub Releases, together with its matching source tag. Older versions may no longer receive fixes; reproduce an issue on the latest version when it is safe to do so.
 
+A version number present on an unreleased source branch does not supersede the latest signed release. Use the Google Play listing or matching GitHub Release and signed tag to identify the currently supported production version.
+
 ## Reporting a vulnerability
 
 Email **richonenight@gmail.com** with the subject `PocketVault security report`.
@@ -29,12 +31,20 @@ PocketVault is designed as a strictly local Android application:
 - it does not request `android.permission.INTERNET`;
 - it contains no analytics, advertising, telemetry, or crash-reporting SDK;
 - the master password is not persisted;
-- new and re-keyed vaults derive a wrapping key with PBKDF2-HMAC-SHA256 using 600,000 iterations;
+- new and re-keyed vaults derive a wrapping key with PBKDF2-HMAC-SHA256 using 600,000 iterations, and supported vault configurations require at least that work factor;
 - vault content is encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF;
 - biometric unlock is a convenience mechanism backed by Android Keystore, not a replacement for the master password;
 - automatic locking, screenshot protection, authenticated encryption, import validation, and timed clipboard clearing reduce common exposure paths.
 
 The readable `vault_v2.json` configuration contains metadata required before decryption, including the password hint, salt, KDF parameters, and encrypted keyset. Exported backups include this metadata. Password hints must not contain sensitive information.
+
+The app enforces a six-character minimum master password as an input floor, not as a security guarantee. Users should choose a substantially longer, unique passphrase because offline backup access permits repeated password guesses without contacting PocketVault.
+
+## Vault format compatibility
+
+Version 2.5.0 intentionally fails closed unless a V2 vault contains the current required KDF parameters, vault identifier, associated-data version, public integrity value, authenticated manifest binding, file digests, and file sizes. V1 vaults and early V2 snapshots that omit these fields are recognized as existing data but are not decrypted, imported, or silently overwritten.
+
+Users with an older vault must first use the official 2.4.0 release to unlock and migrate it, then export a fresh `.hpb` backup before installing 2.5.0. Keep the original installation and backup until the fresh backup has been verified. Test migration procedures with synthetic data or a disposable copy; never send a real vault to a public issue.
 
 ## Security limitations
 

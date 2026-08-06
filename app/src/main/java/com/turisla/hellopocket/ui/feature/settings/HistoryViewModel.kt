@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.turisla.hellopocket.data.PasswordRepository
 import com.turisla.hellopocket.data.TotpRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -34,36 +35,58 @@ class HistoryViewModel(
     private fun loadBackupHistory() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val historyFiles = passwordRepository.getBackupHistory()
-            _uiState.update { it.copy(backupFiles = historyFiles, isLoading = false) }
+            try {
+                val historyFiles = passwordRepository.getBackupHistory()
+                _uiState.update { it.copy(backupFiles = historyFiles) }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                _event.value = Event.LoadFailed
+            } finally {
+                // 页面会在加载中禁止返回，因此所有结果都必须释放加载状态。
+                _uiState.update { it.copy(isLoading = false) }
+            }
         }
     }
 
     fun restoreBackup(backupFile: File, masterPassword: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val success = totpRepository.withVaultReplacementLock {
-                passwordRepository.restoreFromBackup(backupFile, masterPassword)
-            }
-            if (success) {
-                _event.value = Event.RestoreSuccess
-            } else {
+            try {
+                val success = totpRepository.withVaultReplacementLock {
+                    passwordRepository.restoreFromBackup(backupFile, masterPassword)
+                }
+                _event.value = if (success) Event.RestoreSuccess else Event.RestoreFailed
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
                 _event.value = Event.RestoreFailed
-
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
             }
-            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
     fun deleteBackup(backupFile: File) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val success = passwordRepository.deleteFromBackup(backupFile)
-            if (success) {
-                _event.value = Event.DeleteSuccess
-                _uiState.update { it.copy(isLoading = false, backupFiles = _uiState.value.backupFiles.filter { it.path != backupFile.path }) }
-            } else {
+            try {
+                val success = passwordRepository.deleteFromBackup(backupFile)
+                if (success) {
+                    _event.value = Event.DeleteSuccess
+                    _uiState.update { state ->
+                        state.copy(
+                            backupFiles = state.backupFiles.filter { it.path != backupFile.path },
+                        )
+                    }
+                } else {
+                    _event.value = Event.DeleteFailed
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
                 _event.value = Event.DeleteFailed
+            } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
@@ -79,5 +102,6 @@ class HistoryViewModel(
         data object RestoreFailed : Event()
         data object DeleteSuccess : Event()
         data object DeleteFailed : Event()
+        data object LoadFailed : Event()
     }
 }

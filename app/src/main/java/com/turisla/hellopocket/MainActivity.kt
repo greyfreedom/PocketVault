@@ -39,6 +39,7 @@ import com.turisla.hellopocket.router.RouteCategoryManagement
 import com.turisla.hellopocket.router.RouteDetail
 import com.turisla.hellopocket.router.RouteHistory
 import com.turisla.hellopocket.router.RouteMainPage
+import com.turisla.hellopocket.router.RouteSearch
 import com.turisla.hellopocket.router.RouteSetup
 import com.turisla.hellopocket.router.RouteUnlock
 import com.turisla.hellopocket.router.RouteAddPassword
@@ -68,6 +69,7 @@ import com.turisla.hellopocket.ui.feature.detail.DetailScreen
 import com.turisla.hellopocket.ui.feature.detail.DetailEditDraftViewModel
 import com.turisla.hellopocket.ui.feature.mainPage.MainPage
 import com.turisla.hellopocket.ui.feature.passwordGenerator.PasswordGeneratorScreen
+import com.turisla.hellopocket.ui.feature.search.SearchScreen
 import com.turisla.hellopocket.ui.feature.settings.AboutScreen
 import com.turisla.hellopocket.ui.feature.settings.AppearanceSettingsScreen
 import com.turisla.hellopocket.ui.feature.settings.ChangePasswordScreen
@@ -276,6 +278,14 @@ private fun AppNavigation(viewModel: MainViewModel) {
         }
         composable<RouteMainPage> {
             MainPage(navController = navController)
+        }
+        composable<RouteSearch> {
+            SearchScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onResultClick = { entryId ->
+                    navController.navigate(RouteDetail(id = entryId))
+                },
+            )
         }
         composable<RouteDetail> { backStackEntry ->
             // 编辑草稿绑定到当前详情页返回栈，进入生成器后仍保留编辑模式和表单内容。

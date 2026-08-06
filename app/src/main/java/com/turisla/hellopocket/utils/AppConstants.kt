@@ -21,6 +21,6 @@ object AppConstants {
     // 最大附件大小限制（50MB）
     const val MAX_ATTACHMENT_SIZE_BYTES = 50L * 1024 * 1024 // 50MB
 
-    // 主密码用于抵抗离线破解，不能沿用普通 PIN 的最低长度
-    const val MIN_MASTER_PASSWORD_LENGTH = 12
+    // 产品允许的最低输入门槛；6 位不代表安全强度充足，仍应鼓励用户使用更长的主密码。
+    const val MIN_MASTER_PASSWORD_LENGTH = 6
 }

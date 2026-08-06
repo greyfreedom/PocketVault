@@ -1,10 +1,15 @@
 package com.turisla.hellopocket.ui.feature.common
 
+import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,6 +20,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -23,8 +29,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,6 +46,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.toColorInt
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.Category
+import java.util.Locale
+
+private const val DEFAULT_CATEGORY_COLOR = "#2196F3"
 
 /**
  * 分类编辑对话框 - 统一的UI组件，可用于添加和编辑分类
@@ -51,7 +66,10 @@ fun CategoryEditDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
         ) {
             CategoryCreationContent(
                 title = title,
@@ -99,7 +117,8 @@ fun SelectCategoryContent(
     
     Column(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp), 
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -112,13 +131,12 @@ fun SelectCategoryContent(
             Text(
                 text = stringResource(R.string.select_category), 
                 style = MaterialTheme.typography.titleLarge, 
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold,
             )
             
             // 创建新分类图标按钮
             IconButton(
                 onClick = onCreateNew,
-                modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     Icons.Default.Add,
@@ -234,18 +252,20 @@ fun SelectableCategoryItem(
             .fillMaxWidth()
             .height(64.dp) // 适合列表项的高度
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerLow
+            },
         ),
         border = if (isSelected) {
-            BorderStroke(2.dp, Color(category.color.toColorInt()))
+            BorderStroke(1.5.dp, Color(category.color.toColorInt()))
         } else {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+            BorderStroke(1.dp, Color.Transparent)
         },
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 4.dp else 1.dp
-        )
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
             modifier = Modifier
@@ -302,39 +322,23 @@ fun CategoryCreationContent(
     category: Category? = null,
     onSave: (String, String) -> Unit,
     onCancel: () -> Unit,
+    isSaving: Boolean = false,
 ) {
     var name by remember { mutableStateOf(category?.name ?: "") }
-    var selectedColor by remember { mutableStateOf(category?.color ?: "#2196F3") }
-    
-    val predefinedColors = listOf(
-        // 基础颜色
-        "#F44336", "#E91E63", "#9C27B0", "#673AB7", "#3F51B5",
-        "#2196F3", "#03A9F4", "#00BCD4", "#009688", "#4CAF50",
-        "#8BC34A", "#CDDC39", "#FFEB3B", "#FFC107", "#FF9800",
-        "#FF5722", "#795548", "#9E9E9E", "#607D8B", "#000000",
-        
-        // 浅色调
-        "#FFCDD2", "#F8BBD9", "#E1BEE7", "#D1C4E9", "#C5CAE9",
-        "#BBDEFB", "#B3E5FC", "#B2EBF2", "#B2DFDB", "#C8E6C9",
-        "#DCEDC8", "#F0F4C3", "#FFF9C4", "#FFECB3", "#FFE0B2",
-        "#FFCCBC", "#D7CCC8", "#F5F5F5", "#CFD8DC", "#EFEBE9",
-        
-        // 深色调
-        "#B71C1C", "#880E4F", "#4A148C", "#311B92", "#1A237E",
-        "#0D47A1", "#01579B", "#006064", "#004D40", "#1B5E20",
-        "#33691E", "#827717", "#F57F17", "#FF6F00", "#E65100",
-        "#BF360C", "#3E2723", "#212121", "#263238", "#5D4037",
-        
-        // 特殊颜色
-        "#FF1744", "#F50057", "#D500F9", "#651FFF", "#3D5AFE",
-        "#2979FF", "#00B0FF", "#00E5FF", "#1DE9B6", "#00E676",
-        "#76FF03", "#C6FF00", "#FFEA00", "#FFC400", "#FF9100",
-        "#FF3D00", "#DD2C00", "#6A4C93", "#A8E6CF", "#FFD3A5"
-    )
+    val initialHsv = remember(category?.color) {
+        colorToHsv(category?.color ?: DEFAULT_CATEGORY_COLOR)
+    }
+    var hue by remember(category?.color) { mutableFloatStateOf(initialHsv[0]) }
+    var saturation by remember(category?.color) { mutableFloatStateOf(initialHsv[1]) }
+    var brightness by remember(category?.color) { mutableFloatStateOf(initialHsv[2]) }
+    val selectedColor = remember(hue, saturation, brightness) {
+        hsvToHex(hue, saturation, brightness)
+    }
 
     Column(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -342,7 +346,7 @@ fun CategoryCreationContent(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold,
             )
         }
         
@@ -356,10 +360,12 @@ fun CategoryCreationContent(
         BasicTextField(
             value = name,
             onValueChange = { name = it },
+            enabled = !isSaving,
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)
+                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                    MaterialTheme.shapes.medium,
                 )
                 .padding(16.dp),
             textStyle = MaterialTheme.typography.bodyLarge.copy(
@@ -386,40 +392,17 @@ fun CategoryCreationContent(
             color = MaterialTheme.colorScheme.onSurface
         )
         
-        // 颜色选择网格
-        LazyVerticalGrid(
-            columns = GridCells.FixedSize(30.dp), // 8列颜色网格
-            modifier = Modifier.height(200.dp), // 固定高度以支持滚动
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(4.dp)
-        ) {
-            items(predefinedColors, key = { it }) { color ->
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(Color(color.toColorInt()))
-                        .clickable { selectedColor = color }
-                        .let { modifier ->
-                            if (selectedColor == color) {
-                                modifier.border(2.dp, Color.White, CircleShape)
-                            } else {
-                                modifier
-                            }
-                        }
-                ) {
-                    if (selectedColor == color) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                }
-            }
-        }
+        SlidingColorPalette(
+            hue = hue,
+            saturation = saturation,
+            brightness = brightness,
+            enabled = !isSaving,
+            onColorChange = { newHue, newSaturation, newBrightness ->
+                hue = newHue
+                saturation = newSaturation
+                brightness = newBrightness
+            },
+        )
         
         // 按钮行
         Row(
@@ -427,7 +410,10 @@ fun CategoryCreationContent(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(onClick = onCancel) {
+            TextButton(
+                onClick = onCancel,
+                enabled = !isSaving,
+            ) {
                 Text(stringResource(R.string.cancel))
             }
             
@@ -439,10 +425,208 @@ fun CategoryCreationContent(
                         onSave(name, selectedColor)
                     }
                 },
-                enabled = name.isNotBlank()
+                enabled = name.isNotBlank() && !isSaving,
             ) {
                 Text(stringResource(R.string.save))
             }
         }
     }
+}
+
+/** 连续 HSV 调色板：二维区域选择饱和度/明度，底部色带选择色相。 */
+@Composable
+private fun SlidingColorPalette(
+    hue: Float,
+    saturation: Float,
+    brightness: Float,
+    enabled: Boolean,
+    onColorChange: (hue: Float, saturation: Float, brightness: Float) -> Unit,
+) {
+    val hueColor = Color(AndroidColor.HSVToColor(floatArrayOf(hue, 1f, 1f)))
+    val selectedColor = Color(
+        AndroidColor.HSVToColor(floatArrayOf(hue, saturation, brightness)),
+    )
+    val outlineColor = MaterialTheme.colorScheme.outline
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val selectedColorHex = remember(hue, saturation, brightness) {
+        hsvToHex(hue, saturation, brightness)
+    }
+    val hueColors = remember {
+        listOf(
+            Color.Red,
+            Color.Yellow,
+            Color.Green,
+            Color.Cyan,
+            Color.Blue,
+            Color.Magenta,
+            Color.Red,
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(176.dp)
+                .clip(MaterialTheme.shapes.medium)
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+                .pointerInput(enabled, hue) {
+                    if (enabled) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+
+                            fun updateColor(position: Offset) {
+                                val paletteWidth = size.width.toFloat().coerceAtLeast(1f)
+                                val paletteHeight = size.height.toFloat().coerceAtLeast(1f)
+                                onColorChange(
+                                    hue,
+                                    (position.x / paletteWidth).coerceIn(0f, 1f),
+                                    (1f - position.y / paletteHeight).coerceIn(0f, 1f),
+                                )
+                            }
+
+                            updateColor(down.position)
+                            down.consume()
+                            var change = down
+                            while (change.pressed) {
+                                val event = awaitPointerEvent()
+                                change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                updateColor(change.position)
+                                change.consume()
+                            }
+                        }
+                    }
+                },
+        ) {
+            drawRect(
+                brush = Brush.horizontalGradient(listOf(Color.White, hueColor)),
+            )
+            drawRect(
+                brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black)),
+            )
+
+            val outerRadius = 11.dp.toPx()
+            val indicatorX = (saturation * size.width).coerceIn(
+                outerRadius,
+                size.width - outerRadius,
+            )
+            val indicatorY = ((1f - brightness) * size.height).coerceIn(
+                outerRadius,
+                size.height - outerRadius,
+            )
+            val indicatorCenter = Offset(indicatorX, indicatorY)
+
+            drawCircle(
+                color = Color.Black.copy(alpha = 0.35f),
+                radius = outerRadius,
+                center = indicatorCenter,
+                style = Stroke(width = 1.dp.toPx()),
+            )
+            drawCircle(
+                color = selectedColor,
+                radius = 8.dp.toPx(),
+                center = indicatorCenter,
+            )
+            drawCircle(
+                color = Color.White,
+                radius = 9.dp.toPx(),
+                center = indicatorCenter,
+                style = Stroke(width = 2.dp.toPx()),
+            )
+        }
+
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(36.dp)
+                .pointerInput(enabled, saturation, brightness) {
+                    if (enabled) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+
+                            fun updateHue(position: Offset) {
+                                val trackWidth = size.width.toFloat().coerceAtLeast(1f)
+                                val newHue = (position.x / trackWidth * 360f).coerceIn(0f, 360f)
+                                onColorChange(newHue, saturation, brightness)
+                            }
+
+                            updateHue(down.position)
+                            down.consume()
+                            var change = down
+                            while (change.pressed) {
+                                val event = awaitPointerEvent()
+                                change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                updateHue(change.position)
+                                change.consume()
+                            }
+                        }
+                    }
+                },
+        ) {
+            val trackHeight = 12.dp.toPx()
+            val trackTop = (size.height - trackHeight) / 2f
+            drawRoundRect(
+                brush = Brush.horizontalGradient(
+                    colors = hueColors,
+                    startX = 0f,
+                    endX = size.width,
+                ),
+                topLeft = Offset(0f, trackTop),
+                size = Size(size.width, trackHeight),
+                cornerRadius = CornerRadius(trackHeight / 2f),
+            )
+
+            val thumbRadius = 10.dp.toPx()
+            val thumbX = (hue / 360f * size.width).coerceIn(
+                thumbRadius,
+                size.width - thumbRadius,
+            )
+            val thumbCenter = Offset(thumbX, size.height / 2f)
+            drawCircle(
+                color = surfaceColor,
+                radius = thumbRadius,
+                center = thumbCenter,
+            )
+            drawCircle(
+                color = outlineColor,
+                radius = thumbRadius,
+                center = thumbCenter,
+                style = Stroke(width = 1.dp.toPx()),
+            )
+            drawCircle(
+                color = hueColor,
+                radius = 6.dp.toPx(),
+                center = thumbCenter,
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(selectedColor)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+            )
+            Text(
+                text = selectedColorHex,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+private fun colorToHsv(colorHex: String): FloatArray {
+    val colorInt = runCatching { colorHex.toColorInt() }
+        .getOrElse { DEFAULT_CATEGORY_COLOR.toColorInt() }
+    return FloatArray(3).also { hsv -> AndroidColor.colorToHSV(colorInt, hsv) }
+}
+
+private fun hsvToHex(hue: Float, saturation: Float, brightness: Float): String {
+    val colorInt = AndroidColor.HSVToColor(floatArrayOf(hue, saturation, brightness))
+    return String.format(Locale.US, "#%06X", colorInt and 0xFFFFFF)
 }

@@ -40,10 +40,20 @@
     <string name="edit_mode">Modo de Edição</string>
     <string name="detail">Detalhe</string>
     <string name="add_new_password">Adicionar Nova Senha</string>
+    <string name="add_item">Adicionar</string>
     <string name="no_passwords_found">Nenhum registro de senha encontrado</string>
-    <string name="search_passwords">Pesquisar senhas</string>
+    <string name="search_vault">Pesquisar no cofre</string>
+    <string name="search_hint">Título, conta ou notas</string>
+    <string name="search_empty_message">Encontre senhas e notas seguras por título, conta ou notas.</string>
     <string name="vault_empty_message">"O cofre está vazio,\nToque no botão \'+\' no canto inferior direito para adicionar uma nova senha!"</string>
     <string name="no_search_results">Nenhum resultado correspondente encontrado</string>
+    <string name="search_no_results_hint">Tente outro título, conta ou termo das notas.</string>
+    <string name="clear_search">Limpar pesquisa</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d resultado</item>
+        <item quantity="many">%1$d resultados</item>
+        <item quantity="other">%1$d resultados</item>
+    </plurals>
     
     <!-- Password Entry -->
     <string name="title">Título</string>

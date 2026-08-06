@@ -30,6 +30,9 @@ class DetailViewModel(
     private val _event = MutableStateFlow<Event?>(null)
     val event = _event.asStateFlow()
 
+    private val _isDeleting = MutableStateFlow(false)
+    val isDeleting = _isDeleting.asStateFlow()
+
     fun consumeEvent(event: Event) {
         _event.compareAndSet(event, null)
     }
@@ -73,10 +76,15 @@ class DetailViewModel(
      * 删除当前密码条目
      */
     fun deletePassword() {
+        if (!_isDeleting.compareAndSet(expect = false, update = true)) return
         launchRepositoryMutation {
-            passwordRepository.deleteEntry(entryId)
-            // 发送事件，通知UI需要返回上一页
-            _event.value = Event.NavigateBack
+            try {
+                passwordRepository.deleteEntry(entryId)
+                // 持久化完成后再返回，避免页面销毁取消写入。
+                _event.value = Event.NavigateBack
+            } finally {
+                _isDeleting.value = false
+            }
         }
     }
 

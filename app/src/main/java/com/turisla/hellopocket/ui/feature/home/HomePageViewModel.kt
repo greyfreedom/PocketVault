@@ -24,9 +24,6 @@ class HomePageViewModel(
     private val passwordRepository: PasswordRepository,
 ) : RepositoryMutationViewModel() {
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery = _searchQuery.asStateFlow()
-
     // 分类相关的状态
     private val _selectedCategoryId = MutableStateFlow(AppConstants.CATEGORY_ID_ALL)
     val selectedCategoryId = _selectedCategoryId.asStateFlow()
@@ -35,9 +32,6 @@ class HomePageViewModel(
     private val _selectedItemType = MutableStateFlow<VaultItemType?>(null)
     val selectedItemType = _selectedItemType.asStateFlow()
 
-    private val _isGridView = MutableStateFlow(false)
-    val isGridView = _isGridView.asStateFlow()
-    
     // 并发附件任务共享同一个可重放状态，避免 SharedFlow 丢失开始/结束事件。
     private val attachmentLoadingLock = Any()
     private var activeAttachmentOperations = 0
@@ -65,13 +59,13 @@ class HomePageViewModel(
         }
     }
 
-    // 根据搜索关键词、类型和选中分类过滤后的密码列表（包含密码和笔记）
+    // 根据类型和选中分类过滤后的密码列表（包含密码和笔记）。
+    // 搜索已拆分到独立页面，主页状态不再与搜索状态互相影响。
     val filteredPasswordEntries: StateFlow<List<PasswordEntry>> = combine(
         passwordEntries,
-        searchQuery,
         selectedCategoryId,
         selectedItemType
-    ) { entries, query, categoryId, itemType ->
+    ) { entries, categoryId, itemType ->
         // 1. 按类型筛选
         val typeFilteredEntries = itemType?.let { type ->
             entries.filter { it.type == type }
@@ -84,28 +78,8 @@ class HomePageViewModel(
             else -> typeFilteredEntries.filter { it.categoryIdsList.contains(categoryId) }
         }
         
-        // 3. 按搜索词筛选
-        if (query.isBlank()) {
-            categoryFilteredEntries
-        } else {
-            // 搜索支持：密码条目搜索标题，笔记条目搜索标题和内容
-            categoryFilteredEntries.filter { entry ->
-                when (entry.type) {
-                    VaultItemType.PASSWORD -> entry.title.contains(query, ignoreCase = true)
-                    VaultItemType.NOTE -> entry.title.contains(query, ignoreCase = true) || 
-                                         entry.content.contains(query, ignoreCase = true)
-                    else -> entry.title.contains(query, ignoreCase = true)
-                }
-            }
-        }
+        categoryFilteredEntries
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    /**
-     * 更新搜索关键词
-     */
-    fun onSearchQueryChanged(query: String) {
-        _searchQuery.value = query
-    }
 
     /**
      * 切换选中的分类
@@ -120,20 +94,6 @@ class HomePageViewModel(
      */
     fun onItemTypeSelected(itemType: VaultItemType?) {
         _selectedItemType.value = itemType
-    }
-
-    /**
-     * 切换视图模式（列表/网格）
-     */
-    fun toggleViewMode() {
-        _isGridView.value = !_isGridView.value
-    }
-
-    /**
-     * 获取分类下的密码数量
-     */
-    fun getCategoryPasswordCount(categoryId: String): Int {
-        return passwordRepository.getCategoryPasswordCount(categoryId)
     }
 
     // 附件列表

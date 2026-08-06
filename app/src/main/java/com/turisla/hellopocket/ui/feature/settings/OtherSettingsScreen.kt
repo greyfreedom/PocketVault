@@ -13,6 +13,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -32,12 +34,19 @@ fun OtherSettingsScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.settings_other)) }, navigationIcon = {
+            TopAppBar(title = {
+                Text(
+                    stringResource(R.string.settings_other),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-            })
-        }) { paddingValues ->
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+            ))
+        }, containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -45,17 +54,21 @@ fun OtherSettingsScreen(
         ) {
             item { SettingsDivider() }
             item {
-                SettingsListItem(
-                    title = stringResource(R.string.history), icon = Icons.Outlined.History, onClick = {
-                        navController.navigate(RouteHistory)
-                    })
-            }
-            item { SettingsDivider() }
-            item {
-                SettingsListItem(
-                    title = stringResource(R.string.manage_categories), icon = Icons.Outlined.Category, onClick = {
-                        navController.navigate(RouteCategoryManagement)
-                    })
+                SettingsGroup {
+                    SettingsListItem(
+                        title = stringResource(R.string.history),
+                        icon = Icons.Outlined.History,
+                        onClick = { navController.navigate(RouteHistory) },
+                        inGroup = true,
+                    )
+                    SettingsGroupDivider()
+                    SettingsListItem(
+                        title = stringResource(R.string.manage_categories),
+                        icon = Icons.Outlined.Category,
+                        onClick = { navController.navigate(RouteCategoryManagement) },
+                        inGroup = true,
+                    )
+                }
             }
             item { SettingsDivider() }
         }

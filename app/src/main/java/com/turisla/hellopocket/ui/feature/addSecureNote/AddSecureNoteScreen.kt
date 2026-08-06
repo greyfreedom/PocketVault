@@ -41,6 +41,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -78,6 +80,7 @@ import com.turisla.hellopocket.ui.feature.common.SelectCategoryContent
 import com.turisla.hellopocket.ui.feature.common.getCategoryDisplayName
 import com.turisla.hellopocket.ui.feature.home.HomePageViewModel
 import com.turisla.hellopocket.utils.AppConstants
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -103,6 +106,7 @@ fun AddSecureNoteScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val currentOnLoading by rememberUpdatedState(onLoading)
+    val isBusy = isSaving || isAttachmentLoading
 
     LaunchedEffect(isSaving, isAttachmentLoading) {
         currentOnLoading(isSaving || isAttachmentLoading)
@@ -112,8 +116,11 @@ fun AddSecureNoteScreen(
     }
 
     BackHandler {
-        draftViewModel.clear()
-        onNavigateBack()
+        // 持久化或附件写入期间不能退出，否则页面作用域会取消正在进行的事务。
+        if (!isBusy) {
+            draftViewModel.clear()
+            onNavigateBack()
+        }
     }
 
     Scaffold(
@@ -122,15 +129,17 @@ fun AddSecureNoteScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.add_secure_note), 
-                        style = MaterialTheme.typography.titleMedium, 
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.titleLarge,
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        draftViewModel.clear()
-                        onNavigateBack()
-                    }) {
+                    IconButton(
+                        onClick = {
+                            draftViewModel.clear()
+                            onNavigateBack()
+                        },
+                        enabled = !isBusy,
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
@@ -146,7 +155,7 @@ fun AddSecureNoteScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .imePadding()
-                .padding(horizontal = 10.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             // 标题区域
@@ -196,6 +205,8 @@ fun AddSecureNoteScreen(
                             try {
                                 val id = viewModel.addAttachment(uri)
                                 draftViewModel.addAttachment(id)
+                            } catch (error: CancellationException) {
+                                throw error
                             } catch (_: IllegalArgumentException) {
                                 // 文件大小超限
                                 Toast.makeText(context, R.string.attachment_add_failed, Toast.LENGTH_LONG).show()
@@ -235,7 +246,8 @@ fun AddSecureNoteScreen(
                         draftViewModel.clear()
                         onNavigateBack()
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = !isBusy,
                 ) {
                     Text(stringResource(R.string.cancel))
                 }
@@ -256,6 +268,8 @@ fun AddSecureNoteScreen(
                                     )
                                     draftViewModel.clear()
                                     onNavigateBack()
+                                } catch (error: CancellationException) {
+                                    throw error
                                 } catch (e: Exception) {
                                     error = context.getString(R.string.save_failed)
                                 } finally {
@@ -265,7 +279,7 @@ fun AddSecureNoteScreen(
                         }
                     }, 
                     modifier = Modifier.weight(1f),
-                    enabled = !isSaving
+                    enabled = !isBusy,
                 ) {
                     Text(stringResource(R.string.save))
                 }
@@ -278,9 +292,11 @@ fun AddSecureNoteScreen(
 private fun CardContainer(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
     ) {
         content()
     }
@@ -387,10 +403,9 @@ private fun ContentSection(
 private fun SectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
     )
 }
 
@@ -439,21 +454,19 @@ private fun CategorySelectionSection(
                         } else {
                             onCategoryAdd(AppConstants.CATEGORY_ID_FAVORITES)
                         }
-                    }, 
-                    modifier = Modifier.size(32.dp)
+                    },
                 ) {
                     Icon(
                         imageVector = if (isFavoritesSelected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = if (isFavoritesSelected) stringResource(R.string.remove_from_favorites) else stringResource(R.string.add_to_favorites),
-                        tint = if (isFavoritesSelected) Color(0xFFFF9800) else MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 
                 // 添加分类按钮
                 IconButton(
-                    onClick = { showCategoryDialog = true }, 
-                    modifier = Modifier.size(32.dp)
+                    onClick = { showCategoryDialog = true },
                 ) {
                     Icon(
                         Icons.Default.Add, 
@@ -514,42 +527,36 @@ private fun SelectedCategoryChip(
     category: Category, 
     onRemove: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(category.color.toColorInt()).copy(alpha = 0.2f))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically, 
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
+    InputChip(
+        selected = true,
+        onClick = onRemove,
+        label = {
+            Text(
+                text = getCategoryDisplayName(category = category),
+                style = MaterialTheme.typography.labelMedium,
+            )
+        },
+        leadingIcon = {
             Box(
                 modifier = Modifier
                     .size(12.dp)
                     .clip(CircleShape)
-                    .background(Color(category.color.toColorInt()))
+                    .background(Color(category.color.toColorInt())),
             )
-
-            Text(
-                text = getCategoryDisplayName(category = category),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+        },
+        trailingIcon = {
+            Icon(
+                Icons.Default.Close,
+                contentDescription = stringResource(R.string.remove_category),
+                modifier = Modifier.size(InputChipDefaults.IconSize),
             )
-
-            IconButton(
-                onClick = onRemove, 
-                modifier = Modifier.size(16.dp)
-            ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = stringResource(R.string.remove_category),
-                    modifier = Modifier.size(12.dp),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
-    }
+        },
+        shape = MaterialTheme.shapes.small,
+        colors = InputChipDefaults.inputChipColors(
+            selectedContainerColor = Color(category.color.toColorInt()).copy(alpha = 0.18f),
+            selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+        ),
+    )
 }
 
 /**
@@ -565,33 +572,50 @@ private fun CategorySelectionDialog(
 ) {
     var showCreateCategory by remember { mutableStateOf(false) }
     var newlyCreatedCategoryId by remember { mutableStateOf<String?>(null) }
+    var isCreatingCategory by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Dialog(
-        onDismissRequest = onDismiss, 
-        properties = DialogProperties(dismissOnClickOutside = false)
+        onDismissRequest = { if (!isCreatingCategory) onDismiss() },
+        properties = DialogProperties(dismissOnClickOutside = false),
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp), 
-            shape = RoundedCornerShape(16.dp), 
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
         ) {
             if (showCreateCategory) {
                 CategoryCreationContent(
                     onSave = { name, color ->
-                        coroutineScope.launch {
-                            try {
-                                val newCategoryId = viewModel.addCategory(name, color)
-                                newlyCreatedCategoryId = newCategoryId
-                            } catch (e: Exception) {
-                                // 处理错误
+                        if (!isCreatingCategory) {
+                            isCreatingCategory = true
+                            // 分类持久化完成前保持对话框，避免页面作用域取消写入。
+                            coroutineScope.launch {
+                                try {
+                                    val newCategoryId = viewModel.addCategory(name, color)
+                                    newlyCreatedCategoryId = newCategoryId
+                                    showCreateCategory = false
+                                } catch (error: CancellationException) {
+                                    throw error
+                                } catch (_: Exception) {
+                                    Toast.makeText(
+                                        context,
+                                        R.string.create_category_failed,
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                } finally {
+                                    isCreatingCategory = false
+                                }
                             }
-                            showCreateCategory = false
                         }
-                    }, 
-                    onCancel = { showCreateCategory = false }
+                    },
+                    onCancel = { showCreateCategory = false },
+                    isSaving = isCreatingCategory,
                 )
             } else {
                 SelectCategoryContent(

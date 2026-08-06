@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.protobuf)
@@ -24,8 +23,8 @@ android {
         applicationId = "com.turisla.hellopocket"
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
-        versionName = "2.4.0"
+        versionCode = 10
+        versionName = "2.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -53,6 +52,7 @@ android {
 
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("hellopocket")
@@ -77,17 +77,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
     }
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("build/generated/source/proto/main/java", "build/generated/source/proto/main/kotlin", "src/main/java")
-        }
+}
+
+java {
+    // Gradle、Lint 与源码编译统一使用 JDK 21；生成的字节码目标仍保持 Java 11。
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

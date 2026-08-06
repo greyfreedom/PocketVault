@@ -45,7 +45,10 @@ fun AddPasswordDialog(
 
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
-            shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
         ) {
             Column(
                 modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally
@@ -58,25 +61,25 @@ fun AddPasswordDialog(
                         value = title, onValueChange = {
                         title = it
                         error = null // Clear error on change
-                    }, label = { Text(stringResource(R.string.title_required)) }, modifier = Modifier.fillMaxWidth(), isError = error != null && title.isBlank()
+                    }, label = { Text(stringResource(R.string.title_required)) }, modifier = Modifier.fillMaxWidth(), isError = error != null && title.isBlank(), shape = MaterialTheme.shapes.medium
                     )
                     OutlinedTextField(
                         value = username, onValueChange = {
                         username = it
                         error = null
-                    }, label = { Text(stringResource(R.string.username_optional)) }, modifier = Modifier.fillMaxWidth()
+                    }, label = { Text(stringResource(R.string.username_optional)) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium
                     )
                     OutlinedTextField(
                         value = password, onValueChange = {
                         password = it
                         error = null
-                    }, label = { Text(stringResource(R.string.password_required)) }, modifier = Modifier.fillMaxWidth(), isError = error != null && password.isBlank()
+                    }, label = { Text(stringResource(R.string.password_required)) }, modifier = Modifier.fillMaxWidth(), isError = error != null && password.isBlank(), shape = MaterialTheme.shapes.medium
                     )
                     OutlinedTextField(
                         value = notes, onValueChange = {
                         notes = it
                         error = null
-                    }, label = { Text(stringResource(R.string.notes_optional)) }, modifier = Modifier.fillMaxWidth()
+                    }, label = { Text(stringResource(R.string.notes_optional)) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium
                     )
                 }
 

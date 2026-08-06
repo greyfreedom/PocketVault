@@ -258,7 +258,7 @@ fi
 APKSIGNER="$(find_android_tool apksigner)" || fail "apksigner was not found. Install Android SDK Build Tools."
 APKANALYZER="$(find_android_tool apkanalyzer)" || fail "apkanalyzer was not found. Install Android SDK Command-line Tools."
 command -v unzip >/dev/null 2>&1 || fail "unzip is required."
-command -v jarsigner >/dev/null 2>&1 || fail "jarsigner is required. Use JDK 17."
+command -v jarsigner >/dev/null 2>&1 || fail "jarsigner is required. Use JDK 21."
 command -v git >/dev/null 2>&1 || fail "git is required."
 
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/pocketvault-release.XXXXXX")"

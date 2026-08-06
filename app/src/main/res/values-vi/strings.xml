@@ -38,10 +38,18 @@
     <string name="edit_mode">Chế độ chỉnh sửa</string>
     <string name="detail">Chi tiết</string>
     <string name="add_new_password">Thêm mật khẩu mới</string>
+    <string name="add_item">Thêm</string>
     <string name="no_passwords_found">Không tìm thấy hồ sơ mật khẩu</string>
-    <string name="search_passwords">Tìm kiếm mật khẩu</string>
+    <string name="search_vault">Tìm kiếm trong kho</string>
+    <string name="search_hint">Tiêu đề, tài khoản hoặc ghi chú</string>
+    <string name="search_empty_message">Tìm mật khẩu và ghi chú bảo mật theo tiêu đề, tài khoản hoặc ghi chú.</string>
     <string name="vault_empty_message">"Kho lưu trữ trống,\nNhấn nút '+' ở góc dưới bên phải để thêm mật khẩu mới!"</string>
     <string name="no_search_results">Không tìm thấy kết quả phù hợp</string>
+    <string name="search_no_results_hint">Hãy thử từ khóa khác cho tiêu đề, tài khoản hoặc ghi chú.</string>
+    <string name="clear_search">Xóa tìm kiếm</string>
+    <plurals name="search_result_count">
+        <item quantity="other">%1$d kết quả</item>
+    </plurals>
     
     <!-- Password Entry -->
     <string name="title">Tiêu đề</string>

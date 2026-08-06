@@ -4,7 +4,6 @@ import com.turisla.hellopocket.data.PasswordRepository
 import com.turisla.hellopocket.data.TotpRepository
 import com.turisla.hellopocket.data.UserPreferencesRepository
 import com.turisla.hellopocket.security.BiometricCipherManager
-import com.turisla.hellopocket.security.CryptoManager
 import com.turisla.hellopocket.security.TinkCryptoManager
 import com.turisla.hellopocket.security.VaultSessionController
 import com.turisla.hellopocket.security.VaultSessionGuard
@@ -16,11 +15,8 @@ import org.koin.dsl.module
  * Koin 模块，负责数据层和安全层的依赖注入
  */
 val repositoryModule = module {
-    // 将 CryptoManager 声明为单例（用于向后兼容）
-    single { CryptoManager() }
-
     // 将 TinkCryptoManager 声明为单例
-    single { TinkCryptoManager(androidContext()) }
+    single { TinkCryptoManager() }
 
     // 将 BiometricCipherManager 声明为单例
     single { BiometricCipherManager() }
@@ -29,7 +25,7 @@ val repositoryModule = module {
     single { VaultSessionGuard() }
 
     // 将 PasswordRepository 声明为单例
-    single { PasswordRepository(androidContext(), get(), get(), get()) }
+    single { PasswordRepository(androidContext(), get(), get()) }
 
     // 将 ClipboardManagerHelper 声明为单例
     single { ClipboardManagerHelper(androidContext()) }

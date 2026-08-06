@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -51,6 +54,21 @@ fun AppearanceSettingsScreen(
     
     val showThemeDialog by viewModel.showThemeDialog.collectAsStateWithLifecycle()
     val currentTheme by viewModel.currentTheme.collectAsStateWithLifecycle()
+    val languageDesc = when (currentLanguage) {
+        UserPreferencesRepository.LANGUAGE_ENGLISH -> stringResource(R.string.language_english)
+        UserPreferencesRepository.LANGUAGE_CHINESE -> stringResource(R.string.language_chinese)
+        UserPreferencesRepository.LANGUAGE_KOREAN -> stringResource(R.string.language_korean)
+        UserPreferencesRepository.LANGUAGE_VIETNAMESE -> stringResource(R.string.language_vietnamese)
+        UserPreferencesRepository.LANGUAGE_HINDI -> stringResource(R.string.language_hindi)
+        UserPreferencesRepository.LANGUAGE_SPANISH -> stringResource(R.string.language_spanish)
+        UserPreferencesRepository.LANGUAGE_PORTUGUESE -> stringResource(R.string.language_portuguese)
+        else -> stringResource(R.string.language_follow_system)
+    }
+    val themeDesc = when (currentTheme) {
+        UserPreferencesRepository.THEME_LIGHT -> stringResource(R.string.theme_light)
+        UserPreferencesRepository.THEME_DARK -> stringResource(R.string.theme_dark)
+        else -> stringResource(R.string.theme_follow_system)
+    }
 
     if (showLanguageDialog) {
         LanguageDialog(
@@ -66,12 +84,19 @@ fun AppearanceSettingsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.settings_appearance)) }, navigationIcon = {
+            TopAppBar(title = {
+                Text(
+                    stringResource(R.string.settings_appearance),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-            })
-        }) { paddingValues ->
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+            ))
+        }, containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,28 +104,23 @@ fun AppearanceSettingsScreen(
         ) {
             item { SettingsDivider() }
             item {
-                val languageDesc = when (currentLanguage) {
-                    UserPreferencesRepository.LANGUAGE_ENGLISH -> stringResource(R.string.language_english)
-                    UserPreferencesRepository.LANGUAGE_CHINESE -> stringResource(R.string.language_chinese)
-                    UserPreferencesRepository.LANGUAGE_KOREAN -> stringResource(R.string.language_korean)
-                    UserPreferencesRepository.LANGUAGE_VIETNAMESE -> stringResource(R.string.language_vietnamese)
-                    UserPreferencesRepository.LANGUAGE_HINDI -> stringResource(R.string.language_hindi)
-                    UserPreferencesRepository.LANGUAGE_SPANISH -> stringResource(R.string.language_spanish)
-                    UserPreferencesRepository.LANGUAGE_PORTUGUESE -> stringResource(R.string.language_portuguese)
-                    else -> stringResource(R.string.language_follow_system)
+                SettingsGroup {
+                    SettingsListItem(
+                        title = stringResource(R.string.language),
+                        description = languageDesc,
+                        icon = Icons.Outlined.Language,
+                        onClick = viewModel::onLanguageClicked,
+                        inGroup = true,
+                    )
+                    SettingsGroupDivider()
+                    SettingsListItem(
+                        title = stringResource(R.string.theme),
+                        description = themeDesc,
+                        icon = Icons.Outlined.Palette,
+                        onClick = viewModel::onThemeClicked,
+                        inGroup = true,
+                    )
                 }
-                SettingsListItem(
-                    title = stringResource(R.string.language), description = languageDesc, icon = Icons.Outlined.Language, onClick = { viewModel.onLanguageClicked() })
-            }
-            item { SettingsDivider() }
-            item {
-                val themeDesc = when (currentTheme) {
-                    UserPreferencesRepository.THEME_LIGHT -> stringResource(R.string.theme_light)
-                    UserPreferencesRepository.THEME_DARK -> stringResource(R.string.theme_dark)
-                    else -> stringResource(R.string.theme_follow_system)
-                }
-                SettingsListItem(
-                    title = stringResource(R.string.theme), description = themeDesc, icon = Icons.Outlined.Palette, onClick = { viewModel.onThemeClicked() })
             }
             item { SettingsDivider() }
         }
@@ -126,12 +146,15 @@ private fun LanguageDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = { Text(text = stringResource(id = R.string.language)) },
         text = {
-            Column {
-                languages.forEach { (displayName, languageCode) ->
+            LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                items(
+                    items = languages,
+                    key = { (_, languageCode) -> languageCode },
+                ) { (displayName, languageCode) ->
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -139,7 +162,10 @@ private fun LanguageDialog(
                             .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        RadioButton(selected = (currentLanguage == languageCode), onClick = { onLanguageSelected(languageCode) })
+                        RadioButton(
+                            selected = currentLanguage == languageCode,
+                            onClick = null,
+                        )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(text = displayName, style = MaterialTheme.typography.bodyLarge)
                     }
@@ -166,8 +192,8 @@ private fun ThemeDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = { Text(text = stringResource(id = R.string.theme)) },
         text = {
             Column {

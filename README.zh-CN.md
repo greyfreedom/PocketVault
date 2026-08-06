@@ -25,6 +25,10 @@
   <a href="CONTRIBUTING.md">参与贡献</a> · <a href="LICENSE">Apache-2.0</a>
 </p>
 
+<p align="center">
+  <a href="./pictures/zh/banner.png"><img src="./pictures/zh/banner.png" alt="口袋密本产品概览" width="900"></a>
+</p>
+
 ---
 
 PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密码管理器。应用不申请 `android.permission.INTERNET`，不包含广告、分析、遥测或崩溃上报 SDK，也没有账号系统和远程服务器。
@@ -37,12 +41,15 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 > [!NOTE]
 > 本仓库中的严格离线声明适用于 2.4.0 及更高版本。商店发布过渡期间，Google Play 可能暂时仍提供旧版本；请核对已安装版本及其对应源码 tag。迁移说明见[更新日志](CHANGELOG.md)。
 
+> [!WARNING]
+> 2.5.0 仅接受当前带完整认证信息的 V2 保险库格式。缺少当前完整性、绑定或 KDF 元数据的 V1 和早期 V2 保险库会被拒绝，不再原地迁移。旧版本用户应先使用 2.4.0 解锁保险库并导出一份新的 `.hpb` 备份；在卸载或替换 2.4.0 前，请保留原始数据并确认新备份可用。
+
 ## 核心特性
 
 - **严格离线**：没有网络权限，没有 Firebase、广告、用户行为统计或远程日志。
 - **密码与安全笔记**：本地保存密码、用户名、备注、安全笔记、分类、收藏和加密附件。
 - **TOTP 验证码**：支持手动添加或使用可选相机权限扫描二维码，二维码只在设备本地处理。
-- **本地整理**：支持多分类、收藏、列表/网格视图和主页实时搜索。
+- **本地整理**：支持多分类、收藏、列表/网格视图，以及可搜索标题、账号、密码备注和安全笔记内容的独立搜索页面。
 - **密码生成器**：支持长度、字符集、易混淆字符排除和密码短语。
 - **生物识别快捷解锁**：使用 Android Keystore 保护的本地密钥包装机制。
 - **本地备份与恢复**：支持加密导出、导入和最多 5 份、总计最多 1 GiB 的自动备份历史。
@@ -54,16 +61,16 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 截图使用演示数据，不包含真实凭据。点击任意截图可打开 [`pictures/zh`](pictures/zh/) 中的原图。
 
 <p align="center">
-  <a href="./pictures/zh/listpass.jpeg"><img src="./pictures/zh/listpass.jpeg" alt="密码列表" width="210"></a>
-  <a href="./pictures/zh/search.jpeg"><img src="./pictures/zh/search.jpeg" alt="本地搜索" width="210"></a>
-  <a href="./pictures/zh/addpass.jpeg"><img src="./pictures/zh/addpass.jpeg" alt="添加密码" width="210"></a>
-  <a href="./pictures/zh/gene.jpeg"><img src="./pictures/zh/gene.jpeg" alt="密码生成器" width="210"></a>
+  <a href="./pictures/zh/listpass.png"><img src="./pictures/zh/listpass.png" alt="密码列表" width="210"></a>
+  <a href="./pictures/zh/addpass.png"><img src="./pictures/zh/addpass.png" alt="添加密码" width="210"></a>
+  <a href="./pictures/zh/addnote.png"><img src="./pictures/zh/addnote.png" alt="添加安全笔记" width="210"></a>
+  <a href="./pictures/zh/addcategory.png"><img src="./pictures/zh/addcategory.png" alt="创建分类" width="210"></a>
 </p>
 
 <p align="center">
-  <a href="./pictures/zh/list_category.jpeg"><img src="./pictures/zh/list_category.jpeg" alt="分类筛选" width="210"></a>
-  <a href="./pictures/zh/category.jpeg"><img src="./pictures/zh/category.jpeg" alt="分类管理" width="210"></a>
-  <a href="./pictures/zh/fingerprint.jpeg"><img src="./pictures/zh/fingerprint.jpeg" alt="生物识别解锁" width="210"></a>
+  <a href="./pictures/zh/listtotp.png"><img src="./pictures/zh/listtotp.png" alt="TOTP 验证码列表" width="210"></a>
+  <a href="./pictures/zh/addtotp.png"><img src="./pictures/zh/addtotp.png" alt="添加 TOTP 验证码" width="210"></a>
+  <a href="./pictures/zh/genpass.png"><img src="./pictures/zh/genpass.png" alt="密码生成器" width="210"></a>
 </p>
 
 ## 安全设计
@@ -71,7 +78,7 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 PocketVault 采用“主密码包装随机数据密钥”的设计：
 
 1. 新建保险库时生成随机盐和随机 Google Tink `StreamingAead` Keyset。
-2. 使用 PBKDF2-HMAC-SHA256 从主密码派生密钥加密密钥。新建和改密后的保险库使用 600,000 次迭代；较低参数仅保留用于兼容旧保险库。
+2. 使用 PBKDF2-HMAC-SHA256 从主密码派生密钥加密密钥。新建和改密后的保险库使用 600,000 次迭代，受支持的保险库配置也必须声明不低于该工作因子。
 3. 派生密钥只用于包装随机 Keyset；主密码、派生密钥和明文 Keyset 都不会持久化。
 4. 密码、分类、TOTP、清单和附件使用 Google Tink Streaming AEAD（AES-256-GCM-HKDF）加密。
 5. 修改主密码时只重新包装 Keyset，不需要重新加密全部保险库内容。
@@ -90,7 +97,7 @@ PocketVault 采用“主密码包装随机数据密钥”的设计：
 - 加密后的 Tink Keyset；
 - 版本、保险库标识和完整性绑定所需元数据。
 
-请勿在密码提示中填写敏感信息，并妥善保存导出的备份。旧备份仍需要创建它时使用的主密码；应用没有账号、托管密钥或主密码找回服务。
+请勿在密码提示中填写敏感信息，并妥善保存导出的备份。受支持的备份仍需要创建它时使用的主密码；从 2.5.0 开始，备份必须已经采用上文所述的当前认证 V2 格式。应用没有账号、托管密钥或主密码找回服务。
 
 ## 安全模型与限制
 
@@ -131,7 +138,7 @@ GitHub 附件必须是从 Play Console 下载的已签名 Universal APK，不能
 
 - Android Studio 或 Android SDK Command-line Tools；
 - Android SDK 36；
-- JDK 17；
+- Gradle、Android Lint 与 Java/Kotlin 编译统一使用 JDK 21；生成的字节码仍兼容 Java 11；
 - Git。
 
 克隆仓库后无需 Firebase 配置，也不需要 `google-services.json`：

@@ -1,13 +1,14 @@
 package com.turisla.hellopocket.model
 
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class VaultManifestV2Test {
     @Test
-    fun `legacy manifest without snapshot metadata remains readable`() {
+    fun `manifest without authenticated snapshot metadata is rejected`() {
         val legacyJson = """
             {
               "schemaVersion": 1,
@@ -18,10 +19,9 @@ class VaultManifestV2Test {
             }
         """.trimIndent()
 
-        val manifest = Json.decodeFromString<VaultManifestV2>(legacyJson)
-
-        assertTrue(manifest.fileDigests.isEmpty())
-        assertTrue(manifest.fileSizes.isEmpty())
+        assertThrows(SerializationException::class.java) {
+            Json.decodeFromString<VaultManifestV2>(legacyJson)
+        }
     }
 
     @Test

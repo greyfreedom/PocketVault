@@ -1,7 +1,6 @@
 package com.turisla.hellopocket.ui.feature.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
@@ -38,8 +37,8 @@ fun ConfirmDeleteDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         icon = { Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
         title = { Text(stringResource(R.string.confirm_delete), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
         text = { Text(text, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },

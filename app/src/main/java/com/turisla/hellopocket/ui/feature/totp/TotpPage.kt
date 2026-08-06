@@ -2,21 +2,13 @@ package com.turisla.hellopocket.ui.feature.totp
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,7 +24,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.router.RouteEditTotp
+import com.turisla.hellopocket.ui.feature.common.AppEmptyState
 import com.turisla.hellopocket.ui.feature.common.ConfirmDeleteDialog
+import com.turisla.hellopocket.ui.theme.AppSpacing
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -74,44 +68,34 @@ fun TotpPage(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (totpEntries.isEmpty()) {
-            // 空状态
             Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 72.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Icon(
-                        Icons.Default.QrCodeScanner,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = stringResource(R.string.totp_empty_message),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = stringResource(R.string.totp_empty_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                AppEmptyState(
+                    icon = Icons.Default.QrCodeScanner,
+                    title = stringResource(R.string.totp_empty_message),
+                    description = stringResource(R.string.totp_empty_hint),
+                )
             }
         } else {
-            // TOTP 列表
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(
+                    start = AppSpacing.md,
+                    top = AppSpacing.sm,
+                    end = AppSpacing.md,
+                    bottom = 96.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
             ) {
-                item {
-                    Spacer(modifier = Modifier.size(8.dp))
-                }
-                items(totpEntries, key = { it.id }) { entry ->
+                items(
+                    items = totpEntries,
+                    key = { it.id },
+                    contentType = { "totp" },
+                ) { entry ->
                     val isExpanded = expandedIds.contains(entry.id)
 
                     TotpListItem(
@@ -123,9 +107,6 @@ fun TotpPage(
                         onDelete = { entryToDelete = entry },
                         onEdit = { navController.navigate(RouteEditTotp(entry.id)) },
                     )
-                }
-                item {
-                    Spacer(modifier = Modifier.size(72.dp)) // 为 FAB 留出空间
                 }
             }
         }

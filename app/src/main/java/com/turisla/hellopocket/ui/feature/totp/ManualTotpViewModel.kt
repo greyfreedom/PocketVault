@@ -7,6 +7,7 @@ import com.turisla.hellopocket.R
 import com.turisla.hellopocket.data.TotpRepository
 import com.turisla.hellopocket.security.OtpAuthData
 import com.turisla.hellopocket.security.OtpAuthParser
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -190,6 +191,8 @@ class ManualTotpViewModel(
                     }
                 }
                 _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
+            } catch (error: CancellationException) {
+                throw error
             } catch (_: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,

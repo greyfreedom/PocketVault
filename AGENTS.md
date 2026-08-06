@@ -4,17 +4,18 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project Overview
 
-HelloPocket is an Android password manager built with Kotlin and Jetpack Compose. It uses Google Tink for encryption (AES-256-GCM-HKDF-1MB) with PBKDF2 key derivation (600,000 iterations for new vaults; 100,000 retained only for legacy compatibility). The app follows an offline-first architecture with MVVM pattern and Koin for dependency injection.
+HelloPocket is an Android password manager built with Kotlin and Jetpack Compose. It uses Google Tink for encryption (AES-256-GCM-HKDF-1MB) with PBKDF2 key derivation (600,000 iterations). The app follows an offline-first architecture with MVVM pattern and Koin for dependency injection.
 
 ## 协作备忘录 (重要)
 
 ### 你需要注意的协作历史和重要结论
 
 1.  **核心架构 - 数据可移植性**:
-    *   项目**不使用数据库**，而是采用一种名为 **“保险库目录” (Vault Bundle)** 的存储模型。这是一个结构化的目录 (`hellopocket_vault`)，其中包含：一个核心的`manifest.json`清单文件、多个独立加密的数据文件（如`passwords.dat`, `categories.dat`）以及一个用于存放附件的子目录。
+    *   项目**不使用数据库**，而是采用一种名为 **“保险库目录” (Vault Bundle)** 的存储模型。这是一个结构化的目录 (`hellopocket_vault`)，其中包含：公开配置 `vault_v2.json`、加密清单 `manifest.dat`、多个独立加密的数据文件（如 `passwords.dat`, `categories.dat`）以及附件子目录。
 
 2.  **安全模型**:
-    *   **主密码是唯一信源**: 主密码和 `vault_v2.json` 中的随机盐通过 PBKDF2-HMAC-SHA256（新保险库 600,000 次；旧保险库最低兼容 100,000 次）派生密钥加密密钥，用于包装随机生成的 `StreamingAead Keyset`；项目只持久化加密后的 Keyset，绝不存储主密码、派生密钥或明文 Keyset。
+    *   **主密码是唯一信源**: 主密码和 `vault_v2.json` 中的随机盐通过 PBKDF2-HMAC-SHA256（600,000 次）派生密钥加密密钥，用于包装随机生成的 `StreamingAead Keyset`；项目只持久化加密后的 Keyset，绝不存储主密码、派生密钥或明文 Keyset。
+    *   **当前格式边界**: 2.5.0 只接受具备完整 KDF、保险库标识、关联数据、完整性与清单绑定字段的当前认证 V2 格式；V1 和早期 V2 只识别并明确拒绝，不再自动迁移。旧数据必须先用 2.4.0 迁移并重新导出。
     *   **Google Tink 加密**: 采用 Google Tink 库的 `StreamingAead` (AES-256-GCM-HKDF-1MB) 流式认证加密方案。
     *   **流式加密优势**: 使用流式加密避免将整个附件同时加载到内存；可处理的实际大小仍受设备存储、Android 平台和应用安全限制影响。
     *   **数据完整性保护**: 内置 SHA-256 完整性校验，确保保险库数据未被篡改。同时 GCM 模式本身也提供认证加密 (AEAD)。
@@ -22,7 +23,7 @@ HelloPocket is an Android password manager built with Kotlin and Jetpack Compose
     *   **修改主密码优化**: 修改主密码时，只需要重新加密 `Keyset`，而不需要重新加密所有数据文件，大幅提升了性能和用户体验。
 
 3.  **关键功能实现决策**:
-    *   **搜索**: 采用**主页内嵌式搜索**方案，点击搜索图标后，在 `TopAppBar` 原地展开搜索框，实时过滤列表，而不是跳转到新页面。
+    *   **搜索**: 采用**独立搜索页面**，本地检索标题、账号、密码备注和安全笔记正文；不索引密码值或 TOTP 密钥，并按命中字段和更新时间排序结果。
     *   **自动锁定**: 应用进入后台**1分钟**后自动锁定，返回前台时需重新认证。
     *   **剪贴板管理**: 复制的密码在**60秒**后，会自动从系统剪贴板中清除。
     *   **防截屏**: 应用主窗口统一添加 `FLAG_SECURE` 标志，以禁止常规截屏、录屏和最近任务缩略图。
@@ -122,7 +123,7 @@ com.turisla.hellopocket/
 
 ### Technology Stack
 
-- Kotlin 2.2.10, Android Gradle Plugin 8.10.1
+- Kotlin 2.3.21, Android Gradle Plugin 9.3.1, Gradle 9.5.1
 - Jetpack Compose BOM for UI
 - Koin for dependency injection
 - Google Tink for encryption
@@ -145,4 +146,5 @@ com.turisla.hellopocket/
 
 - Min SDK: 24 (Android Nougat)
 - Target SDK: 36
-- JDK: 17
+- Gradle and Android Lint runtime: JDK 21
+- Java/Kotlin toolchain: JDK 21，字节码目标保持 Java 11
