@@ -39,6 +39,7 @@
     <string name="edit_mode">Edit Mode</string>
     <string name="detail">Detail</string>
     <string name="add_new_password">Add New Password</string>
+    <string name="add_item">Add</string>
     <string name="no_passwords_found">No password records found</string>
     <string name="search_vault">Search vault</string>
     <string name="search_hint">Title, account, or notes</string>

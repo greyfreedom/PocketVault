@@ -58,6 +58,7 @@ import com.turisla.hellopocket.ui.feature.common.ConfirmDeleteDialog
 import com.turisla.hellopocket.ui.feature.common.SelectCategoryContent
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import androidx.core.graphics.toColorInt
@@ -107,6 +108,7 @@ fun DetailScreen(
     val attachments by viewModel.attachments.collectAsStateWithLifecycle()
     val editDraft by editDraftViewModel.draft.collectAsStateWithLifecycle()
     val isAttachmentLoading by viewModel.isAttachmentLoading.collectAsStateWithLifecycle()
+    val isDeleting by viewModel.isDeleting.collectAsStateWithLifecycle()
     val event by viewModel.event.collectAsStateWithLifecycle()
     val isInEditMode = editDraft.isEditing
     val context = LocalContext.current
@@ -123,10 +125,13 @@ fun DetailScreen(
     }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEntryActions by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
+    val isBusy = isSaving || isAttachmentLoading || isDeleting
 
-    // 拦截返回键：如果在编辑模式，则退出编辑模式而不是退出页面
-    BackHandler(enabled = isInEditMode) {
-        editDraftViewModel.clear()
+    // 编辑时返回会放弃草稿；持久化期间则阻止退出，避免取消页面作用域中的事务。
+    BackHandler(enabled = isInEditMode || isBusy) {
+        if (!isBusy) editDraftViewModel.clear()
     }
 
     LaunchedEffect(event) {
@@ -146,11 +151,10 @@ fun DetailScreen(
         )
     }
 
-    var isSaving by remember { mutableStateOf(false) }
     val currentOnLoading by rememberUpdatedState(onLoading)
 
-    LaunchedEffect(isSaving, isAttachmentLoading) {
-        currentOnLoading(isSaving || isAttachmentLoading)
+    LaunchedEffect(isSaving, isAttachmentLoading, isDeleting) {
+        currentOnLoading(isSaving || isAttachmentLoading || isDeleting)
     }
     DisposableEffect(Unit) {
         onDispose { currentOnLoading(false) }
@@ -161,18 +165,24 @@ fun DetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isInEditMode) stringResource(R.string.edit_mode) else (entry?.title ?: stringResource(R.string.detail)),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
+                        text = if (isInEditMode) {
+                            stringResource(R.string.edit_mode)
+                        } else {
+                            stringResource(R.string.detail)
+                        },
+                        style = MaterialTheme.typography.titleLarge,
                     )
                 },
                 navigationIcon = {
                     if (isInEditMode) {
-                        IconButton(onClick = editDraftViewModel::clear) {
+                        IconButton(
+                            onClick = editDraftViewModel::clear,
+                            enabled = !isBusy,
+                        ) {
                             Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
                         }
                     } else {
-                        IconButton(onClick = onBack) {
+                        IconButton(onClick = onBack, enabled = !isBusy) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     }
@@ -203,6 +213,8 @@ fun DetailScreen(
                                     try {
                                         viewModel.updatePassword(updatedEntry)
                                         editDraftViewModel.clear()
+                                    } catch (error: CancellationException) {
+                                        throw error
                                     } catch (e: Exception) {
                                         android.widget.Toast.makeText(
                                             context,
@@ -214,19 +226,52 @@ fun DetailScreen(
                                     }
                                 }
                             }
-                        }, enabled = !isSaving) {
+                        }, enabled = !isBusy) {
                             Icon(Icons.Default.Check, contentDescription = stringResource(R.string.save))
                         }
                     } else {
-                        IconButton(onClick = {
-                            entry?.let(editDraftViewModel::beginEditing)
-                        }) {
+                        FilledTonalIconButton(
+                            onClick = { entry?.let(editDraftViewModel::beginEditing) },
+                            enabled = !isBusy,
+                        ) {
                             Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
                         }
-                        IconButton(onClick = {
-                            showDeleteDialog = true
-                        }) {
-                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+                        Box {
+                            IconButton(
+                                onClick = { showEntryActions = true },
+                                enabled = !isBusy,
+                            ) {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = stringResource(R.string.totp_more),
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showEntryActions,
+                                onDismissRequest = { showEntryActions = false },
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            stringResource(R.string.delete),
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Outlined.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                        )
+                                    },
+                                    onClick = {
+                                        showEntryActions = false
+                                        showDeleteDialog = true
+                                    },
+                                )
+                            }
                         }
                     }
                 },
@@ -243,7 +288,7 @@ fun DetailScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .imePadding()
-                    .padding(horizontal = 10.dp)
+                    .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 if (isInEditMode) {
@@ -288,6 +333,56 @@ fun DetailScreen(
 }
 
 @Composable
+private fun EntryIdentityHeader(entry: PasswordEntry) {
+    val isNote = entry.type == VaultItemType.NOTE
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp, bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Surface(
+            modifier = Modifier.size(64.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = if (isNote) {
+                MaterialTheme.colorScheme.tertiaryContainer
+            } else {
+                MaterialTheme.colorScheme.primaryContainer
+            },
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = if (isNote) Icons.Filled.NoteAlt else Icons.Outlined.Key,
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp),
+                    tint = if (isNote) {
+                        MaterialTheme.colorScheme.onTertiaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    },
+                )
+            }
+        }
+        Text(
+            text = entry.title,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = stringResource(
+                if (isNote) R.string.type_note else R.string.type_password,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
 private fun ViewModeContent(
     entry: PasswordEntry, 
     categories: List<Category>,
@@ -299,15 +394,8 @@ private fun ViewModeContent(
     isNote: Boolean = false  // 新增：是否为笔记类型
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    
-    // Title section
-    SectionHeader(title = stringResource(R.string.title))
-    CardContainer {
-        DetailItemSection(
-            title = stringResource(R.string.title),
-            value = entry.title
-        )
-    }
+
+    EntryIdentityHeader(entry = entry)
 
     // 根据类型显示不同的内容区域
     if (isNote) {
@@ -528,6 +616,8 @@ private fun EditModeContent(
                     try {
                         val id = onAddAttachment(uri)
                         onAttachmentAdd(id)
+                    } catch (error: CancellationException) {
+                        throw error
                     } catch (_: IllegalArgumentException) {
                         // 文件大小超限
                         android.widget.Toast.makeText(ctx, R.string.attachment_add_failed, android.widget.Toast.LENGTH_LONG).show()
@@ -548,9 +638,11 @@ private fun EditModeContent(
 private fun CardContainer(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
     ) {
         content()
     }
@@ -602,7 +694,6 @@ private fun DetailItemSection(
                 onCopy?.let {
                     IconButton(
                         onClick = it,
-                        modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
@@ -653,7 +744,6 @@ private fun DetailPasswordSection(
             Row {
                 IconButton(
                     onClick = onVisibilityToggle,
-                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         imageVector = if (isVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
@@ -667,7 +757,6 @@ private fun DetailPasswordSection(
 
                 IconButton(
                     onClick = onCopy,
-                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.ContentCopy,
@@ -811,7 +900,6 @@ private fun EditPasswordSection(
             Row {
                 IconButton(
                     onClick = onVisibilityToggle,
-                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         imageVector = if (isVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
@@ -825,7 +913,6 @@ private fun EditPasswordSection(
 
                 IconButton(
                     onClick = onGenerateClick,
-                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.AutoFixHigh,
@@ -892,10 +979,9 @@ private fun EditNoteSection(
 private fun SectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
     )
 }
 
@@ -957,7 +1043,6 @@ private fun EditCategorySection(
             
             IconButton(
                 onClick = { showCategoryDialog = true },
-                modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     Icons.Default.Add,
@@ -1046,42 +1131,36 @@ private fun SelectedCategoryChip(
     category: Category,
     onRemove: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(category.color.toColorInt()).copy(alpha = 0.2f))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
+    InputChip(
+        selected = true,
+        onClick = onRemove,
+        label = {
+            Text(
+                text = getCategoryDisplayName(category),
+                style = MaterialTheme.typography.labelMedium,
+            )
+        },
+        leadingIcon = {
             Box(
                 modifier = Modifier
                     .size(12.dp)
                     .clip(CircleShape)
-                    .background(Color(category.color.toColorInt()))
+                    .background(Color(category.color.toColorInt())),
             )
-            
-            Text(
-                text = getCategoryDisplayName(category),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface
+        },
+        trailingIcon = {
+            Icon(
+                Icons.Default.Close,
+                contentDescription = stringResource(R.string.remove_category),
+                modifier = Modifier.size(InputChipDefaults.IconSize),
             )
-            
-            IconButton(
-                onClick = onRemove,
-                modifier = Modifier.size(16.dp)
-            ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = stringResource(R.string.remove_category),
-                    modifier = Modifier.size(12.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
-    }
+        },
+        shape = MaterialTheme.shapes.small,
+        colors = InputChipDefaults.inputChipColors(
+            selectedContainerColor = Color(category.color.toColorInt()).copy(alpha = 0.18f),
+            selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+        ),
+    )
 }
 
 /**
@@ -1097,33 +1176,51 @@ private fun CategorySelectionDialog(
 ) {
     var showCreateCategory by remember { mutableStateOf(false) }
     var newlyCreatedCategoryId by remember { mutableStateOf<String?>(null) }
+    var isCreatingCategory by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(dismissOnClickOutside = false)) {
+    Dialog(
+        onDismissRequest = { if (!isCreatingCategory) onDismiss() },
+        properties = DialogProperties(dismissOnClickOutside = false),
+    ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
         ) {
             if (showCreateCategory) {
                 // 使用统一的分类编辑对话框内容，但嵌入在当前对话框中
                 CategoryCreationContent(
                     onSave = { name, color ->
-                        // 使用协程来等待分类创建完成并获取新分类ID
-                        coroutineScope.launch {
-                            try {
-                                val newCategoryId = onCreateCategory(name, color)
-                                // 不直接应用选择，只记录新创建的分类 ID
-                                newlyCreatedCategoryId = newCategoryId
-                            } catch (e: Exception) {
-                                // 处理错误情况
+                        if (!isCreatingCategory) {
+                            isCreatingCategory = true
+                            // 分类持久化完成前保持对话框，避免页面作用域取消写入。
+                            coroutineScope.launch {
+                                try {
+                                    val newCategoryId = onCreateCategory(name, color)
+                                    newlyCreatedCategoryId = newCategoryId
+                                    showCreateCategory = false
+                                } catch (error: CancellationException) {
+                                    throw error
+                                } catch (_: Exception) {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        R.string.create_category_failed,
+                                        android.widget.Toast.LENGTH_SHORT,
+                                    ).show()
+                                } finally {
+                                    isCreatingCategory = false
+                                }
                             }
-                            showCreateCategory = false
                         }
                     },
-                    onCancel = { showCreateCategory = false }
+                    onCancel = { showCreateCategory = false },
+                    isSaving = isCreatingCategory,
                 )
             } else {
                 SelectCategoryContent(

@@ -38,6 +38,7 @@
     <string name="edit_mode">편집 모드</string>
     <string name="detail">상세 정보</string>
     <string name="add_new_password">새 비밀번호 추가</string>
+    <string name="add_item">추가</string>
     <string name="no_passwords_found">비밀번호 기록이 없습니다</string>
     <string name="search_vault">보관함 검색</string>
     <string name="search_hint">제목, 계정 또는 메모</string>

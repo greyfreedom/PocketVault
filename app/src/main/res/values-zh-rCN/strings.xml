@@ -38,6 +38,7 @@
     <string name="edit_mode">编辑模式</string>
     <string name="detail">详情</string>
     <string name="add_new_password">添加新密码</string>
+    <string name="add_item">添加</string>
     <string name="no_passwords_found">暂无密码记录</string>
     <string name="search_vault">搜索保险库</string>
     <string name="search_hint">标题、账号或备注</string>

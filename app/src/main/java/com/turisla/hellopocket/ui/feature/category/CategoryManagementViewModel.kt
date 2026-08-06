@@ -6,6 +6,7 @@ import androidx.annotation.StringRes
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.data.PasswordRepository
 import com.turisla.hellopocket.model.Category
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +24,9 @@ class CategoryManagementViewModel(private val passwordRepository: PasswordReposi
     private val _event = MutableStateFlow<Event?>(null)
     val event: StateFlow<Event?> = _event.asStateFlow()
 
+    private val _isMutating = MutableStateFlow(false)
+    val isMutating: StateFlow<Boolean> = _isMutating.asStateFlow()
+
     fun consumeEvent(event: Event) {
         _event.compareAndSet(event, null)
     }
@@ -39,13 +43,11 @@ class CategoryManagementViewModel(private val passwordRepository: PasswordReposi
      * 添加新分类
      */
     fun addCategory(name: String, color: String) {
-        viewModelScope.launch {
-            try {
-                passwordRepository.addCategory(name, color)
-                _event.value = Event.ShowMessage(R.string.category_created_success)
-            } catch (_: Exception) {
-                _event.value = Event.ShowMessage(R.string.create_category_failed)
-            }
+        launchMutation(
+            successMessage = R.string.category_created_success,
+            failureMessage = R.string.create_category_failed,
+        ) {
+            passwordRepository.addCategory(name, color)
         }
     }
 
@@ -53,13 +55,11 @@ class CategoryManagementViewModel(private val passwordRepository: PasswordReposi
      * 更新分类
      */
     fun updateCategory(category: Category) {
-        viewModelScope.launch {
-            try {
-                passwordRepository.updateCategory(category)
-                _event.value = Event.ShowMessage(R.string.category_updated_success)
-            } catch (_: Exception) {
-                _event.value = Event.ShowMessage(R.string.update_category_failed)
-            }
+        launchMutation(
+            successMessage = R.string.category_updated_success,
+            failureMessage = R.string.update_category_failed,
+        ) {
+            passwordRepository.updateCategory(category)
         }
     }
 
@@ -67,12 +67,30 @@ class CategoryManagementViewModel(private val passwordRepository: PasswordReposi
      * 删除分类
      */
     fun deleteCategory(categoryId: String) {
+        launchMutation(
+            successMessage = R.string.category_deleted_success,
+            failureMessage = R.string.delete_category_failed,
+        ) {
+            passwordRepository.deleteCategory(categoryId)
+        }
+    }
+
+    private fun launchMutation(
+        @StringRes successMessage: Int,
+        @StringRes failureMessage: Int,
+        block: suspend () -> Unit,
+    ) {
+        if (!_isMutating.compareAndSet(expect = false, update = true)) return
         viewModelScope.launch {
             try {
-                passwordRepository.deleteCategory(categoryId)
-                _event.value = Event.ShowMessage(R.string.category_deleted_success)
+                block()
+                _event.value = Event.ShowMessage(successMessage)
+            } catch (error: CancellationException) {
+                throw error
             } catch (_: Exception) {
-                _event.value = Event.ShowMessage(R.string.delete_category_failed)
+                _event.value = Event.ShowMessage(failureMessage)
+            } finally {
+                _isMutating.value = false
             }
         }
     }

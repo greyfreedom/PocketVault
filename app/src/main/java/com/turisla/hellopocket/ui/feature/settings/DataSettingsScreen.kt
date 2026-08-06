@@ -2,6 +2,7 @@ package com.turisla.hellopocket.ui.feature.settings
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,6 +71,9 @@ fun DataSettingsScreen(
     var showImportDataWarning by remember { mutableStateOf(false) }
     var showShareSecurityInfo by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    // 导入、导出和分享文件都依赖页面作用域，处理中禁止返回取消任务。
+    BackHandler(enabled = isLoading) {}
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream"), onResult = { uri -> uri?.let { viewModel.exportData(it) } })
@@ -136,49 +141,61 @@ fun DataSettingsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.settings_data)) }, navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+            TopAppBar(title = {
+                Text(
+                    stringResource(R.string.settings_data),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }, navigationIcon = {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    enabled = !isLoading,
+                ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-            })
-        }) { paddingValues ->
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+            ))
+        }, containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 item { SettingsDivider() }
                 item {
-                    SettingsListItem(
-                        title = stringResource(R.string.export_data), icon = Icons.Outlined.FileDownload, onClick = {
-                            exportLauncher.launch("pocketvault.hpb")
-                        })
-                }
-                item { SettingsDivider() }
-                item {
-                    SettingsListItem(
-                        title = stringResource(R.string.share_data),
-                        icon = Icons.Outlined.Share,
-                        onClick = { viewModel.shareData(context) },
-                        trailingContent = {
-                            IconButton(
-                                onClick = { showShareSecurityInfo = true },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Info,
-                                    contentDescription = stringResource(R.string.settings_security),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    )
-                }
-                item { SettingsDivider() }
-                item {
-                    SettingsListItem(
-                        title = stringResource(R.string.import_data), icon = Icons.Outlined.FileUpload, onClick = {
-                            showImportDataWarning = true
-                        })
+                    SettingsGroup {
+                        SettingsListItem(
+                            title = stringResource(R.string.export_data),
+                            icon = Icons.Outlined.FileDownload,
+                            onClick = { exportLauncher.launch("pocketvault.hpb") },
+                            inGroup = true,
+                        )
+                        SettingsGroupDivider()
+                        SettingsListItem(
+                            title = stringResource(R.string.share_data),
+                            icon = Icons.Outlined.Share,
+                            onClick = { viewModel.shareData(context) },
+                            trailingContent = {
+                                IconButton(
+                                    onClick = { showShareSecurityInfo = true },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Info,
+                                        contentDescription = stringResource(R.string.share_data_security_title),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            },
+                            inGroup = true,
+                        )
+                        SettingsGroupDivider()
+                        SettingsListItem(
+                            title = stringResource(R.string.import_data),
+                            icon = Icons.Outlined.FileUpload,
+                            onClick = { showImportDataWarning = true },
+                            inGroup = true,
+                        )
+                    }
                 }
                 item { SettingsDivider() }
             }
@@ -198,8 +215,8 @@ private fun ShareSecurityInfoDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         icon = {
             Icon(
                 Icons.Rounded.Lock,
@@ -240,8 +257,8 @@ private fun ImportDataWarningDialog(
     val additionInfo = if (isBiometricEnabled) biometricInfo else ""
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         icon = { Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
         title = { Text(stringResource(R.string.important_notice), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
         text = { Text(stringResource(R.string.import_data_warning, additionInfo), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },

@@ -2,6 +2,7 @@ package com.turisla.hellopocket.ui.feature.totp
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +51,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import com.turisla.hellopocket.R
+import com.turisla.hellopocket.ui.feature.common.AppEmptyState
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -61,46 +64,48 @@ fun ScannerScreen(
     viewModel: ScannerViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
-    val scanResult by viewModel.scanResult.collectAsStateWithLifecycle()
     val addSuccess by viewModel.addSuccess.collectAsStateWithLifecycle()
+    val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
 
     // 相机权限状态
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
-    // 处理扫码结果
-    LaunchedEffect(scanResult) {
-        scanResult?.let { result ->
-            if (result.isSuccess) {
-                val uri = result.getOrNull()
-                if (uri != null) {
-                    viewModel.processScannedUri(uri)
-                }
-            } else {
-                viewModel.showError(R.string.totp_invalid_qr)
-            }
-        }
-    }
+    // TOTP 写入依赖当前页面的 ViewModel，处理中禁止返回取消事务。
+    BackHandler(enabled = isProcessing) {}
 
     // 处理添加成功
     LaunchedEffect(addSuccess) {
         if (addSuccess) {
-            viewModel.resetAddSuccess()
             navController.navigateUp()
+            // 先完成返回，再释放扫码锁，避免当前页在极短窗口内重新激活相机。
+            viewModel.resetAddSuccess()
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.scan_qr_code)) },
+                title = {
+                    Text(
+                        stringResource(R.string.scan_qr_code),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(
+                        onClick = { navController.navigateUp() },
+                        enabled = !isProcessing,
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                ),
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -108,6 +113,21 @@ fun ScannerScreen(
                 .padding(paddingValues)
         ) {
             when {
+                isProcessing -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            CircularProgressIndicator()
+                            Text(stringResource(R.string.totp_adding_entry))
+                        }
+                    }
+                }
+
                 // 权限已授予 - 显示扫码器
                 cameraPermissionState.status.isGranted -> {
                     ScannerContent(
@@ -136,27 +156,14 @@ fun ScannerScreen(
                 }
             }
 
-            // 加载指示器
-            if (addSuccess) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        CircularProgressIndicator()
-                        Text(stringResource(R.string.totp_adding_entry))
-                    }
-                }
-            }
         }
 
         // 错误提示对话框
         errorMessage?.let { messageRes ->
             AlertDialog(
                 onDismissRequest = { viewModel.clearError() },
+                shape = MaterialTheme.shapes.extraLarge,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 title = { Text(stringResource(R.string.error)) },
                 text = { Text(stringResource(messageRes)) },
                 confirmButton = {
@@ -256,6 +263,8 @@ fun PermissionRationaleDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = { Text(stringResource(R.string.camera_permission_required)) },
         text = { Text(stringResource(R.string.camera_permission_rationale)) },
         confirmButton = {
@@ -288,24 +297,10 @@ fun PermissionDeniedScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(32.dp)
         ) {
-            Icon(
-                Icons.Default.QrCodeScanner,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = stringResource(R.string.camera_permission_required),
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center
-            )
-
-            Text(
-                text = stringResource(R.string.totp_permission_denied_message),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+            AppEmptyState(
+                icon = Icons.Default.QrCodeScanner,
+                title = stringResource(R.string.camera_permission_required),
+                description = stringResource(R.string.totp_permission_denied_message),
             )
 
             Row(

@@ -1,7 +1,6 @@
 package com.turisla.hellopocket.ui.feature.search
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,13 +9,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,14 +26,13 @@ import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SearchOff
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -44,10 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -69,6 +63,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.VaultItemType
+import com.turisla.hellopocket.ui.feature.common.AppEmptyState
+import com.turisla.hellopocket.ui.feature.common.AppIconTile
+import com.turisla.hellopocket.ui.theme.AppSpacing
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -170,13 +167,10 @@ private fun SearchTopAppBar(
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
-    var initialFocusRequested by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        if (!initialFocusRequested) {
-            initialFocusRequested = true
-            focusRequester.requestFocus()
-        }
+    LaunchedEffect(focusRequester) {
+        // FocusRequester 会在配置变更后重建，因此每次进入新的 composition 都重新聚焦。
+        focusRequester.requestFocus()
     }
 
     TopAppBar(
@@ -187,7 +181,8 @@ private fun SearchTopAppBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(end = 8.dp)
-                    .height(56.dp)
+                    // 普通输入保持 56dp，大字体模式仍可向上扩展，避免文字底部被裁切。
+                    .heightIn(min = 56.dp)
                     .focusRequester(focusRequester),
                 textStyle = MaterialTheme.typography.bodyMedium,
                 placeholder = {
@@ -214,10 +209,10 @@ private fun SearchTopAppBar(
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
+                shape = MaterialTheme.shapes.medium,
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                 ),
@@ -236,7 +231,7 @@ private fun SearchTopAppBar(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.background,
         ),
     )
 }
@@ -248,41 +243,14 @@ private fun SearchEmptyState(
     title: String,
     message: String,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = CircleShape,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(36.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-        }
-        Spacer(modifier = Modifier.size(20.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
+        AppEmptyState(
+            icon = icon,
+            title = title,
+            description = message,
         )
     }
 }
@@ -298,11 +266,11 @@ private fun SearchResultList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             start = 16.dp,
-            top = 12.dp,
+            top = AppSpacing.sm,
             end = 16.dp,
             bottom = 24.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
         item(contentType = SearchListContentType.HEADER) {
             Text(
@@ -341,40 +309,37 @@ private fun SearchResultItem(
     query: String,
     onClick: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = if (result.entryType == VaultItemType.NOTE) {
-                        Icons.Filled.NoteAlt
-                    } else {
-                        Icons.Outlined.Key
-                    },
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
+            val isNote = result.entryType == VaultItemType.NOTE
+            val iconColor = if (isNote) {
+                MaterialTheme.colorScheme.tertiary
+            } else {
+                MaterialTheme.colorScheme.primary
             }
-            Spacer(modifier = Modifier.width(14.dp))
+            AppIconTile(
+                imageVector = if (isNote) Icons.Filled.NoteAlt else Icons.Outlined.Key,
+                contentDescription = null,
+                containerColor = Color.Transparent,
+                contentColor = iconColor,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = iconColor.copy(alpha = 0.32f),
+                ),
+            )
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             Column(modifier = Modifier.weight(1f)) {
                 HighlightedText(
                     text = result.displayTitle,

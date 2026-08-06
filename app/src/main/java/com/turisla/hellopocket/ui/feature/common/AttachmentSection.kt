@@ -62,7 +62,6 @@ fun AttachmentSection(
                 )
                 IconButton(
                     onClick = { launcher.launch(arrayOf("*/*")) },
-                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         Icons.Default.Add,
@@ -139,8 +138,8 @@ fun AttachmentChip(
     Box(
         modifier = modifier
             .width(120.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             .clickable(onClick = onClick)
             .padding(8.dp)
     ) {
@@ -179,23 +178,29 @@ fun AttachmentChip(
                 
                 // 只在可编辑模式下显示删除按钮
                 if (showRemoveButton) {
-                    // 使用Box替代IconButton以获得更精确的控制
-                    Box(
+                    IconButton(
+                        onClick = onRemove,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(2.dp) // 稍微留点边距
-                            .size(20.dp)   // 减小整体尺寸
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                            .clickable(onClick = onRemove),
-                        contentAlignment = Alignment.Center
+                            .offset(x = 12.dp, y = (-12).dp),
                     ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = stringResource(R.string.remove_attachment),
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(14.dp) // 图标尺寸
-                        )
+                        // 将 24dp 可见按钮贴到预览右上角，同时保留 48dp 触控热区。
+                        Surface(
+                            modifier = Modifier.size(24.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                            tonalElevation = 0.dp,
+                            shadowElevation = 0.dp,
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = stringResource(R.string.remove_attachment),
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(12.dp),
+                                )
+                            }
+                        }
                     }
                 }
             }

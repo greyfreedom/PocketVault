@@ -3,6 +3,7 @@ package com.turisla.hellopocket.ui.feature.settings
 import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,6 +55,7 @@ import com.turisla.hellopocket.MainActivity
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.ui.feature.common.LoadingOverlay
 import com.turisla.hellopocket.ui.feature.common.ImportMasterPasswordDialog
+import com.turisla.hellopocket.ui.feature.common.AppEmptyState
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
 import java.text.SimpleDateFormat
@@ -70,6 +73,9 @@ fun HistoryScreen(
     var showRestoreDialog by remember { mutableStateOf<File?>(null) }
     var showDeleteDialog by remember { mutableStateOf<File?>(null) }
     var pendingRestoreFile by remember { mutableStateOf<File?>(null) }
+
+    // 备份恢复/删除必须完整结束；返回会销毁 ViewModel 并取消页面作用域任务。
+    BackHandler(enabled = uiState.isLoading) {}
 
     LaunchedEffect(event) {
         event?.let { currentEvent ->
@@ -93,6 +99,14 @@ fun HistoryScreen(
 
                 is HistoryViewModel.Event.DeleteFailed -> {
                     Toast.makeText(context, context.getString(R.string.delete_backup_failed), Toast.LENGTH_SHORT).show()
+                }
+
+                is HistoryViewModel.Event.LoadFailed -> {
+                    Toast.makeText(
+                        context,
+                        R.string.operation_failed_try_again,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
         }
@@ -124,12 +138,22 @@ fun HistoryScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(title = { Text(stringResource(R.string.history_title)) }, navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+            CenterAlignedTopAppBar(title = {
+                Text(
+                    stringResource(R.string.history_title),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }, navigationIcon = {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    enabled = !uiState.isLoading,
+                ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-            })
-        }) {
+            }, colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+            ))
+        }, containerColor = MaterialTheme.colorScheme.background) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -167,9 +191,11 @@ private fun HistoryItem(file: File, onRestoreClick: (File) -> Unit, onDeleteClic
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
     ) {
         Column(
             modifier = Modifier
@@ -201,16 +227,15 @@ private fun HistoryItem(file: File, onRestoreClick: (File) -> Unit, onDeleteClic
 
 @Composable
 private fun EmptyState() {
-    Column(
-        modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = Icons.Default.History, contentDescription = null, modifier = Modifier
-                .width(64.dp)
-                .height(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant
+        AppEmptyState(
+            icon = Icons.Default.History,
+            title = stringResource(R.string.no_backup_history),
+            description = stringResource(R.string.history_title),
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(stringResource(R.string.no_backup_history), style = MaterialTheme.typography.titleMedium)
     }
 }
 
@@ -219,8 +244,8 @@ private fun RestoreWarningDialog(isBiometricUnlockEnabled: Boolean, fileName: St
     val additionInfo = if (isBiometricUnlockEnabled) stringResource(R.string.restore_biometric_info) else ""
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         icon = { Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
         title = { Text(stringResource(R.string.confirm_restore), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
         text = {
@@ -238,8 +263,8 @@ private fun RestoreWarningDialog(isBiometricUnlockEnabled: Boolean, fileName: St
 private fun DeleteWarningDialog(file: File, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         icon = { Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
         title = { Text(stringResource(R.string.confirm_delete_backup), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
         text = {

@@ -7,6 +7,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,8 @@ fun ImportMasterPasswordDialog(
 
     AlertDialog(
         modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         onDismissRequest = {
             password = ""
             onDismiss()
@@ -50,6 +53,7 @@ fun ImportMasterPasswordDialog(
                     autoCorrectEnabled = false
                 ),
                 singleLine = true,
+                shape = MaterialTheme.shapes.medium,
             )
         },
         confirmButton = {

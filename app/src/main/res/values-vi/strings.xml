@@ -38,6 +38,7 @@
     <string name="edit_mode">Chế độ chỉnh sửa</string>
     <string name="detail">Chi tiết</string>
     <string name="add_new_password">Thêm mật khẩu mới</string>
+    <string name="add_item">Thêm</string>
     <string name="no_passwords_found">Không tìm thấy hồ sơ mật khẩu</string>
     <string name="search_vault">Tìm kiếm trong kho</string>
     <string name="search_hint">Tiêu đề, tài khoản hoặc ghi chú</string>

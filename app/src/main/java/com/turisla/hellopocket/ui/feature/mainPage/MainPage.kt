@@ -3,20 +3,17 @@ package com.turisla.hellopocket.ui.feature.mainPage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
@@ -24,16 +21,20 @@ import androidx.compose.material.icons.filled.NoteAlt
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -42,342 +43,347 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.PasswordEntry
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import com.turisla.hellopocket.router.RouteQA
 import com.turisla.hellopocket.router.RouteAddPassword
 import com.turisla.hellopocket.router.RouteAddSecureNote
 import com.turisla.hellopocket.router.RouteAddTotpManual
 import com.turisla.hellopocket.router.RouteCategoryManagement
+import com.turisla.hellopocket.router.RouteQA
 import com.turisla.hellopocket.router.RouteSearch
 import com.turisla.hellopocket.router.RouteTotpScanner
-import com.turisla.hellopocket.ui.feature.home.AddPasswordDialog
+import com.turisla.hellopocket.ui.feature.common.AppIconTile
+import com.turisla.hellopocket.ui.feature.common.AppListRow
+import com.turisla.hellopocket.ui.feature.common.AppSectionSurface
 import com.turisla.hellopocket.ui.feature.home.HomePage
 import com.turisla.hellopocket.ui.feature.home.HomePageViewModel
 import com.turisla.hellopocket.ui.feature.mainPage.model.MainNavItem
 import com.turisla.hellopocket.ui.feature.settings.SettingsPage
 import com.turisla.hellopocket.ui.feature.totp.TotpPage
+import com.turisla.hellopocket.ui.theme.AppSpacing
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainPage(navController: NavController, viewModel: HomePageViewModel = koinViewModel()) {
-    val context = LocalContext.current
+fun MainPage(
+    navController: NavController,
+    viewModel: HomePageViewModel = koinViewModel(),
+) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-    var showAddMenu by remember { mutableStateOf(false) }  // 提升状态到顶层
-    var showTotpAddMenu by remember { mutableStateOf(false) }
+    var showAddSheet by rememberSaveable { mutableStateOf(false) }
     val filteredEntries by viewModel.filteredPasswordEntries.collectAsStateWithLifecycle()
 
-    val navItemList = remember(LocalConfiguration.current) {
-        listOf(
-            MainNavItem(context.getString(R.string.tab_home), Icons.Default.Home),
-            MainNavItem(context.getString(R.string.tab_totp), Icons.Default.QrCodeScanner),
-            MainNavItem(context.getString(R.string.tab_settings), Icons.Default.Settings),
+    val navItems = listOf(
+        MainNavItem(
+            name = stringResource(R.string.tab_home),
+            selectedIcon = Icons.Filled.Home,
+            unselectedIcon = Icons.Outlined.Home,
+        ),
+        MainNavItem(
+            name = stringResource(R.string.tab_totp),
+            selectedIcon = Icons.Filled.QrCodeScanner,
+            unselectedIcon = Icons.Outlined.QrCodeScanner,
+        ),
+        MainNavItem(
+            name = stringResource(R.string.tab_settings),
+            selectedIcon = Icons.Filled.Settings,
+            unselectedIcon = Icons.Outlined.Settings,
+        ),
+    )
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            MainTopAppBar(
+                selectedTab = selectedTab,
+                onSearchClick = {
+                    navController.navigate(RouteSearch) { launchSingleTop = true }
+                },
+                onHelpClick = { navController.navigate(RouteQA) },
+            )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                tonalElevation = 0.dp,
+            ) {
+                navItems.forEachIndexed { index, navItem ->
+                    val selected = selectedTab == index
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            selectedTab = index
+                            showAddSheet = false
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = if (selected) {
+                                    navItem.selectedIcon
+                                } else {
+                                    navItem.unselectedIcon
+                                },
+                                contentDescription = null,
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = navItem.name,
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                    )
+                }
+            }
+        },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = selectedTab == HOME_TAB || selectedTab == TOTP_TAB,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                FloatingActionButton(
+                    onClick = { showAddSheet = true },
+                    shape = CircleShape,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 2.dp,
+                        pressedElevation = 5.dp,
+                        focusedElevation = 3.dp,
+                        hoveredElevation = 3.dp,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = stringResource(R.string.add_item),
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End,
+    ) { innerPadding ->
+        MainScreen(
+            modifier = Modifier.padding(innerPadding),
+            currentIndex = selectedTab,
+            navController = navController,
+            passwordEntries = filteredEntries,
+            viewModel = viewModel,
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                when (selectedTab) {
-                    0 -> HomeTopAppBar(
-                        onSearchClick = {
-                            navController.navigate(RouteSearch) {
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-                    1 -> TopAppBar(
-                        title = { Text(stringResource(R.string.tab_totp)) },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
-                    )
-                    else -> TopAppBar(
-                        title = { Text(stringResource(R.string.settings)) },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
-                        actions = {
-                            IconButton(onClick = {
-                                navController.navigate(RouteQA)
-                            }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
-                                    contentDescription = stringResource(R.string.qa_title)
-                                )
-                            }
-                        }
-                    )
-                }
+    if (showAddSheet) {
+        AddItemSheet(
+            isTotpTab = selectedTab == TOTP_TAB,
+            onDismiss = { showAddSheet = false },
+            onAddPassword = {
+                showAddSheet = false
+                navController.navigate(RouteAddPassword)
             },
-            containerColor = MaterialTheme.colorScheme.background,
-            bottomBar = {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    tonalElevation = 6.dp,
-                ) {
-                    navItemList.forEachIndexed { index, navItem ->
-                        NavigationBarItem(
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = Color.Transparent,
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            selected = selectedTab == index,
-                            onClick = {
-                                if (index != selectedTab) {
-                                    showAddMenu = false
-                                    showTotpAddMenu = false
-                                }
-                                selectedTab = index
-                            },
-                            icon = { 
-                                Icon(
-                                    imageVector = navItem.icon, 
-                                    contentDescription = null
-                                ) 
-                            },
-                            label = { 
-                                Text(
-                                    text = navItem.name,
-                                    style = MaterialTheme.typography.labelSmall
-                                ) 
-                            }
-                        )
-                    }
-                }
+            onAddNote = {
+                showAddSheet = false
+                navController.navigate(RouteAddSecureNote)
             },
-            floatingActionButton = {
-                // 主页和 TOTP Tab 都显示添加按钮，并按当前类型提供对应的添加方式。
-                AnimatedVisibility(
-                    visible = selectedTab == 0 || selectedTab == 1,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    Box {
-                        FloatingActionButton(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            onClick = {
-                                when (selectedTab) {
-                                    0 -> showAddMenu = !showAddMenu  // 主页：切换菜单显示状态
-                                    1 -> showTotpAddMenu = !showTotpAddMenu
-                                }
-                            },
-                        ) {
-                            Icon(
-                                Icons.Filled.Add,
-                                contentDescription = if (selectedTab == 1) {
-                                    stringResource(R.string.totp_add_entry)
-                                } else {
-                                    stringResource(R.string.add_new_password)
-                                },
-                            )
-                        }
-
-                        DropdownMenu(
-                            expanded = showTotpAddMenu,
-                            onDismissRequest = { showTotpAddMenu = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.scan_qr_code)) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.QrCodeScanner, contentDescription = null)
-                                },
-                                onClick = {
-                                    showTotpAddMenu = false
-                                    navController.navigate(RouteTotpScanner)
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.totp_enter_manually)) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Edit, contentDescription = null)
-                                },
-                                onClick = {
-                                    showTotpAddMenu = false
-                                    navController.navigate(RouteAddTotpManual)
-                                },
-                            )
-                        }
-                        
-                        // 使用 Popup 实现自定义卡片样式菜单
-                        if (showAddMenu) {
-                            val density = androidx.compose.ui.platform.LocalDensity.current
-                            val spacing = with(density) { 12.dp.roundToPx() }
-
-                            androidx.compose.ui.window.Popup(
-                                popupPositionProvider = remember(spacing) {
-                                    object : androidx.compose.ui.window.PopupPositionProvider {
-                                        override fun calculatePosition(
-                                            anchorBounds: androidx.compose.ui.unit.IntRect,
-                                            windowSize: androidx.compose.ui.unit.IntSize,
-                                            layoutDirection: androidx.compose.ui.unit.LayoutDirection,
-                                            popupContentSize: androidx.compose.ui.unit.IntSize
-                                        ): androidx.compose.ui.unit.IntOffset {
-                                            // 将菜单定位在锚点（FAB）的上方，且右对齐
-                                            val x = anchorBounds.right - popupContentSize.width
-                                            val y = anchorBounds.top - popupContentSize.height - spacing
-                                            return androidx.compose.ui.unit.IntOffset(x, y)
-                                        }
-                                    }
-                                },
-                                onDismissRequest = { showAddMenu = false }
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .padding(end = 16.dp, bottom = 8.dp)
-                                        .width(200.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    // 添加密码选项
-                                    Card(
-                                        onClick = {
-                                            showAddMenu = false
-                                            navController.navigate(RouteAddPassword)
-                                        },
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surface
-                                        ),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Home,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-                                            Spacer(Modifier.width(12.dp))
-                                            Text(
-                                                stringResource(R.string.add_new_password),
-                                                style = MaterialTheme.typography.bodyLarge
-                                            )
-                                        }
-                                    }
-                                    
-                                    // 添加笔记选项
-                                    Card(
-                                        onClick = {
-                                            showAddMenu = false
-                                            navController.navigate(RouteAddSecureNote)
-                                        },
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surface
-                                        ),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                Icons.Filled.NoteAlt,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-                                            Spacer(Modifier.width(12.dp))
-                                            Text(
-                                                stringResource(R.string.add_secure_note),
-                                                style = MaterialTheme.typography.bodyLarge
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            onScanTotp = {
+                showAddSheet = false
+                navController.navigate(RouteTotpScanner)
             },
-
-            floatingActionButtonPosition = FabPosition.End,
-        ) { innerPadding ->
-            MainScreen(
-                modifier = Modifier.padding(innerPadding), 
-                currentIndex = selectedTab, 
-                navController = navController, 
-                passwordEntries = filteredEntries,
-                viewModel = viewModel
-            )
-        }
-        
-        // 全屏透明遮罩层，放在 Scaffold 外层，拦截所有外部点击
-        if (showAddMenu) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Transparent)
-                    .clickable(onClick = { showAddMenu = false })
-            )
-        }
+            onAddTotpManually = {
+                showAddSheet = false
+                navController.navigate(RouteAddTotpManual)
+            },
+        )
     }
 }
 
 @Composable
 private fun MainScreen(
-    modifier: Modifier = Modifier, 
-    currentIndex: Int, 
-    navController: NavController, 
+    currentIndex: Int,
+    navController: NavController,
     passwordEntries: List<PasswordEntry>,
-    viewModel: HomePageViewModel
+    viewModel: HomePageViewModel,
+    modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize()) { // The padding is applied here to the Box
+    Box(modifier = modifier.fillMaxSize()) {
         when (currentIndex) {
-            // The children should not receive the padding modifier again
-            0 -> HomePage(
+            HOME_TAB -> HomePage(
                 navController = navController,
                 passwordEntries = passwordEntries,
                 viewModel = viewModel,
                 onCategoryManagementClick = {
                     navController.navigate(RouteCategoryManagement)
-                }
+                },
             )
-            1 -> TotpPage(navController = navController)
-            2 -> SettingsPage(navController = navController)
-            else -> Box {}
+
+            TOTP_TAB -> TotpPage(navController = navController)
+            SETTINGS_TAB -> SettingsPage(navController = navController)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeTopAppBar(onSearchClick: () -> Unit) {
+private fun MainTopAppBar(
+    selectedTab: Int,
+    onSearchClick: () -> Unit,
+    onHelpClick: () -> Unit,
+) {
     TopAppBar(
         title = {
-            Text(stringResource(id = R.string.app_name), color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                text = when (selectedTab) {
+                    HOME_TAB -> stringResource(R.string.app_name)
+                    TOTP_TAB -> stringResource(R.string.tab_totp)
+                    else -> stringResource(R.string.settings)
+                },
+                style = MaterialTheme.typography.titleLarge,
+            )
         },
         actions = {
-            IconButton(onClick = onSearchClick) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(R.string.search_vault)
-                )
+            when (selectedTab) {
+                HOME_TAB -> IconButton(onClick = onSearchClick) {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = stringResource(R.string.search_vault),
+                    )
+                }
+
+                SETTINGS_TAB -> IconButton(onClick = onHelpClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                        contentDescription = stringResource(R.string.qa_title),
+                    )
+                }
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
     )
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddItemSheet(
+    isTotpTab: Boolean,
+    onDismiss: () -> Unit,
+    onAddPassword: () -> Unit,
+    onAddNote: () -> Unit,
+    onScanTotp: () -> Unit,
+    onAddTotpManually: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        tonalElevation = 0.dp,
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = AppSpacing.md)
+                .navigationBarsPadding(),
+        ) {
+            Text(
+                text = if (isTotpTab) {
+                    stringResource(R.string.totp_add_entry)
+                } else {
+                    stringResource(R.string.select_type)
+                },
+                modifier = Modifier.padding(
+                    horizontal = AppSpacing.xs,
+                    vertical = AppSpacing.sm,
+                ),
+                style = MaterialTheme.typography.titleLarge,
+            )
+
+            AppSectionSurface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                if (isTotpTab) {
+                    AppListRow(
+                        headline = stringResource(R.string.scan_qr_code),
+                        onClick = onScanTotp,
+                        leading = {
+                            AddSheetIcon(imageVector = Icons.Outlined.QrCodeScanner)
+                        },
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 68.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    AppListRow(
+                        headline = stringResource(R.string.totp_enter_manually),
+                        onClick = onAddTotpManually,
+                        leading = {
+                            AddSheetIcon(imageVector = Icons.Outlined.Edit)
+                        },
+                    )
+                } else {
+                    AppListRow(
+                        headline = stringResource(R.string.add_new_password),
+                        onClick = onAddPassword,
+                        leading = {
+                            AddSheetIcon(imageVector = Icons.Outlined.Key)
+                        },
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 68.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    AppListRow(
+                        headline = stringResource(R.string.add_secure_note),
+                        onClick = onAddNote,
+                        leading = {
+                            AddSheetIcon(
+                                imageVector = Icons.Filled.NoteAlt,
+                                color = MaterialTheme.colorScheme.tertiary,
+                            )
+                        },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.size(AppSpacing.xl))
+        }
+    }
+}
+
+@Composable
+private fun AddSheetIcon(
+    imageVector: ImageVector,
+    color: Color = MaterialTheme.colorScheme.primary,
+) {
+    AppIconTile(
+        imageVector = imageVector,
+        contentDescription = null,
+        containerColor = Color.Transparent,
+        contentColor = color,
+        border = BorderStroke(
+            width = 1.dp,
+            color = color.copy(alpha = 0.32f),
+        ),
+    )
+}
+
+private const val HOME_TAB = 0
+private const val TOTP_TAB = 1
+private const val SETTINGS_TAB = 2

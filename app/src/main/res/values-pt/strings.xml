@@ -40,6 +40,7 @@
     <string name="edit_mode">Modo de Edição</string>
     <string name="detail">Detalhe</string>
     <string name="add_new_password">Adicionar Nova Senha</string>
+    <string name="add_item">Adicionar</string>
     <string name="no_passwords_found">Nenhum registro de senha encontrado</string>
     <string name="search_vault">Pesquisar no cofre</string>
     <string name="search_hint">Título, conta ou notas</string>

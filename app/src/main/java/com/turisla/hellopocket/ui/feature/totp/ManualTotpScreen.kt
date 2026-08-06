@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -111,7 +112,7 @@ fun ManualTotpScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.background,
                 ),
             )
         },
@@ -123,7 +124,7 @@ fun ManualTotpScreen(
                 .padding(paddingValues)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
@@ -150,6 +151,7 @@ fun ManualTotpScreen(
                     { Text(stringResource(error)) }
                 },
                 enabled = formEnabled,
+                shape = MaterialTheme.shapes.medium,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             )
 
@@ -165,6 +167,7 @@ fun ManualTotpScreen(
                     { Text(stringResource(error)) }
                 },
                 enabled = formEnabled,
+                shape = MaterialTheme.shapes.medium,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             )
 
@@ -207,6 +210,7 @@ fun ManualTotpScreen(
                     }
                 },
                 enabled = formEnabled,
+                shape = MaterialTheme.shapes.medium,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Characters,
                     keyboardType = KeyboardType.Ascii,
@@ -216,9 +220,9 @@ fun ManualTotpScreen(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = MaterialTheme.shapes.large,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 ),
             ) {
                 Column(
@@ -322,6 +326,7 @@ fun ManualTotpScreen(
                                 )
                             },
                             enabled = formEnabled,
+                            shape = MaterialTheme.shapes.medium,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number,
                                 imeAction = ImeAction.Done,
@@ -345,14 +350,20 @@ fun ManualTotpScreen(
             ) {
                 OutlinedButton(
                     onClick = onNavigateBack,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 52.dp),
+                    shape = MaterialTheme.shapes.medium,
                     enabled = !state.isSaving,
                 ) {
                     Text(stringResource(R.string.cancel))
                 }
                 Button(
                     onClick = viewModel::save,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 52.dp),
+                    shape = MaterialTheme.shapes.medium,
                     enabled = formEnabled,
                 ) {
                     if (state.isSaving) {
@@ -385,5 +396,6 @@ private fun AlgorithmOption(
         label = { Text(label) },
         modifier = modifier,
         enabled = enabled,
+        shape = MaterialTheme.shapes.small,
     )
 }

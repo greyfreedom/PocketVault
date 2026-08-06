@@ -39,6 +39,7 @@
     <string name="edit_mode">संपादन मोड</string>
     <string name="detail">विवरण</string>
     <string name="add_new_password">नया पासवर्ड जोड़ें</string>
+    <string name="add_item">जोड़ें</string>
     <string name="no_passwords_found">कोई पासवर्ड रिकॉर्ड नहीं मिला</string>
     <string name="search_vault">वॉल्ट में खोजें</string>
     <string name="search_hint">शीर्षक, खाता या नोट्स</string>

@@ -34,6 +34,13 @@ private val LightColorScheme = lightColorScheme(
     surfaceTint = md_theme_light_surfaceTint,
     outlineVariant = md_theme_light_outlineVariant,
     scrim = md_theme_light_scrim,
+    surfaceBright = md_theme_light_surfaceBright,
+    surfaceDim = md_theme_light_surfaceDim,
+    surfaceContainerLowest = md_theme_light_surfaceContainerLowest,
+    surfaceContainerLow = md_theme_light_surfaceContainerLow,
+    surfaceContainer = md_theme_light_surfaceContainer,
+    surfaceContainerHigh = md_theme_light_surfaceContainerHigh,
+    surfaceContainerHighest = md_theme_light_surfaceContainerHighest,
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -66,8 +73,14 @@ private val DarkColorScheme = darkColorScheme(
     surfaceTint = md_theme_dark_surfaceTint,
     outlineVariant = md_theme_dark_outlineVariant,
     scrim = md_theme_dark_scrim,
+    surfaceBright = md_theme_dark_surfaceBright,
+    surfaceDim = md_theme_dark_surfaceDim,
+    surfaceContainerLowest = md_theme_dark_surfaceContainerLowest,
+    surfaceContainerLow = md_theme_dark_surfaceContainerLow,
+    surfaceContainer = md_theme_dark_surfaceContainer,
+    surfaceContainerHigh = md_theme_dark_surfaceContainerHigh,
+    surfaceContainerHighest = md_theme_dark_surfaceContainerHighest,
 )
 
-// Expose the color schemes to the Theme composable
 internal val AppLightColorScheme: ColorScheme = LightColorScheme
 internal val AppDarkColorScheme: ColorScheme = DarkColorScheme

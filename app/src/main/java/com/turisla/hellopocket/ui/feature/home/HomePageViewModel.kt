@@ -32,9 +32,6 @@ class HomePageViewModel(
     private val _selectedItemType = MutableStateFlow<VaultItemType?>(null)
     val selectedItemType = _selectedItemType.asStateFlow()
 
-    private val _isGridView = MutableStateFlow(false)
-    val isGridView = _isGridView.asStateFlow()
-    
     // 并发附件任务共享同一个可重放状态，避免 SharedFlow 丢失开始/结束事件。
     private val attachmentLoadingLock = Any()
     private var activeAttachmentOperations = 0
@@ -97,20 +94,6 @@ class HomePageViewModel(
      */
     fun onItemTypeSelected(itemType: VaultItemType?) {
         _selectedItemType.value = itemType
-    }
-
-    /**
-     * 切换视图模式（列表/网格）
-     */
-    fun toggleViewMode() {
-        _isGridView.value = !_isGridView.value
-    }
-
-    /**
-     * 获取分类下的密码数量
-     */
-    fun getCategoryPasswordCount(categoryId: String): Int {
-        return passwordRepository.getCategoryPasswordCount(categoryId)
     }
 
     // 附件列表

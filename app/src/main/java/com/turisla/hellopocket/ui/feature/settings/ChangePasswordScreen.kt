@@ -1,14 +1,21 @@
 package com.turisla.hellopocket.ui.feature.settings
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
@@ -21,6 +28,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +48,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.ui.feature.common.LoadingOverlay
+import com.turisla.hellopocket.ui.theme.AppSpacing
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +64,9 @@ fun ChangePasswordScreen(
     var currentPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    // 修改主密码会原子更新保险库配置，处理中禁止返回以免取消页面作用域任务。
+    BackHandler(enabled = isLoading) {}
 
     LaunchedEffect(uiState) {
             when (val state = uiState) {
@@ -79,21 +92,35 @@ fun ChangePasswordScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.change_master_password)) }, navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
+            TopAppBar(title = {
+                Text(
+                    stringResource(R.string.change_master_password),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }, navigationIcon = {
+                IconButton(onClick = onNavigateBack, enabled = !isLoading) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-            })
-        }) { paddingValues ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)) {
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+            ))
+        }, containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally
+                    .align(Alignment.TopCenter)
+                    .widthIn(max = 440.dp)
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = AppSpacing.xl, vertical = AppSpacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(Modifier.weight(0.5f))
                 OutlinedTextField(
                     value = formState.currentPassword,
                     onValueChange = viewModel::updateCurrentPassword,
@@ -105,6 +132,7 @@ fun ChangePasswordScreen(
                     ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
                     trailingIcon = {
                         IconButton(onClick = { currentPasswordVisible = !currentPasswordVisible }) {
                             Icon(
@@ -116,7 +144,7 @@ fun ChangePasswordScreen(
                         }
                     }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
                 OutlinedTextField(
                     value = formState.newPassword,
                     onValueChange = viewModel::updateNewPassword,
@@ -128,6 +156,7 @@ fun ChangePasswordScreen(
                     ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
                     trailingIcon = {
                         IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
                             Icon(
@@ -139,7 +168,7 @@ fun ChangePasswordScreen(
                         }
                     }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
                 OutlinedTextField(
                     value = formState.confirmPassword,
                     onValueChange = viewModel::updateConfirmPassword,
@@ -151,6 +180,7 @@ fun ChangePasswordScreen(
                     ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
                     trailingIcon = {
                         IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                             Icon(
@@ -162,18 +192,20 @@ fun ChangePasswordScreen(
                         }
                     }
                 )
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.xxl))
                 Button(
                     onClick = {
                         keyboardController?.hide()
                         viewModel.attemptChangePassword(context)
                     }, modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .heightIn(min = 52.dp),
+                    enabled = !isLoading,
+                    shape = MaterialTheme.shapes.medium,
                 ) {
                     Text(stringResource(R.string.confirm_change))
                 }
-                Spacer(Modifier.weight(1.5f))
+                Spacer(modifier = Modifier.height(AppSpacing.xxl))
             }
             if (isLoading) {
                 LoadingOverlay()
