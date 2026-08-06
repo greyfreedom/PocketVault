@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.turisla.hellopocket.data.PasswordRepository
 import com.turisla.hellopocket.data.TotpRepository
+import com.turisla.hellopocket.data.ImportDataFailureReason
 import com.turisla.hellopocket.security.BiometricCipherManager
 import com.turisla.hellopocket.security.VaultSessionController
 import com.turisla.hellopocket.utils.ext.toast
@@ -32,6 +33,8 @@ sealed class UiState {
     data object InvalidPassword : UiState()
     data object FileCorrupted : UiState()  // 新增：文件损坏
     data object IntegrityCheckFailed : UiState()  // 新增：完整性校验失败
+    data object UpgradeFailed : UiState()
+    data object UpgradeRequiresMasterPassword : UiState()
     data class UnsupportedVersion(val version: Int) : UiState()  // 新增：不支持的版本
     data object Unlocked : UiState()
 }
@@ -39,6 +42,7 @@ sealed class UiState {
 
 sealed class MainPageInfo {
     data object ImportDataFailed : MainPageInfo()
+    data object ImportUpgradeFailed : MainPageInfo()
     data object VaultSetupFailed : MainPageInfo()
 }
 
@@ -152,7 +156,13 @@ class MainViewModel(
                 if (importResult.success) {
                     checkVaultState() // Re-check to transition to Locked state
                 } else {
-                    _infoEvent.value = MainPageInfo.ImportDataFailed
+                    _infoEvent.value = if (
+                        importResult.failureReason == ImportDataFailureReason.UPGRADE_FAILED
+                    ) {
+                        MainPageInfo.ImportUpgradeFailed
+                    } else {
+                        MainPageInfo.ImportDataFailed
+                    }
                 }
             } finally {
                 _isLoading.value = false
@@ -212,6 +222,12 @@ class MainViewModel(
                     }
                     is com.turisla.hellopocket.model.VaultLoadResult.IntegrityCheckFailed -> {
                         UiState.IntegrityCheckFailed
+                    }
+                    is com.turisla.hellopocket.model.VaultLoadResult.UpgradeFailed -> {
+                        UiState.UpgradeFailed
+                    }
+                    is com.turisla.hellopocket.model.VaultLoadResult.UpgradeRequiresMasterPassword -> {
+                        UiState.UpgradeRequiresMasterPassword
                     }
                     is com.turisla.hellopocket.model.VaultLoadResult.UnsupportedVersion -> {
                         UiState.UnsupportedVersion(result.version)
@@ -335,12 +351,21 @@ class MainViewModel(
                         is com.turisla.hellopocket.model.VaultLoadResult.IntegrityCheckFailed -> {
                             UiState.IntegrityCheckFailed
                         }
+                        is com.turisla.hellopocket.model.VaultLoadResult.UpgradeFailed -> {
+                            UiState.UpgradeFailed
+                        }
+                        is com.turisla.hellopocket.model.VaultLoadResult.UpgradeRequiresMasterPassword -> {
+                            UiState.UpgradeRequiresMasterPassword
+                        }
                         is com.turisla.hellopocket.model.VaultLoadResult.SessionInvalidated -> {
                             UiState.Locked
                         }
                         else -> UiState.FileCorrupted
                     }
-                    if (loadResult !is com.turisla.hellopocket.model.VaultLoadResult.SessionInvalidated) {
+                    if (
+                        loadResult !is com.turisla.hellopocket.model.VaultLoadResult.SessionInvalidated &&
+                        loadResult !is com.turisla.hellopocket.model.VaultLoadResult.UpgradeRequiresMasterPassword
+                    ) {
                         context.toast(R.string.biometric_unlock_failed)
                     }
                 }

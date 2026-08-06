@@ -350,6 +350,8 @@
     <string name="no_app_found">No hay ninguna aplicación disponible para abrir este archivo.</string>
     <string name="vault_file_corrupted">La bóveda o los datos del autenticador están dañados y no se sobrescribieron. Restaura una copia verificada.</string>
     <string name="vault_integrity_failed">La verificación de integridad de la bóveda falló. Los datos no se abrieron ni sobrescribieron.</string>
+    <string name="vault_upgrade_failed">No se pudo actualizar de forma segura la bóveda V2 antigua. Los datos originales no se sobrescribieron. Comprueba el espacio libre e inténtalo con la contraseña maestra.</string>
+    <string name="vault_upgrade_requires_master_password">Esta bóveda V2 antigua necesita una actualización de seguridad única. Desbloquéala con la contraseña maestra; el acceso biométrico no puede realizarla.</string>
     <string name="vault_version_unsupported">Esta bóveda usa la versión no compatible %1$d. Actualiza HelloPocket e inténtalo de nuevo.</string>
     <string name="totp_invalid_qr">Código QR no válido. Escanea un código TOTP válido.</string>
     <string name="totp_add_failed">No se pudo guardar la entrada del autenticador.</string>

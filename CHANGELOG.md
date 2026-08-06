@@ -2,7 +2,25 @@
 
 All notable changes to PocketVault will be documented in this file.
 
-## [2.5.0] - Unreleased
+## [2.5.1] - Unreleased
+
+### Added
+
+- A narrowly scoped, one-time migration for early V2 vaults and backups. The app authenticates core data, TOTP entries, and every referenced attachment before activation, creates an automatic `.hpb` backup of an installed vault, and then atomically switches to the upgraded directory.
+- Dedicated messages for a failed safety upgrade and for legacy V2 vaults that require the master password instead of biometric convenience unlock.
+
+### Changed
+
+- Early V2 Keysets wrapped with the historical 100,000-iteration PBKDF2 parameter are accepted only for authenticated migration. The upgraded vault receives a fresh salt, a new vault identifier, associated-data-bound ciphertext, complete authenticated snapshot metadata, and a 600,000-iteration Keyset wrapper.
+- Early V2 backup imports are normalized to the current format before they can replace an installed vault. V1 remains unsupported and is never migrated or overwritten.
+
+### Fixed
+
+- A 2.5.0 compatibility regression that reported some valid early V2 vaults as damaged even though their files had not been overwritten.
+- Password hints from early V2 configurations are readable again after an incorrect master-password attempt.
+- Automatic-backup retention now runs only after a migrated or imported vault is activated successfully, so a failed switch cannot remove older backup history.
+
+## [2.5.0] - 2026-08-06
 
 ### Added
 

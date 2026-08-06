@@ -121,6 +121,9 @@ fun DataSettingsScreen(
                 }
 
                 is SettingsPageViewModel.Event.ImportFailed -> Toast.makeText(context, R.string.import_failed, Toast.LENGTH_SHORT).show()
+                is SettingsPageViewModel.Event.ImportUpgradeFailed -> {
+                    Toast.makeText(context, R.string.vault_upgrade_failed, Toast.LENGTH_LONG).show()
+                }
                 is SettingsPageViewModel.Event.ShareFile -> {
                     val uri = androidx.core.content.FileProvider.getUriForFile(
                         context, "${context.packageName}.fileprovider", currentEvent.file

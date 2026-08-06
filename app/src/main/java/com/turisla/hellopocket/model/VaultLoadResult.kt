@@ -27,6 +27,16 @@ sealed class VaultLoadResult {
      * 数据文件的 SHA-256 哈希值与配置中记录的不一致
      */
     data object IntegrityCheckFailed : VaultLoadResult()
+
+    /**
+     * 早期 V2 已通过主密码认证，但自动备份或安全升级未能完成；原保险库保持不变。
+     */
+    data object UpgradeFailed : VaultLoadResult()
+
+    /**
+     * 早期 V2 必须用主密码重新包装 Keyset，不能只依赖旧的生物识别快捷解锁。
+     */
+    data object UpgradeRequiresMasterPassword : VaultLoadResult()
     
     /**
      * 不支持的版本

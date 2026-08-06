@@ -350,6 +350,8 @@
     <string name="no_app_found">Nenhum aplicativo está disponível para abrir este arquivo.</string>
     <string name="vault_file_corrupted">O cofre ou os dados do autenticador estão danificados e não foram sobrescritos. Restaure um backup verificado.</string>
     <string name="vault_integrity_failed">A verificação de integridade do cofre falhou. Os dados não foram abertos nem sobrescritos.</string>
+    <string name="vault_upgrade_failed">Não foi possível atualizar com segurança o cofre V2 antigo. Os dados originais não foram sobrescritos. Verifique o espaço livre e tente novamente com a senha mestra.</string>
+    <string name="vault_upgrade_requires_master_password">Este cofre V2 antigo precisa de uma atualização de segurança única. Desbloqueie-o com a senha mestra; a biometria não pode realizar a atualização.</string>
     <string name="vault_version_unsupported">Este cofre usa a versão não compatível %1$d. Atualize o HelloPocket e tente novamente.</string>
     <string name="totp_invalid_qr">Código QR inválido. Leia um código autenticador TOTP válido.</string>
     <string name="totp_add_failed">Não foi possível salvar a entrada do autenticador.</string>

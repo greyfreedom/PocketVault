@@ -344,6 +344,8 @@
     <string name="no_app_found">Không có ứng dụng nào để mở tệp này.</string>
     <string name="vault_file_corrupted">Kho hoặc dữ liệu xác thực đã hỏng và chưa bị ghi đè. Hãy khôi phục bản sao lưu đã xác minh.</string>
     <string name="vault_integrity_failed">Xác minh tính toàn vẹn của kho thất bại. Dữ liệu chưa được mở hoặc ghi đè.</string>
+    <string name="vault_upgrade_failed">Không thể nâng cấp an toàn kho V2 cũ. Dữ liệu gốc chưa bị ghi đè. Hãy kiểm tra dung lượng trống và thử lại bằng mật khẩu chính.</string>
+    <string name="vault_upgrade_requires_master_password">Kho V2 cũ này cần nâng cấp bảo mật một lần. Hãy mở khóa bằng mật khẩu chính; sinh trắc học không thể thực hiện nâng cấp.</string>
     <string name="vault_version_unsupported">Kho này dùng phiên bản chưa được hỗ trợ %1$d. Hãy cập nhật HelloPocket rồi thử lại.</string>
     <string name="totp_invalid_qr">Mã QR không hợp lệ. Hãy quét mã xác thực TOTP hợp lệ.</string>
     <string name="totp_add_failed">Không thể lưu mục xác thực.</string>

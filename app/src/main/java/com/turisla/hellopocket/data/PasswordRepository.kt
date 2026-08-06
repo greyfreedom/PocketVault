@@ -58,13 +58,27 @@ import java.util.zip.ZipOutputStream
 import javax.crypto.Cipher
 
 data class ChangePasswordResult(val success: Boolean, val biometricsWereDisabled: Boolean)
-data class ImportDataFileResult(val success: Boolean, val biometricsWereDisabled: Boolean)
+enum class ImportDataFailureReason {
+    INVALID_BACKUP,
+    UPGRADE_FAILED,
+}
+
+data class ImportDataFileResult(
+    val success: Boolean,
+    val biometricsWereDisabled: Boolean,
+    val failureReason: ImportDataFailureReason? = null,
+)
 data class VaultEncryptionContext(
     val keysetHandle: KeysetHandle,
     val vaultId: String,
+    val associatedDataVersion: Int = 1,
 ) {
     fun associatedData(logicalName: String): ByteArray {
-        return "hellopocket|$vaultId|$logicalName".toByteArray(Charsets.UTF_8)
+        return if (associatedDataVersion >= 1) {
+            "hellopocket|$vaultId|$logicalName".toByteArray(Charsets.UTF_8)
+        } else {
+            ByteArray(0)
+        }
     }
 }
 
@@ -176,6 +190,22 @@ class PasswordRepository(
         val passwords: List<PasswordEntry>,
         val categories: List<Category>,
     )
+
+    private data class LoadedLegacyV2Data(
+        val manifest: CompatibleVaultManifestV2,
+        val passwords: List<PasswordEntry>,
+        val categories: List<Category>,
+        val totpEntries: List<TotpEntry>,
+        val hasTotpFile: Boolean,
+    )
+
+    private data class PreparedVaultUpgrade(
+        val directory: File,
+        val config: VaultConfig,
+        val manifest: VaultManifestV2,
+    )
+
+    private class VaultUpgradeException(cause: Throwable) : Exception(cause)
 
     private data class VaultWriteSession(
         val epoch: Long,
@@ -380,8 +410,9 @@ class PasswordRepository(
     ): VaultLoadResult = withContext(Dispatchers.IO) {
         try {
             val configJson = readUtf8FileWithLimit(vaultConfigFile, MAX_VAULT_CONFIG_BYTES)
-            val config = Json.decodeFromString<VaultConfig>(configJson)
-            validateVaultConfig(config)?.let { return@withContext it }
+            val compatibleConfig = decodeCompatibleVaultConfig(configJson)
+            validateCompatibleVaultConfig(compatibleConfig)?.let { return@withContext it }
+            val config = compatibleConfig.toVaultConfig()
             val salt = Base64.decode(config.salt, Base64.NO_WRAP)
             if (salt.size != SALT_SIZE_BYTES) return@withContext VaultLoadResult.FileCorrupted
             
@@ -398,11 +429,70 @@ class PasswordRepository(
                 return@withContext VaultLoadResult.WrongPassword
             }
             
-            // 2. 验证公开完整性哈希；当前格式不允许缺失。
-            if (!verifyVaultIntegrity(config.integrityHash.orEmpty())) {
+            val requiresUpgrade = compatibleConfig.requiresOneTimeUpgrade()
+
+            // 2. 旧 V2 可验证历史摘要；缺失摘要时仍必须依赖后续 AEAD 全量认证。
+            if (!verifyVaultIntegrity(
+                    directory = vaultDir,
+                    expectedHash = config.integrityHash,
+                    allowLegacyFormat = requiresUpgrade,
+                )
+            ) {
                 loggerI("Vault integrity check failed!")
                 return@withContext VaultLoadResult.IntegrityCheckFailed
             }
+
+            if (requiresUpgrade) {
+                val (legacyResult, legacyData) = loadLegacyV2Data(
+                    directory = vaultDir,
+                    compatibleConfig = compatibleConfig,
+                    keyset = keyset,
+                    allowMissingAuthenticatedMetadata = compatibleConfig
+                        .allowsLegacyEncryptedMetadata(),
+                )
+                if (legacyResult !is VaultLoadResult.Success || legacyData == null) {
+                    return@withContext legacyResult
+                }
+
+                val upgraded = try {
+                    upgradeLegacyV2Vault(
+                        masterPassword = masterPassword,
+                        loadSession = loadSession,
+                        compatibleConfig = compatibleConfig,
+                        keyset = keyset,
+                        legacyData = legacyData,
+                    )
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    loggerE(error)
+                    return@withContext VaultLoadResult.UpgradeFailed
+                }
+
+                currentCoroutineContext().ensureActive()
+                if (!publishLoadedV2(
+                        loadSession = loadSession,
+                        config = upgraded.config,
+                        keyset = keyset,
+                        data = LoadedVaultData(
+                            manifest = upgraded.manifest,
+                            passwords = legacyData.passwords,
+                            categories = legacyData.categories,
+                        ),
+                    )
+                ) {
+                    return@withContext VaultLoadResult.SessionInvalidated
+                }
+                disableBiometricUnlock()
+                return@withContext if (isLoadSessionCurrent(loadSession, keyset)) {
+                    VaultLoadResult.Success
+                } else {
+                    lock()
+                    VaultLoadResult.SessionInvalidated
+                }
+            }
+
+            validateVaultConfig(config)?.let { return@withContext it }
 
             // 3. 所有文件先解密到局部变量，通过会话闸门后才一次性发布。
             val (loadResult, loadedData) = loadVaultDataFromStreamingAead(
@@ -439,15 +529,21 @@ class PasswordRepository(
         if (!vaultConfigFile.isFile) return@withContext VaultLoadResult.FileCorrupted
         val loadSession = captureLoadSession()
         try {
-            // 1. 从字节恢复 Keyset
-            val keyset = tinkCryptoManager.readKeysetFromBytes(keysetBytes)
-            // 2. 从 vault_v2.json 加载配置 (为了保持状态一致)
+            // 1. 先读取配置；旧 V2 必须输入主密码才能提升 KDF，不能用生物识别绕过。
             val configJson = readUtf8FileWithLimit(vaultConfigFile, MAX_VAULT_CONFIG_BYTES)
-            val config = Json.decodeFromString<VaultConfig>(configJson)
+            val compatibleConfig = decodeCompatibleVaultConfig(configJson)
+            validateCompatibleVaultConfig(compatibleConfig)?.let { return@withContext it }
+            if (compatibleConfig.requiresOneTimeUpgrade()) {
+                return@withContext VaultLoadResult.UpgradeRequiresMasterPassword
+            }
+            val config = compatibleConfig.toVaultConfig()
             validateVaultConfig(config)?.let { return@withContext it }
-            if (!verifyVaultIntegrity(config.integrityHash.orEmpty())) {
+            if (!verifyVaultIntegrity(vaultDir, config.integrityHash, allowLegacyFormat = false)) {
                 return@withContext VaultLoadResult.IntegrityCheckFailed
             }
+
+            // 2. 从字节恢复 Keyset
+            val keyset = tinkCryptoManager.readKeysetFromBytes(keysetBytes)
 
             // 3. 使用 Keyset 加载数据，但仅在会话仍有效时发布。
             val (loadResult, loadedData) = loadVaultDataFromStreamingAead(
@@ -564,6 +660,382 @@ class PasswordRepository(
         } catch (e: Exception) {
             loggerE(e)
             return@withContext VaultLoadResult.FileCorrupted to null
+        }
+    }
+
+    /**
+     * 读取并认证早期 V2。此路径只有在公开配置明确带有旧格式特征时才会进入，
+     * 且这里只产生局部明文，不会发布状态或修改磁盘。
+     */
+    private suspend fun loadLegacyV2Data(
+        directory: File,
+        compatibleConfig: CompatibleVaultConfig,
+        keyset: KeysetHandle,
+        allowMissingAuthenticatedMetadata: Boolean,
+    ): Pair<VaultLoadResult, LoadedLegacyV2Data?> = withContext(Dispatchers.IO) {
+        try {
+            val streamingAead = tinkCryptoManager.getStreamingAead(keyset)
+            val encryptionContext = VaultEncryptionContext(
+                keysetHandle = keyset,
+                vaultId = compatibleConfig.vaultId,
+                associatedDataVersion = compatibleConfig.associatedDataVersion,
+            )
+            val manifest = decryptImportedFile(
+                File(directory, MANIFEST_DATA_FILE),
+                streamingAead,
+                encryptionContext.associatedData(MANIFEST_DATA_FILE),
+            ) { input ->
+                decodeCompatibleVaultManifest(
+                    readUtf8WithLimit(input, MAX_MANIFEST_PLAINTEXT_BYTES)
+                )
+            }
+            require(manifest.attachments.size <= MAX_ATTACHMENT_COUNT) {
+                "Legacy vault contains too many attachments"
+            }
+            val manifestSchemaSupported = if (allowMissingAuthenticatedMetadata) {
+                manifest.schemaVersion in 0..CURRENT_SCHEMA_VERSION
+            } else {
+                manifest.schemaVersion == CURRENT_SCHEMA_VERSION
+            }
+            if (!manifestSchemaSupported) {
+                return@withContext VaultLoadResult.UnsupportedVersion(manifest.schemaVersion) to null
+            }
+            if (
+                compatibleConfig.associatedDataVersion >= 1 &&
+                manifest.vaultId != compatibleConfig.vaultId
+            ) {
+                return@withContext VaultLoadResult.FileCorrupted to null
+            }
+            if (!verifyCompatibleConfigBinding(
+                    manifest = manifest,
+                    config = compatibleConfig,
+                    allowMissing = allowMissingAuthenticatedMetadata,
+                )
+            ) {
+                return@withContext VaultLoadResult.IntegrityCheckFailed to null
+            }
+            if (!verifyCompatibleSnapshotMetadata(
+                    manifest = manifest,
+                    directory = directory,
+                    allowMissing = allowMissingAuthenticatedMetadata,
+                )
+            ) {
+                return@withContext VaultLoadResult.IntegrityCheckFailed to null
+            }
+
+            val passwords = decryptImportedFile(
+                File(directory, PASSWORDS_DATA_FILE),
+                streamingAead,
+                encryptionContext.associatedData(PASSWORDS_DATA_FILE),
+            ) { input ->
+                parseProtobufWithLimits(input, MAX_PASSWORDS_PLAINTEXT_BYTES) {
+                    PasswordEntries.parseFrom(it)
+                }
+            }
+            require(passwords.entriesCount <= MAX_PASSWORD_ENTRY_COUNT) {
+                "Legacy vault contains too many password entries"
+            }
+            val passwordSchemaSupported = if (allowMissingAuthenticatedMetadata) {
+                passwords.schemaVersion in 0..CURRENT_SCHEMA_VERSION
+            } else {
+                passwords.schemaVersion == CURRENT_SCHEMA_VERSION
+            }
+            if (!passwordSchemaSupported) {
+                return@withContext VaultLoadResult.UnsupportedVersion(passwords.schemaVersion) to null
+            }
+
+            val categories = decryptImportedFile(
+                File(directory, CATEGORIES_DATA_FILE),
+                streamingAead,
+                encryptionContext.associatedData(CATEGORIES_DATA_FILE),
+            ) { input ->
+                parseProtobufWithLimits(input, MAX_CATEGORIES_PLAINTEXT_BYTES) {
+                    Categories.parseFrom(it)
+                }
+            }
+            require(categories.categoriesCount <= MAX_CATEGORY_COUNT) {
+                "Legacy vault contains too many categories"
+            }
+            val categorySchemaSupported = if (allowMissingAuthenticatedMetadata) {
+                categories.schemaVersion in 0..CURRENT_SCHEMA_VERSION
+            } else {
+                categories.schemaVersion == CURRENT_SCHEMA_VERSION
+            }
+            if (!categorySchemaSupported) {
+                return@withContext VaultLoadResult.UnsupportedVersion(categories.schemaVersion) to null
+            }
+
+            val totpFile = File(directory, TOTP_DATA_FILE)
+            val totpEntries = if (totpFile.isFile) {
+                val totp = decryptImportedFile(
+                    totpFile,
+                    streamingAead,
+                    encryptionContext.associatedData(TOTP_DATA_FILE),
+                ) { input ->
+                    parseProtobufWithLimits(input, MAX_TOTP_PLAINTEXT_BYTES) {
+                        TotpEntries.parseFrom(it)
+                    }
+                }
+                require(totp.entriesCount <= MAX_TOTP_ENTRY_COUNT) {
+                    "Legacy vault contains too many TOTP entries"
+                }
+                val totpSchemaSupported = if (allowMissingAuthenticatedMetadata) {
+                    totp.schemaVersion in 0..CURRENT_SCHEMA_VERSION
+                } else {
+                    totp.schemaVersion == CURRENT_SCHEMA_VERSION
+                }
+                if (!totpSchemaSupported) {
+                    return@withContext VaultLoadResult.UnsupportedVersion(totp.schemaVersion) to null
+                }
+                totp.entriesList
+            } else {
+                emptyList()
+            }
+
+            VaultSemanticValidator.validateCore(
+                passwords = passwords.entriesList,
+                categories = categories.categoriesList,
+                attachments = manifest.attachments,
+            )
+            VaultSemanticValidator.validateTotpEntries(totpEntries)
+            VaultLoadResult.Success to LoadedLegacyV2Data(
+                manifest = manifest,
+                passwords = passwords.entriesList,
+                categories = categories.categoriesList,
+                totpEntries = totpEntries,
+                hasTotpFile = totpFile.isFile,
+            )
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            loggerE(error)
+            VaultLoadResult.FileCorrupted to null
+        }
+    }
+
+    /**
+     * 已认证的旧 V2 先完整写入同文件系统的暂存目录，再创建自动备份并原子替换目录。
+     * 任一步失败都会保留原保险库，绝不在旧目录上逐个覆盖文件。
+     */
+    private suspend fun upgradeLegacyV2Vault(
+        masterPassword: String,
+        loadSession: LoadSession,
+        compatibleConfig: CompatibleVaultConfig,
+        keyset: KeysetHandle,
+        legacyData: LoadedLegacyV2Data,
+    ): PreparedVaultUpgrade = saveMutex.withLock {
+        val stagedDirectory = File(
+            context.filesDir,
+            ".$VAULT_DIRECTORY_NAME.migration-${UUID.randomUUID()}",
+        )
+        try {
+            val prepared = createUpgradedLegacyVault(
+                sourceDirectory = vaultDir,
+                targetDirectory = stagedDirectory,
+                masterPassword = masterPassword,
+                compatibleConfig = compatibleConfig,
+                keyset = keyset,
+                legacyData = legacyData,
+            )
+            currentCoroutineContext().ensureActive()
+            require(sessionGuard.publishIfValid(loadSession.guardToken) {}) {
+                "Vault upgrade session is no longer active"
+            }
+
+            // 自动备份必须先可靠落盘；失败时不允许开始目录切换。
+            val migrationBackup = requireNotNull(backupCurrentVault()) {
+                "Failed to back up the legacy V2 vault"
+            }
+            currentCoroutineContext().ensureActive()
+            require(sessionGuard.publishIfValid(loadSession.guardToken) {}) {
+                "Vault upgrade session is no longer active"
+            }
+            runVaultMutationForSession(loadSession.repositoryEpoch) {
+                VaultFileTransaction.replaceDirectory(vaultDir, stagedDirectory)
+            }
+            // 只有新目录成功激活后才执行保留策略，失败路径不能顺带删除既有历史备份。
+            pruneAutomaticBackups(migrationBackup)
+            recoveryFailed = false
+            prepared.copy(directory = vaultDir)
+        } finally {
+            stagedDirectory.deleteRecursively()
+        }
+    }
+
+    /**
+     * 将已经完整认证的旧 V2 内容标准化为当前格式。该方法只写 [targetDirectory]，
+     * 可同时复用于本地自动升级和旧备份导入。
+     */
+    private suspend fun createUpgradedLegacyVault(
+        sourceDirectory: File,
+        targetDirectory: File,
+        masterPassword: String,
+        compatibleConfig: CompatibleVaultConfig,
+        keyset: KeysetHandle,
+        legacyData: LoadedLegacyV2Data,
+    ): PreparedVaultUpgrade {
+        require(!targetDirectory.exists() || targetDirectory.list().isNullOrEmpty()) {
+            "Vault upgrade target must be empty"
+        }
+        require(targetDirectory.mkdirs() || targetDirectory.isDirectory) {
+            "Cannot create vault upgrade directory"
+        }
+        val targetAttachments = File(targetDirectory, ATTACHMENTS_DIR)
+        require(targetAttachments.mkdirs() || targetAttachments.isDirectory) {
+            "Cannot create upgraded attachment directory"
+        }
+
+        val newSalt = tinkCryptoManager.generateSalt()
+        val newVaultId = UUID.randomUUID().toString()
+        val encryptedKeyset = tinkCryptoManager.encryptKeyset(
+            keysetHandle = keyset,
+            password = masterPassword,
+            salt = newSalt,
+            iterations = TinkCryptoManager.DEFAULT_KDF_ITERATIONS,
+        )
+        val configWithoutHash = VaultConfig(
+            version = VAULT_VERSION_V2,
+            salt = Base64.encodeToString(newSalt, Base64.NO_WRAP),
+            encryptedKeyset = encryptedKeyset,
+            integrityHash = null,
+            passwordHint = compatibleConfig.passwordHint,
+            kdfAlgorithm = TinkCryptoManager.PBKDF2_ALGORITHM,
+            kdfIterations = TinkCryptoManager.DEFAULT_KDF_ITERATIONS,
+            vaultId = newVaultId,
+            associatedDataVersion = 1,
+        )
+        val streamingAead = tinkCryptoManager.getStreamingAead(keyset)
+        val oldContext = VaultEncryptionContext(
+            keysetHandle = keyset,
+            vaultId = compatibleConfig.vaultId,
+            associatedDataVersion = compatibleConfig.associatedDataVersion,
+        )
+        val newContext = VaultEncryptionContext(keyset, newVaultId)
+
+        writeEncryptedMessage(
+            File(targetDirectory, PASSWORDS_DATA_FILE),
+            PasswordEntries.newBuilder()
+                .setSchemaVersion(CURRENT_SCHEMA_VERSION)
+                .addAllEntries(legacyData.passwords)
+                .build(),
+            streamingAead,
+            newContext.associatedData(PASSWORDS_DATA_FILE),
+        )
+        writeEncryptedMessage(
+            File(targetDirectory, CATEGORIES_DATA_FILE),
+            Categories.newBuilder()
+                .setSchemaVersion(CURRENT_SCHEMA_VERSION)
+                .addAllCategories(legacyData.categories)
+                .build(),
+            streamingAead,
+            newContext.associatedData(CATEGORIES_DATA_FILE),
+        )
+        if (legacyData.hasTotpFile) {
+            writeEncryptedMessage(
+                File(targetDirectory, TOTP_DATA_FILE),
+                TotpEntries.newBuilder()
+                    .setSchemaVersion(CURRENT_SCHEMA_VERSION)
+                    .addAllEntries(legacyData.totpEntries)
+                    .build(),
+                streamingAead,
+                newContext.associatedData(TOTP_DATA_FILE),
+            )
+        }
+
+        legacyData.manifest.attachments.forEach { attachment ->
+            val source = safeVaultAttachmentFile(sourceDirectory, attachment.encryptedFileName)
+            require(source.isFile) { "Legacy vault attachment is missing" }
+            reencryptVaultFile(
+                source = source,
+                target = safeVaultAttachmentFile(targetDirectory, attachment.encryptedFileName),
+                streamingAead = streamingAead,
+                oldAssociatedData = oldContext.associatedData("attachment:${attachment.id}"),
+                newAssociatedData = newContext.associatedData("attachment:${attachment.id}"),
+                maxPlaintextBytes = AppConstants.MAX_ATTACHMENT_SIZE_BYTES,
+            )
+
+            val thumbnailName = "${attachment.id}_thumb.dat"
+            val sourceThumbnail = safeVaultAttachmentFile(sourceDirectory, thumbnailName)
+            if (sourceThumbnail.isFile) {
+                reencryptVaultFile(
+                    source = sourceThumbnail,
+                    target = safeVaultAttachmentFile(targetDirectory, thumbnailName),
+                    streamingAead = streamingAead,
+                    oldAssociatedData = oldContext.associatedData(
+                        "attachment-thumbnail:${attachment.id}"
+                    ),
+                    newAssociatedData = newContext.associatedData(
+                        "attachment-thumbnail:${attachment.id}"
+                    ),
+                    maxPlaintextBytes = MAX_THUMBNAIL_PLAINTEXT_BYTES,
+                )
+            }
+        }
+
+        val snapshotFiles = mutableMapOf(
+            PASSWORDS_DATA_FILE to File(targetDirectory, PASSWORDS_DATA_FILE),
+            CATEGORIES_DATA_FILE to File(targetDirectory, CATEGORIES_DATA_FILE),
+        )
+        File(targetDirectory, TOTP_DATA_FILE).takeIf(File::isFile)?.let {
+            snapshotFiles[TOTP_DATA_FILE] = it
+        }
+        val snapshotMetadata = calculateSnapshotMetadata(snapshotFiles)
+        val nextGeneration = legacyData.manifest.generation.let { generation ->
+            if (generation >= 0L && generation < Long.MAX_VALUE) generation + 1L else 1L
+        }
+        val newManifest = VaultManifestV2(
+            schemaVersion = CURRENT_SCHEMA_VERSION,
+            vaultId = newVaultId,
+            generation = nextGeneration,
+            createdAt = legacyData.manifest.createdAt.takeIf { it > 0L }
+                ?: System.currentTimeMillis(),
+            attachments = legacyData.manifest.attachments,
+            fileDigests = snapshotMetadata.digests,
+            fileSizes = snapshotMetadata.sizes,
+            configBinding = calculateConfigBinding(configWithoutHash),
+        )
+        writeEncryptedManifest(
+            File(targetDirectory, MANIFEST_DATA_FILE),
+            newManifest,
+            streamingAead,
+            newContext.associatedData(MANIFEST_DATA_FILE),
+        )
+        val completedConfig = configWithoutHash.copy(
+            integrityHash = calculateVaultIntegrityHash(targetDirectory)
+                ?: error("Failed to hash upgraded V2 vault")
+        )
+        writePlainTextSynced(
+            File(targetDirectory, VAULT_CONFIG_FILE_NAME),
+            Json.encodeToString(completedConfig),
+        )
+
+        // 切换目录前再次从新盐和 600k KDF 开始验证全部新密文及附件。
+        require(
+            verifyVaultIntegrity(
+                directory = targetDirectory,
+                expectedHash = completedConfig.integrityHash,
+                allowLegacyFormat = false,
+            )
+        ) { "Upgraded V2 vault failed its integrity check" }
+        validateImportedVaultCryptographically(targetDirectory, completedConfig, masterPassword)
+        return PreparedVaultUpgrade(targetDirectory, completedConfig, newManifest)
+    }
+
+    private suspend fun reencryptVaultFile(
+        source: File,
+        target: File,
+        streamingAead: StreamingAead,
+        oldAssociatedData: ByteArray,
+        newAssociatedData: ByteArray,
+        maxPlaintextBytes: Long,
+    ) {
+        val operationJob = currentCoroutineContext()[Job]
+        decryptImportedFile(source, streamingAead, oldAssociatedData) { plainInput ->
+            writeEncryptedStream(target, streamingAead, newAssociatedData) { encryptedOutput ->
+                copyWithLimit(plainInput, encryptedOutput, maxPlaintextBytes) {
+                    operationJob?.ensureActive()
+                }
+            }
         }
     }
 
@@ -910,6 +1382,27 @@ class PasswordRepository(
         return null
     }
 
+    private fun validateCompatibleVaultConfig(
+        config: CompatibleVaultConfig,
+    ): VaultLoadResult? {
+        if (config.version != VAULT_VERSION_V2) {
+            return VaultLoadResult.UnsupportedVersion(config.version)
+        }
+        if (config.kdfAlgorithm != TinkCryptoManager.PBKDF2_ALGORITHM) {
+            return VaultLoadResult.FileCorrupted
+        }
+        if (!tinkCryptoManager.isKdfIterationCountSupportedForDecryption(config.kdfIterations)) {
+            return VaultLoadResult.FileCorrupted
+        }
+        if (config.associatedDataVersion !in 0..1) {
+            return VaultLoadResult.FileCorrupted
+        }
+        if (config.associatedDataVersion == 1 && config.vaultId.isBlank()) {
+            return VaultLoadResult.FileCorrupted
+        }
+        return null
+    }
+
     suspend fun addEntry(
         title: String,
         username: String,
@@ -1056,6 +1549,10 @@ class PasswordRepository(
         }
     }
 
+    /**
+     * 创建并同步当前保险库备份，但不在这里执行保留策略。
+     * 调用方必须等新保险库成功激活后再清理旧备份，确保失败路径不会造成历史备份丢失。
+     */
     private suspend fun backupCurrentVault(): File? {
         if (!isVaultInitialized()) return null
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.ROOT).format(Date())
@@ -1070,7 +1567,6 @@ class PasswordRepository(
                 zipVaultToOutputStream(nonClosingOutput)
                 fileOutput.fd.sync()
             }
-            pruneAutomaticBackups(backupFile)
             return backupFile
         } catch (error: CancellationException) {
             backupFile.delete()
@@ -1109,6 +1605,10 @@ class PasswordRepository(
     @SuppressLint("UsableSpace")
     suspend fun importData(sourceUri: Uri, masterPassword: String): ImportDataFileResult = withContext(Dispatchers.IO) {
         val tempVaultDir = File(context.filesDir, ".$VAULT_DIRECTORY_NAME.import-${UUID.randomUUID()}")
+        val upgradedImportDir = File(
+            context.filesDir,
+            ".$VAULT_DIRECTORY_NAME.migration-${UUID.randomUUID()}",
+        )
         val importSessionToken = sessionGuard.capture()
         val importRepositoryEpoch = synchronized(vaultSessionLock) { sessionEpoch }
         try {
@@ -1178,31 +1678,79 @@ class PasswordRepository(
                     }
                 } ?: error("Cannot open import source")
 
-                val importedConfig = validateImportedVault(tempVaultDir)
+                val compatibleConfig = validateImportedVault(tempVaultDir)
+                val importedConfig = compatibleConfig.toVaultConfig()
+                val requiresUpgrade = compatibleConfig.requiresOneTimeUpgrade()
                 require(
-                    base64DigestMatches(
-                        importedConfig.integrityHash.orEmpty(),
-                        calculateVaultIntegrityHash(tempVaultDir),
+                    verifyVaultIntegrity(
+                        directory = tempVaultDir,
+                        expectedHash = importedConfig.integrityHash,
+                        allowLegacyFormat = requiresUpgrade,
                     )
                 ) {
                     "Imported vault failed its integrity check"
                 }
+
                 // 在替换现有保险库前，必须用导入文件自己的主密码完成真实解密和认证校验。
-                validateImportedVaultCryptographically(tempVaultDir, importedConfig, masterPassword)
+                val directoryToActivate = if (requiresUpgrade) {
+                    val salt = Base64.decode(importedConfig.salt, Base64.NO_WRAP)
+                    val keyset = tinkCryptoManager.decryptKeyset(
+                        importedConfig.encryptedKeyset,
+                        masterPassword,
+                        salt,
+                        importedConfig.kdfIterations,
+                    )
+                    val (legacyResult, legacyData) = loadLegacyV2Data(
+                        directory = tempVaultDir,
+                        compatibleConfig = compatibleConfig,
+                        keyset = keyset,
+                        allowMissingAuthenticatedMetadata = compatibleConfig
+                            .allowsLegacyEncryptedMetadata(),
+                    )
+                    require(legacyResult is VaultLoadResult.Success && legacyData != null) {
+                        "Imported legacy V2 vault failed authentication"
+                    }
+                    try {
+                        createUpgradedLegacyVault(
+                            sourceDirectory = tempVaultDir,
+                            targetDirectory = upgradedImportDir,
+                            masterPassword = masterPassword,
+                            compatibleConfig = compatibleConfig,
+                            keyset = keyset,
+                            legacyData = legacyData,
+                        ).directory
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        throw VaultUpgradeException(error)
+                    }
+                } else {
+                    require(validateVaultConfig(importedConfig) == null) {
+                        "Imported vault config is unsupported"
+                    }
+                    validateImportedVaultCryptographically(
+                        tempVaultDir,
+                        importedConfig,
+                        masterPassword,
+                    )
+                    tempVaultDir
+                }
 
                 // 备份失败则终止导入；旧保险库始终保留到新目录原子激活成功。
                 currentCoroutineContext().ensureActive()
                 require(sessionGuard.publishIfValid(importSessionToken) {}) {
                     "Import session is no longer active"
                 }
-                backupCurrentVault()
+                val currentVaultBackup = backupCurrentVault()
                 currentCoroutineContext().ensureActive()
                 require(sessionGuard.publishIfValid(importSessionToken) {}) {
                     "Import session is no longer active"
                 }
                 runVaultMutationForSession(importRepositoryEpoch) {
-                    VaultFileTransaction.replaceDirectory(vaultDir, tempVaultDir)
+                    VaultFileTransaction.replaceDirectory(vaultDir, directoryToActivate)
                 }
+                // 导入成功前不清理任何旧备份，避免激活失败时丢失用户正在恢复的历史副本。
+                currentVaultBackup?.let(::pruneAutomaticBackups)
                 recoveryFailed = false
 
                 val wasBiometricEnabled = isBiometricUnlockEnabled()
@@ -1214,15 +1762,27 @@ class PasswordRepository(
             }
         } catch (error: CancellationException) {
             throw error
+        } catch (error: VaultUpgradeException) {
+            loggerE(error)
+            ImportDataFileResult(
+                success = false,
+                biometricsWereDisabled = false,
+                failureReason = ImportDataFailureReason.UPGRADE_FAILED,
+            )
         } catch (e: Exception) {
             loggerE(e)
-            ImportDataFileResult(false, false)
+            ImportDataFileResult(
+                success = false,
+                biometricsWereDisabled = false,
+                failureReason = ImportDataFailureReason.INVALID_BACKUP,
+            )
         } finally {
             tempVaultDir.deleteRecursively()
+            upgradedImportDir.deleteRecursively()
         }
     }
 
-    private fun validateImportedVault(directory: File): VaultConfig {
+    private fun validateImportedVault(directory: File): CompatibleVaultConfig {
         val requiredFiles = listOf(
             VAULT_CONFIG_FILE_NAME,
             PASSWORDS_DATA_FILE,
@@ -1232,10 +1792,12 @@ class PasswordRepository(
         require(requiredFiles.all { File(directory, it).isFile && File(directory, it).length() > 0L }) {
             "Imported vault is missing required files"
         }
-        val config = Json.decodeFromString<VaultConfig>(
+        val config = decodeCompatibleVaultConfig(
             readUtf8FileWithLimit(File(directory, VAULT_CONFIG_FILE_NAME), MAX_VAULT_CONFIG_BYTES)
         )
-        require(validateVaultConfig(config) == null) { "Imported vault config is unsupported" }
+        require(validateCompatibleVaultConfig(config) == null) {
+            "Imported vault config is unsupported"
+        }
         require(Base64.decode(config.salt, Base64.NO_WRAP).size == SALT_SIZE_BYTES) { "Invalid vault salt" }
         require(Base64.decode(config.encryptedKeyset, Base64.NO_WRAP).isNotEmpty()) { "Invalid encrypted keyset" }
 
@@ -1379,14 +1941,18 @@ class PasswordRepository(
         VaultSemanticValidator.validateTotpEntries(importedTotpEntries)
     }
 
-    private fun safeImportedAttachmentFile(directory: File, fileName: String): File {
+    private fun safeVaultAttachmentFile(directory: File, fileName: String): File {
         require(fileName.isNotBlank() && '/' !in fileName && '\\' !in fileName) {
-            "Imported attachment has an invalid file name"
+            "Vault attachment has an invalid file name"
         }
         val attachmentsDirectory = File(directory, ATTACHMENTS_DIR).canonicalFile
         val file = File(attachmentsDirectory, fileName).canonicalFile
-        require(file.parentFile == attachmentsDirectory) { "Imported attachment escaped its directory" }
+        require(file.parentFile == attachmentsDirectory) { "Vault attachment escaped its directory" }
         return file
+    }
+
+    private fun safeImportedAttachmentFile(directory: File, fileName: String): File {
+        return safeVaultAttachmentFile(directory, fileName)
     }
 
     private suspend fun <T> decryptImportedFile(
@@ -1619,7 +2185,7 @@ class PasswordRepository(
         vaultConfig?.passwordHint?.let { return it.takeIf(String::isNotBlank) }
         if (!vaultConfigFile.isFile) return null
         return try {
-            Json.decodeFromString<VaultConfig>(
+            decodeCompatibleVaultConfig(
                 readUtf8FileWithLimit(vaultConfigFile, MAX_VAULT_CONFIG_BYTES)
             ).passwordHint?.takeIf(String::isNotBlank)
         } catch (error: Exception) {
@@ -2234,7 +2800,35 @@ class PasswordRepository(
         manifest: VaultManifestV2,
         directory: File,
     ): Boolean {
-        if (manifest.fileDigests.isEmpty() || manifest.fileSizes.isEmpty()) return false
+        return verifySnapshotMetadata(
+            fileDigests = manifest.fileDigests,
+            fileSizes = manifest.fileSizes,
+            directory = directory,
+            allowBothMissing = false,
+        )
+    }
+
+    private fun verifyCompatibleSnapshotMetadata(
+        manifest: CompatibleVaultManifestV2,
+        directory: File,
+        allowMissing: Boolean,
+    ): Boolean {
+        return verifySnapshotMetadata(
+            fileDigests = manifest.fileDigests,
+            fileSizes = manifest.fileSizes,
+            directory = directory,
+            allowBothMissing = allowMissing,
+        )
+    }
+
+    private fun verifySnapshotMetadata(
+        fileDigests: Map<String, String>,
+        fileSizes: Map<String, Long>,
+        directory: File,
+        allowBothMissing: Boolean,
+    ): Boolean {
+        if (fileDigests.isEmpty() && fileSizes.isEmpty()) return allowBothMissing
+        if (fileDigests.isEmpty() || fileSizes.isEmpty()) return false
 
         return try {
             val expectedNames = buildSet {
@@ -2242,15 +2836,15 @@ class PasswordRepository(
                 add(CATEGORIES_DATA_FILE)
                 if (File(directory, TOTP_DATA_FILE).isFile) add(TOTP_DATA_FILE)
             }
-            if (manifest.fileDigests.keys != expectedNames || manifest.fileSizes.keys != expectedNames) {
+            if (fileDigests.keys != expectedNames || fileSizes.keys != expectedNames) {
                 return false
             }
             expectedNames.all { logicalName ->
                 val file = File(directory, logicalName)
                 if (!file.isFile) return@all false
-                val expectedDigest = Base64.decode(manifest.fileDigests.getValue(logicalName), Base64.NO_WRAP)
+                val expectedDigest = Base64.decode(fileDigests.getValue(logicalName), Base64.NO_WRAP)
                 val actualDigest = Base64.decode(calculateFileDigest(file), Base64.NO_WRAP)
-                file.length() == manifest.fileSizes.getValue(logicalName) &&
+                file.length() == fileSizes.getValue(logicalName) &&
                     MessageDigest.isEqual(expectedDigest, actualDigest)
             }
         } catch (error: Exception) {
@@ -2282,6 +2876,24 @@ class PasswordRepository(
                 Base64.decode(manifest.configBinding, Base64.NO_WRAP),
                 Base64.decode(calculateConfigBinding(config), Base64.NO_WRAP),
             )
+        } catch (error: Exception) {
+            loggerE(error)
+            false
+        }
+    }
+
+    private fun verifyCompatibleConfigBinding(
+        manifest: CompatibleVaultManifestV2,
+        config: CompatibleVaultConfig,
+        allowMissing: Boolean,
+    ): Boolean {
+        // 最早的 V2 清单没有绑定；只有已由旧公开配置触发的兼容路径才允许缺失。
+        if (manifest.configBinding.isBlank()) return allowMissing
+        return try {
+            val actual = Base64.decode(manifest.configBinding, Base64.NO_WRAP)
+            val historical = calculateCompatibleVaultConfigBindingBytes(config)
+            val current = calculateVaultConfigBindingBytes(config.toVaultConfig())
+            MessageDigest.isEqual(actual, historical) || MessageDigest.isEqual(actual, current)
         } catch (error: Exception) {
             loggerE(error)
             false
@@ -2329,9 +2941,40 @@ class PasswordRepository(
         }
     }
     
-    /** 验证公开配置中的保险库完整性摘要。 */
-    private fun verifyVaultIntegrity(expectedHash: String): Boolean {
-        return base64DigestMatches(expectedHash, calculateVaultIntegrityHash())
+    /**
+     * 验证公开配置中的保险库完整性摘要。早期 V2 可能没有摘要，或使用只串接密文字节的历史算法；
+     * 这些例外只允许在公开配置已经明确标记为旧格式时使用。
+     */
+    private fun verifyVaultIntegrity(
+        directory: File,
+        expectedHash: String?,
+        allowLegacyFormat: Boolean,
+    ): Boolean {
+        if (expectedHash.isNullOrBlank()) return allowLegacyFormat
+        if (base64DigestMatches(expectedHash, calculateVaultIntegrityHash(directory))) return true
+        return allowLegacyFormat &&
+            base64DigestMatches(expectedHash, calculateLegacyVaultIntegrityHash(directory))
+    }
+
+    private fun calculateLegacyVaultIntegrityHash(baseDir: File): String? {
+        return try {
+            val digest = MessageDigest.getInstance("SHA-256")
+            listOf(PASSWORDS_DATA_FILE, CATEGORIES_DATA_FILE, MANIFEST_DATA_FILE).forEach { fileName ->
+                val file = File(baseDir, fileName)
+                if (!file.isFile) return null
+                FileInputStream(file).use { input ->
+                    val buffer = ByteArray(64 * 1024)
+                    var count: Int
+                    while (input.read(buffer).also { count = it } != -1) {
+                        digest.update(buffer, 0, count)
+                    }
+                }
+            }
+            Base64.encodeToString(digest.digest(), Base64.NO_WRAP)
+        } catch (error: Exception) {
+            loggerE(error)
+            null
+        }
     }
 
     private fun base64DigestMatches(expectedHash: String, actualHash: String?): Boolean {
