@@ -84,9 +84,9 @@ android {
 }
 
 java {
-    // Gradle 由 Android Studio 的 JDK 运行，源码编译固定使用稳定的 JDK 17 工具链。
+    // Gradle、Lint 与源码编译统一使用 JDK 21；生成的字节码目标仍保持 Java 11。
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

@@ -15,7 +15,7 @@ All notable changes to PocketVault will be documented in this file.
 - Refreshed the app-wide Material 3 design with clearer typography, spacing, surfaces, icons, dialogs, navigation, list items, and circular add actions.
 - Moved password/note type selection and category selection into compact menus so filters no longer require horizontal scrolling.
 - Reduced the enforced master-password minimum from 12 to 6 characters. A longer unique passphrase remains strongly recommended because six characters are not sufficient evidence of password strength.
-- Upgraded the build stack to Android Gradle Plugin 9.3.1, Gradle 9.5.1, and Kotlin 2.3.21. Gradle can run on JDK 17–25 while compilation remains pinned to the JDK 17 toolchain.
+- Upgraded the build stack to Android Gradle Plugin 9.3.1, Gradle 9.5.1, and Kotlin 2.3.21, and standardized Gradle, Android Lint, and compilation on JDK 21 while retaining the Java 11 bytecode target.
 - Modernized Google Tink keyset serialization and primitive access, and enabled both code minification and resource shrinking for release builds.
 
 ### Removed

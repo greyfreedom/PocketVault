@@ -146,5 +146,5 @@ com.turisla.hellopocket/
 
 - Min SDK: 24 (Android Nougat)
 - Target SDK: 36
-- Gradle runtime: JDK 17–25（本地 Android Studio 使用内置 JBR 25）
-- Java/Kotlin toolchain: JDK 17，字节码目标保持 Java 11
+- Gradle and Android Lint runtime: JDK 21
+- Java/Kotlin toolchain: JDK 21，字节码目标保持 Java 11
