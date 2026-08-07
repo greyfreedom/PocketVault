@@ -669,15 +669,20 @@ private fun DetailItemSection(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SelectionContainer {
+            // SelectionContainer 才是 Row 的直接子项，权重必须放在这里，
+            // 否则长文本会按完整宽度测量并把右侧操作按钮挤出卡片。
+            SelectionContainer(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            ) {
                 Text(
                     text = value.ifEmpty { "" },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -730,14 +735,19 @@ private fun DetailPasswordSection(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SelectionContainer {
+            // 密码内容只使用操作区之外的剩余宽度；显示超长密码时允许文本换行，
+            // 查看和复制按钮始终保留在卡片右侧。
+            SelectionContainer(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            ) {
                 Text(
                     text = if (isVisible) createColoredPasswordText(value) else AnnotatedString("••••••••"),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
