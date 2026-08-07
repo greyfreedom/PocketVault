@@ -2,6 +2,7 @@ package com.turisla.hellopocket.data
 
 import com.turisla.hellopocket.model.AttachmentManifestEntry
 import com.turisla.hellopocket.model.Category
+import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.TotpEntry
 import com.turisla.hellopocket.utils.AppConstants
@@ -54,6 +55,32 @@ internal object VaultSemanticValidator {
         }
 
         passwords.forEach { entry ->
+            val customFields = entry.customFieldsList
+            require(customFields.size <= AppConstants.MAX_CUSTOM_FIELDS_PER_ENTRY) {
+                "Vault entry contains too many custom fields"
+            }
+            requireUniqueNonBlankIds(customFields.map { it.id }, "custom field")
+            customFields.forEach { field ->
+                require(field.name.isNotBlank() && field.name == field.name.trim()) {
+                    "Vault entry contains an invalid custom field name"
+                }
+                require('\n' !in field.name && '\r' !in field.name) {
+                    "Vault entry contains a multi-line custom field name"
+                }
+                require(field.name.length <= AppConstants.MAX_CUSTOM_FIELD_NAME_LENGTH) {
+                    "Vault entry contains an oversized custom field name"
+                }
+                require(field.value.length <= AppConstants.MAX_CUSTOM_FIELD_VALUE_LENGTH) {
+                    "Vault entry contains an oversized custom field value"
+                }
+                require(
+                    field.type == CustomFieldType.TEXT ||
+                        field.type == CustomFieldType.CONCEALED
+                ) {
+                    "Vault entry contains an unsupported custom field type"
+                }
+            }
+
             val entryCategoryIds = entry.categoryIdsList
             require(entryCategoryIds.size == entryCategoryIds.toSet().size) {
                 "Vault entry contains duplicate category references"

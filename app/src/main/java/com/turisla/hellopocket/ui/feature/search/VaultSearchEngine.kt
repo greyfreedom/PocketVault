@@ -1,5 +1,6 @@
 package com.turisla.hellopocket.ui.feature.search
 
+import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.VaultItemType
 import java.util.Locale
@@ -7,6 +8,7 @@ import java.util.Locale
 internal enum class SearchMatchField {
     TITLE,
     ACCOUNT,
+    CUSTOM_FIELD,
     NOTES,
 }
 
@@ -22,7 +24,8 @@ internal data class VaultSearchResult(
 /**
  * 保险库本地搜索引擎。
  *
- * 只索引标题、账号和用户填写的备注/笔记内容，绝不把密码正文加入索引。
+ * 索引标题、账号、自定义字段名、明文自定义字段值和备注/笔记内容。
+ * 密码正文与隐藏型自定义字段值始终不进入索引，避免搜索结果意外暴露秘密。
  */
 internal object VaultSearchEngine {
     private val whitespaceRegex = Regex("\\s+")
@@ -78,37 +81,46 @@ internal object VaultSearchEngine {
     }
 
     private fun PasswordEntry.searchableFields(): List<SearchableField> = buildList {
-        add(SearchableField(SearchMatchField.TITLE, title))
+        add(SearchableField(FieldKind.TITLE, title))
         if (type == VaultItemType.NOTE) {
             if (content.isNotBlank()) {
-                add(SearchableField(SearchMatchField.NOTES, content))
+                add(SearchableField(FieldKind.NOTES, content))
             }
         } else {
             if (username.isNotBlank()) {
-                add(SearchableField(SearchMatchField.ACCOUNT, username))
+                add(SearchableField(FieldKind.ACCOUNT, username))
             }
             if (notes.isNotBlank()) {
-                add(SearchableField(SearchMatchField.NOTES, notes))
+                add(SearchableField(FieldKind.NOTES, notes))
+            }
+        }
+
+        customFieldsList.forEach { field ->
+            if (field.name.isNotBlank()) {
+                add(SearchableField(FieldKind.CUSTOM_NAME, field.name))
+            }
+            if (field.type == CustomFieldType.TEXT && field.value.isNotBlank()) {
+                add(
+                    SearchableField(
+                        kind = FieldKind.CUSTOM_VALUE,
+                        originalText = field.value,
+                        supportingPrefix = field.name.takeIf(String::isNotBlank)?.let { "$it: " },
+                    )
+                )
             }
         }
     }
 
     private fun List<SearchableField>.bestMatchFor(terms: List<String>): SearchableField {
         // 单一字段完整命中时优先展示它，便于用户理解结果为何出现。
-        firstOrNull { it.type == SearchMatchField.TITLE && it.matchesAll(terms) }?.let { return it }
-        firstOrNull { it.type == SearchMatchField.ACCOUNT && it.matchesAll(terms) }?.let { return it }
-        firstOrNull { it.type == SearchMatchField.NOTES && it.matchesAll(terms) }?.let { return it }
+        FieldKind.entries.forEach { kind ->
+            firstOrNull { it.kind == kind && it.matchesAll(terms) }?.let { return it }
+        }
 
-        // 多词分布在不同字段时，展示命中词最多的字段；同分时优先账号和备注。
+        // 多词分布在不同字段时，展示命中词最多且更具辨识度的字段。
         return maxWithOrNull(
             compareBy<SearchableField> { field -> field.matchCount(terms) }
-                .thenBy { field ->
-                    when (field.type) {
-                        SearchMatchField.TITLE -> 0
-                        SearchMatchField.NOTES -> 1
-                        SearchMatchField.ACCOUNT -> 2
-                    }
-                }
+                .thenBy { field -> FieldKind.entries.size - field.kind.ordinal }
         ) ?: first()
     }
 
@@ -116,9 +128,11 @@ internal object VaultSearchEngine {
         queryPhrase: String,
         terms: List<String>,
     ): Int {
-        val title = first { it.type == SearchMatchField.TITLE }
-        val account = firstOrNull { it.type == SearchMatchField.ACCOUNT }
-        val notes = filter { it.type == SearchMatchField.NOTES }
+        val title = first { it.kind == FieldKind.TITLE }
+        val account = firstOrNull { it.kind == FieldKind.ACCOUNT }
+        val customNames = filter { it.kind == FieldKind.CUSTOM_NAME }
+        val customValues = filter { it.kind == FieldKind.CUSTOM_VALUE }
+        val notes = filter { it.kind == FieldKind.NOTES }
 
         return when {
             title.originalText.equals(queryPhrase, ignoreCase = true) -> 0
@@ -127,8 +141,14 @@ internal object VaultSearchEngine {
             account?.originalText?.equals(queryPhrase, ignoreCase = true) == true -> 3
             account?.originalText?.startsWith(queryPhrase, ignoreCase = true) == true -> 4
             account?.matchesAll(terms) == true -> 5
-            notes.any { it.matchesAll(terms) } -> 6
-            else -> 7
+            customNames.any { it.originalText.equals(queryPhrase, ignoreCase = true) } -> 6
+            customNames.any { it.originalText.startsWith(queryPhrase, ignoreCase = true) } -> 7
+            customNames.any { it.matchesAll(terms) } -> 8
+            customValues.any { it.originalText.equals(queryPhrase, ignoreCase = true) } -> 9
+            customValues.any { it.originalText.startsWith(queryPhrase, ignoreCase = true) } -> 10
+            customValues.any { it.matchesAll(terms) } -> 11
+            notes.any { it.matchesAll(terms) } -> 12
+            else -> 13
         }
     }
 
@@ -142,7 +162,7 @@ internal object VaultSearchEngine {
         terms.count { term -> contains(term) }
 
     private fun SearchableField.toSupportingText(terms: List<String>): String =
-        originalText.toSearchSnippet(terms)
+        supportingPrefix.orEmpty() + originalText.toSearchSnippet(terms)
 
     /**
      * 只截取命中位置附近的小窗口，避免为展示摘要而复制整段大型笔记。
@@ -173,9 +193,21 @@ internal object VaultSearchEngine {
     }
 
     private data class SearchableField(
-        val type: SearchMatchField,
+        val kind: FieldKind,
         val originalText: String,
-    )
+        val supportingPrefix: String? = null,
+    ) {
+        val type: SearchMatchField
+            get() = kind.matchField
+    }
+
+    private enum class FieldKind(val matchField: SearchMatchField) {
+        TITLE(SearchMatchField.TITLE),
+        ACCOUNT(SearchMatchField.ACCOUNT),
+        CUSTOM_NAME(SearchMatchField.CUSTOM_FIELD),
+        CUSTOM_VALUE(SearchMatchField.CUSTOM_FIELD),
+        NOTES(SearchMatchField.NOTES),
+    }
 
     private data class RankedSearchResult(
         val result: VaultSearchResult,

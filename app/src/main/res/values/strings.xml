@@ -357,4 +357,31 @@
     <string name="show_password">Show password</string>
     <string name="hide_password">Hide password</string>
     <string name="title_cannot_be_empty">Title cannot be empty</string>
+    <!-- Custom fields -->
+    <string name="custom_fields">Custom fields</string>
+    <string name="custom_field">Custom field</string>
+    <string name="add_custom_field">Add field</string>
+    <string name="custom_field_text">Text field</string>
+    <string name="custom_field_text_description">Always visible; still encrypted in your vault.</string>
+    <string name="custom_field_concealed">Hidden field</string>
+    <string name="custom_field_concealed_description">Hidden by default; ideal for PINs and sensitive answers.</string>
+    <string name="custom_field_name">Field name</string>
+    <string name="custom_field_value">Field value</string>
+    <string name="custom_field_name_required">Field name cannot be empty.</string>
+    <plurals name="custom_field_limit_reached">
+        <item quantity="one">Up to %1$d custom field can be added.</item>
+        <item quantity="other">Up to %1$d custom fields can be added.</item>
+    </plurals>
+    <string name="custom_field_deleted">Custom field deleted.</string>
+    <string name="undo">Undo</string>
+    <string name="change_to_text_field">Change to text field</string>
+    <string name="change_to_concealed_field">Change to hidden field</string>
+    <string name="delete_custom_field">Delete field</string>
+    <string name="show_custom_field">Show field value</string>
+    <string name="hide_custom_field">Hide field value</string>
+    <string name="drag_to_reorder">Touch and hold to reorder</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="custom_field_value_hidden">Field value hidden</string>
+    <string name="not_filled">Not filled</string>
 </resources>

@@ -64,6 +64,19 @@ class DetailViewModel(
         }
     }
 
+    fun onCopyCustomField(fieldId: String) {
+        passwordEntry.value?.customFieldsList
+            ?.firstOrNull { it.id == fieldId }
+            ?.value
+            ?.let { value ->
+                clipboardManagerHelper.copyTextToClipboard(R.string.custom_field, value)
+            }
+    }
+
+    fun copyCustomFieldValue(value: String) {
+        clipboardManagerHelper.copyTextToClipboard(R.string.custom_field, value)
+    }
+
     /**
      * 更新密码条目
      * @param entry 包含更新后信息的新密码条目对象

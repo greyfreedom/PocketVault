@@ -1,5 +1,7 @@
 package com.turisla.hellopocket.ui.feature.search
 
+import com.turisla.hellopocket.model.CustomField
+import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.VaultItemType
 import kotlinx.coroutines.CancellationException
@@ -110,6 +112,50 @@ class VaultSearchEngineTest {
     }
 
     @Test
+    fun textCustomFieldNameAndValueAreSearchable() {
+        val entry = passwordEntry(
+            id = "membership",
+            title = "Gym",
+            customFields = listOf(
+                customField(
+                    name = "Membership number",
+                    value = "MEM-2048",
+                    type = CustomFieldType.TEXT,
+                )
+            ),
+        )
+
+        val nameResult = VaultSearchEngine.search(listOf(entry), "membership number").single()
+        assertEquals(SearchMatchField.CUSTOM_FIELD, nameResult.matchedField)
+        assertEquals("Membership number", nameResult.supportingText)
+
+        val valueResult = VaultSearchEngine.search(listOf(entry), "mem-2048").single()
+        assertEquals(SearchMatchField.CUSTOM_FIELD, valueResult.matchedField)
+        assertEquals("Membership number: MEM-2048", valueResult.supportingText)
+    }
+
+    @Test
+    fun concealedCustomFieldNameIsSearchableButItsValueIsNot() {
+        val entry = passwordEntry(
+            id = "bank",
+            title = "Bank",
+            customFields = listOf(
+                customField(
+                    name = "Telephone PIN",
+                    value = "unique-concealed-value",
+                    type = CustomFieldType.CONCEALED,
+                )
+            ),
+        )
+
+        assertEquals(
+            SearchMatchField.CUSTOM_FIELD,
+            VaultSearchEngine.search(listOf(entry), "telephone pin").single().matchedField,
+        )
+        assertTrue(VaultSearchEngine.search(listOf(entry), "unique-concealed-value").isEmpty())
+    }
+
+    @Test
     fun fieldsHiddenByEntryTypeAreNotSearchable() {
         val passwordWithHiddenContent = passwordEntry(
             id = "password",
@@ -164,7 +210,7 @@ class VaultSearchEngineTest {
     }
 
     @Test
-    fun titleMatchesAreRankedBeforeAccountAndNotesMatches() {
+    fun resultsFollowFieldPriorityBeforeUpdatedTime() {
         val notesMatch = passwordEntry(
             id = "notes",
             title = "Other",
@@ -177,6 +223,18 @@ class VaultSearchEngineTest {
             username = "github-user",
             updatedAt = 20,
         )
+        val customValueMatch = passwordEntry(
+            id = "custom-value",
+            title = "Value entry",
+            customFields = listOf(customField(name = "Service", value = "GitHub")),
+            updatedAt = 50,
+        )
+        val customNameMatch = passwordEntry(
+            id = "custom-name",
+            title = "Named entry",
+            customFields = listOf(customField(name = "GitHub account", value = "Work")),
+            updatedAt = 40,
+        )
         val titleMatch = passwordEntry(
             id = "title",
             title = "GitHub",
@@ -184,9 +242,15 @@ class VaultSearchEngineTest {
         )
 
         assertEquals(
-            listOf("title", "account", "notes"),
+            listOf("title", "account", "custom-name", "custom-value", "notes"),
             VaultSearchEngine.search(
-                listOf(notesMatch, accountMatch, titleMatch),
+                listOf(
+                    notesMatch,
+                    customValueMatch,
+                    customNameMatch,
+                    accountMatch,
+                    titleMatch,
+                ),
                 "github",
             ).map(VaultSearchResult::entryId),
         )
@@ -201,6 +265,7 @@ class VaultSearchEngineTest {
         type: VaultItemType = VaultItemType.PASSWORD,
         content: String = "",
         updatedAt: Long = 0,
+        customFields: List<CustomField> = emptyList(),
     ): PasswordEntry = PasswordEntry.newBuilder()
         .setId(id)
         .setTitle(title)
@@ -210,5 +275,18 @@ class VaultSearchEngineTest {
         .setType(type)
         .setContent(content)
         .setUpdatedAt(updatedAt)
+        .addAllCustomFields(customFields)
+        .build()
+
+    private fun customField(
+        id: String = "field-1",
+        name: String,
+        value: String,
+        type: CustomFieldType = CustomFieldType.TEXT,
+    ): CustomField = CustomField.newBuilder()
+        .setId(id)
+        .setName(name)
+        .setValue(value)
+        .setType(type)
         .build()
 }

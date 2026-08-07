@@ -11,6 +11,8 @@ import com.google.protobuf.MessageLite
 import com.turisla.hellopocket.model.AttachmentManifestEntry
 import com.turisla.hellopocket.model.Categories
 import com.turisla.hellopocket.model.Category
+import com.turisla.hellopocket.model.CustomField
+import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntries
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.TotpEntries
@@ -18,6 +20,7 @@ import com.turisla.hellopocket.model.TotpEntry
 import com.turisla.hellopocket.model.VaultConfig
 import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.model.VaultLoadResult
+import com.turisla.hellopocket.model.VaultManifestV2
 import com.turisla.hellopocket.security.TinkCryptoManager
 import com.turisla.hellopocket.security.VaultSessionGuard
 import kotlinx.coroutines.runBlocking
@@ -157,6 +160,129 @@ class PasswordRepositoryLegacyV2MigrationTest {
         assertTrue(upgradedConfig.integrityHash?.isNotBlank() == true)
         assertNotEquals(fixture.legacyVaultId, upgradedConfig.vaultId)
         assertTrue(repository.getBackupHistory().single().isFile)
+    }
+
+    @Test
+    fun `schema one first core write creates a restorable backup before schema two activation`() =
+        runBlocking {
+            val password = "schema-one-master-password"
+            val manager = TinkCryptoManager()
+            val guard = VaultSessionGuard().apply { enterForeground() }
+            val repository = PasswordRepository(context, manager, guard)
+
+            repository.setupNewVault(password)
+            repository.addEntry(
+                title = "Before upgrade",
+                username = "before@example.com",
+                plainTextPassword = "before-secret",
+                notes = "",
+            )
+            val encryptionContext = requireNotNull(repository.getVaultEncryptionContext())
+            rewriteCurrentVaultAsSchemaOne(encryptionContext)
+            repository.lock()
+
+            val upgradingRepository = PasswordRepository(context, manager, guard)
+            assertTrue(upgradingRepository.loadAndDecryptData(password) is VaultLoadResult.Success)
+            assertTrue(upgradingRepository.getBackupHistory().isEmpty())
+
+            val customField = CustomField.newBuilder()
+                .setId("field-1")
+                .setName("Recovery email")
+                .setValue("recovery@example.com")
+                .setType(CustomFieldType.TEXT)
+                .build()
+            upgradingRepository.addEntry(
+                title = "After upgrade",
+                username = "after@example.com",
+                plainTextPassword = "after-secret",
+                notes = "",
+                customFields = listOf(customField),
+            )
+
+            val upgradedContext = requireNotNull(upgradingRepository.getVaultEncryptionContext())
+            assertEquals(
+                PasswordRepository.CURRENT_SCHEMA_VERSION,
+                readCurrentManifest(upgradedContext).schemaVersion,
+            )
+            assertEquals(
+                PasswordRepository.CURRENT_SCHEMA_VERSION,
+                readCurrentPasswords(upgradedContext).schemaVersion,
+            )
+            assertEquals(
+                listOf(customField),
+                upgradingRepository.passwordEntries.value
+                    .single { it.title == "After upgrade" }
+                    .customFieldsList,
+            )
+
+            val schemaOneBackup = upgradingRepository.getBackupHistory().single()
+            assertTrue(schemaOneBackup.isFile && schemaOneBackup.length() > 0L)
+            assertTrue(upgradingRepository.restoreFromBackup(schemaOneBackup, password))
+            assertTrue(upgradingRepository.loadAndDecryptData(password) is VaultLoadResult.Success)
+            assertEquals(
+                listOf("Before upgrade"),
+                upgradingRepository.passwordEntries.value.map(PasswordEntry::getTitle),
+            )
+            assertTrue(upgradingRepository.passwordEntries.value.single().customFieldsList.isEmpty())
+        }
+
+    @Test
+    fun `schema one first totp write keeps mixed core schema readable after upgrade`() = runBlocking {
+        val password = "schema-one-totp-master-password"
+        val manager = TinkCryptoManager()
+        val guard = VaultSessionGuard().apply { enterForeground() }
+        val repository = PasswordRepository(context, manager, guard)
+
+        repository.setupNewVault(password)
+        repository.addEntry(
+            title = "Existing password",
+            username = "existing@example.com",
+            plainTextPassword = "existing-secret",
+            notes = "",
+        )
+        rewriteCurrentVaultAsSchemaOne(requireNotNull(repository.getVaultEncryptionContext()))
+        repository.lock()
+
+        val upgradingRepository = PasswordRepository(context, manager, guard)
+        assertTrue(upgradingRepository.loadAndDecryptData(password) is VaultLoadResult.Success)
+        val totp = TotpEntry.newBuilder()
+            .setId("totp-after-schema-upgrade")
+            .setIssuer("Example")
+            .setAccount("existing@example.com")
+            .setSecret(ByteString.copyFromUtf8("JBSWY3DPEHPK3PXP"))
+            .setAlgorithm("SHA1")
+            .setDigits(6)
+            .setPeriod(30)
+            .setCreatedAt(2L)
+            .setUpdatedAt(2L)
+            .build()
+        upgradingRepository.persistTotpEntries(listOf(totp))
+
+        val upgradedContext = requireNotNull(upgradingRepository.getVaultEncryptionContext())
+        assertEquals(
+            PasswordRepository.CURRENT_SCHEMA_VERSION,
+            readCurrentManifest(upgradedContext).schemaVersion,
+        )
+        assertEquals(1, readCurrentPasswords(upgradedContext).schemaVersion)
+        assertEquals(
+            PasswordRepository.CURRENT_SCHEMA_VERSION,
+            readCurrentTotp(upgradedContext).schemaVersion,
+        )
+        assertTrue(upgradingRepository.getBackupHistory().single().isFile)
+
+        upgradingRepository.lock()
+        val reloadedRepository = PasswordRepository(context, manager, guard)
+        assertTrue(reloadedRepository.loadAndDecryptData(password) is VaultLoadResult.Success)
+        assertEquals(
+            listOf("Existing password"),
+            reloadedRepository.passwordEntries.value.map(PasswordEntry::getTitle),
+        )
+        val totpRepository = TotpRepository(context, manager, reloadedRepository, guard)
+        assertTrue(
+            totpRepository.initialize(requireNotNull(reloadedRepository.getVaultEncryptionContext()))
+                is VaultLoadResult.Success
+        )
+        assertEquals(listOf(totp), totpRepository.totpEntries.value)
     }
 
     @Test
@@ -337,6 +463,105 @@ class PasswordRepositoryLegacyV2MigrationTest {
         } else {
             ByteArray(0)
         }
+    }
+
+    private fun rewriteCurrentVaultAsSchemaOne(encryptionContext: VaultEncryptionContext) {
+        val vaultDirectory = File(context.filesDir, PasswordRepository.VAULT_DIRECTORY_NAME)
+        val streamingAead = TinkCryptoManager().getStreamingAead(encryptionContext.keysetHandle)
+        val passwords = readCurrentPasswords(encryptionContext)
+        val categoriesFile = File(vaultDirectory, PasswordRepository.CATEGORIES_DATA_FILE)
+        val categories = readEncryptedBytes(
+            categoriesFile,
+            streamingAead,
+            encryptionContext.associatedData(PasswordRepository.CATEGORIES_DATA_FILE),
+        ).let(Categories::parseFrom)
+        val manifest = readCurrentManifest(encryptionContext)
+
+        writeLegacyMessage(
+            File(vaultDirectory, PasswordRepository.PASSWORDS_DATA_FILE),
+            passwords.toBuilder().setSchemaVersion(1).build(),
+            streamingAead,
+            encryptionContext.associatedData(PasswordRepository.PASSWORDS_DATA_FILE),
+        )
+        writeLegacyMessage(
+            categoriesFile,
+            categories.toBuilder().setSchemaVersion(1).build(),
+            streamingAead,
+            encryptionContext.associatedData(PasswordRepository.CATEGORIES_DATA_FILE),
+        )
+
+        val snapshotFiles = buildMap {
+            put(
+                PasswordRepository.PASSWORDS_DATA_FILE,
+                File(vaultDirectory, PasswordRepository.PASSWORDS_DATA_FILE),
+            )
+            put(PasswordRepository.CATEGORIES_DATA_FILE, categoriesFile)
+            File(vaultDirectory, PasswordRepository.TOTP_DATA_FILE)
+                .takeIf(File::isFile)
+                ?.let { put(PasswordRepository.TOTP_DATA_FILE, it) }
+        }
+        val schemaOneManifest = manifest.copy(
+            schemaVersion = 1,
+            fileDigests = snapshotFiles.mapValues { (_, file) -> calculateFileDigest(file) },
+            fileSizes = snapshotFiles.mapValues { (_, file) -> file.length() },
+        )
+        writeLegacyBytes(
+            File(vaultDirectory, PasswordRepository.MANIFEST_DATA_FILE),
+            Json.encodeToString(schemaOneManifest).toByteArray(Charsets.UTF_8),
+            streamingAead,
+            encryptionContext.associatedData(PasswordRepository.MANIFEST_DATA_FILE),
+        )
+
+        val config = readCurrentConfig().copy(
+            integrityHash = calculateCurrentVaultHash(vaultDirectory),
+        )
+        File(vaultDirectory, PasswordRepository.VAULT_CONFIG_FILE_NAME)
+            .writeText(Json.encodeToString(config))
+    }
+
+    private fun readCurrentPasswords(encryptionContext: VaultEncryptionContext): PasswordEntries {
+        val streamingAead = TinkCryptoManager().getStreamingAead(encryptionContext.keysetHandle)
+        return readEncryptedBytes(
+            File(
+                File(context.filesDir, PasswordRepository.VAULT_DIRECTORY_NAME),
+                PasswordRepository.PASSWORDS_DATA_FILE,
+            ),
+            streamingAead,
+            encryptionContext.associatedData(PasswordRepository.PASSWORDS_DATA_FILE),
+        ).let(PasswordEntries::parseFrom)
+    }
+
+    private fun readCurrentManifest(encryptionContext: VaultEncryptionContext): VaultManifestV2 {
+        val streamingAead = TinkCryptoManager().getStreamingAead(encryptionContext.keysetHandle)
+        val bytes = readEncryptedBytes(
+            File(
+                File(context.filesDir, PasswordRepository.VAULT_DIRECTORY_NAME),
+                PasswordRepository.MANIFEST_DATA_FILE,
+            ),
+            streamingAead,
+            encryptionContext.associatedData(PasswordRepository.MANIFEST_DATA_FILE),
+        )
+        return Json.decodeFromString(bytes.toString(Charsets.UTF_8))
+    }
+
+    private fun readCurrentTotp(encryptionContext: VaultEncryptionContext): TotpEntries {
+        val streamingAead = TinkCryptoManager().getStreamingAead(encryptionContext.keysetHandle)
+        return readEncryptedBytes(
+            File(
+                File(context.filesDir, PasswordRepository.VAULT_DIRECTORY_NAME),
+                PasswordRepository.TOTP_DATA_FILE,
+            ),
+            streamingAead,
+            encryptionContext.associatedData(PasswordRepository.TOTP_DATA_FILE),
+        ).let(TotpEntries::parseFrom)
+    }
+
+    private fun readEncryptedBytes(
+        file: File,
+        streamingAead: StreamingAead,
+        associatedData: ByteArray,
+    ): ByteArray = file.inputStream().use { input ->
+        streamingAead.newDecryptingStream(input, associatedData).use { it.readBytes() }
     }
 
     private fun writeLegacyMessage(

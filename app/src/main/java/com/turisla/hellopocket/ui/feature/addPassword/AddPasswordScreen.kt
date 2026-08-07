@@ -56,6 +56,8 @@ import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -93,8 +95,11 @@ import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.ui.feature.common.AttachmentSection
 import com.turisla.hellopocket.ui.feature.common.CategoryCreationContent
+import com.turisla.hellopocket.ui.feature.common.CustomFieldEditSection
+import com.turisla.hellopocket.ui.feature.common.ResetSensitiveStateOnBackground
 import com.turisla.hellopocket.ui.feature.common.SelectCategoryContent
 import com.turisla.hellopocket.ui.feature.common.getCategoryDisplayName
+import com.turisla.hellopocket.ui.feature.common.toProtoCustomFields
 import com.turisla.hellopocket.ui.feature.home.HomePageViewModel
 import com.turisla.hellopocket.utils.AppConstants
 import kotlinx.coroutines.CancellationException
@@ -115,9 +120,11 @@ fun AddPasswordScreen(
     val username = draft.username
     val password = draft.password
     val notes = draft.notes
+    val customFields = draft.customFields
     val selectedCategoryIds = draft.selectedCategoryIds
     val selectedAttachmentIds = draft.selectedAttachmentIds
     var error by remember { mutableStateOf<String?>(null) }
+    var customFieldValidationAttempted by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
 
     var passwordVisible by remember { mutableStateOf(false) }
@@ -129,6 +136,10 @@ fun AddPasswordScreen(
     val context = LocalContext.current
     val currentOnLoading by rememberUpdatedState(onLoading)
     val isBusy = isSaving || isAttachmentLoading
+    val scrollState = rememberScrollState()
+    val customFieldSnackbarHostState = remember { SnackbarHostState() }
+
+    ResetSensitiveStateOnBackground { passwordVisible = false }
 
     LaunchedEffect(isSaving, isAttachmentLoading) {
         currentOnLoading(isSaving || isAttachmentLoading)
@@ -146,6 +157,7 @@ fun AddPasswordScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(customFieldSnackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -177,7 +189,7 @@ fun AddPasswordScreen(
                 .padding(paddingValues)
                 .imePadding() // Avoid keyboard occlusion
                 .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
             SectionHeader(title = stringResource(R.string.title))
             CardContainer {
@@ -210,6 +222,34 @@ fun AddPasswordScreen(
                 )
             }
 
+            CustomFieldEditSection(
+                fields = customFields,
+                parentScrollState = scrollState,
+                snackbarHostState = customFieldSnackbarHostState,
+                showValidationErrors = customFieldValidationAttempted,
+                onAdd = { type ->
+                    error = null
+                    customFieldValidationAttempted = false
+                    draftViewModel.addCustomField(type)
+                },
+                onNameChange = { id, value ->
+                    error = null
+                    customFieldValidationAttempted = false
+                    draftViewModel.updateCustomFieldName(id, value)
+                },
+                onValueChange = draftViewModel::updateCustomFieldValue,
+                onTypeChange = draftViewModel::updateCustomFieldType,
+                onRemove = draftViewModel::removeCustomField,
+                onRestore = draftViewModel::restoreCustomField,
+                onMove = draftViewModel::moveCustomField,
+                onCopy = viewModel::copyCustomFieldValue,
+            )
+
+            SectionHeader(title = stringResource(R.string.notes))
+            CardContainer {
+                NoteSection(value = notes, onValueChange = draftViewModel::updateNotes)
+            }
+
             // 分类选择区域
             SectionHeader(title = stringResource(R.string.category))
             CardContainer {
@@ -220,11 +260,6 @@ fun AddPasswordScreen(
                     draftViewModel.removeCategory(categoryId)
                 }, viewModel = viewModel
                 )
-            }
-
-            SectionHeader(title = stringResource(R.string.notes))
-            CardContainer {
-                NoteSection(value = notes, onValueChange = draftViewModel::updateNotes)
             }
 
             // 附件区域
@@ -289,8 +324,20 @@ fun AddPasswordScreen(
 
                 Button(
                     onClick = {
-                        if (title.isBlank() || password.isBlank()) {
-                            error = context.getString(R.string.title_and_password_required)
+                        val hasInvalidCustomField = customFields.any { it.name.isBlank() }
+                        customFieldValidationAttempted =
+                            title.isNotBlank() && password.isNotBlank() && hasInvalidCustomField
+                        val validationError = when {
+                            title.isBlank() || password.isBlank() -> {
+                                context.getString(R.string.title_and_password_required)
+                            }
+                            hasInvalidCustomField -> {
+                                context.getString(R.string.custom_field_name_required)
+                            }
+                            else -> null
+                        }
+                        if (validationError != null) {
+                            error = validationError
                         } else {
                             scope.launch {
                                 isSaving = true
@@ -301,9 +348,11 @@ fun AddPasswordScreen(
                                         password,
                                         notes.text,
                                         selectedCategoryIds.toList(),
-                                        selectedAttachmentIds.toList()
+                                        selectedAttachmentIds.toList(),
+                                        customFields.toProtoCustomFields(),
                                     )
                                     // durable commit 完成后清除内存明文并返回。
+                                    customFieldValidationAttempted = false
                                     draftViewModel.clear()
                                     onNavigateBack()
                                 } catch (error: CancellationException) {

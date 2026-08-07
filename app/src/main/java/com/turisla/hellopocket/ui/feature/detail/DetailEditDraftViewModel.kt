@@ -2,8 +2,19 @@ package com.turisla.hellopocket.ui.feature.detail
 
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
+import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.VaultItemType
+import com.turisla.hellopocket.ui.feature.common.CustomFieldDraft
+import com.turisla.hellopocket.ui.feature.common.moveCustomField
+import com.turisla.hellopocket.ui.feature.common.newCustomFieldDraft
+import com.turisla.hellopocket.ui.feature.common.normalizeCustomFieldNameInput
+import com.turisla.hellopocket.ui.feature.common.normalizeCustomFieldValueInput
+import com.turisla.hellopocket.ui.feature.common.restoreCustomField
+import com.turisla.hellopocket.ui.feature.common.toDraft
+import com.turisla.hellopocket.ui.feature.common.toProtoCustomFields
+import com.turisla.hellopocket.ui.feature.common.updateCustomField
+import com.turisla.hellopocket.utils.AppConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,6 +31,7 @@ data class DetailEditDraftState(
     val username: String = "",
     val password: String = "",
     val notes: TextFieldValue = TextFieldValue(""),
+    val customFields: List<CustomFieldDraft> = emptyList(),
     val selectedCategoryIds: Set<String> = emptySet(),
     val selectedAttachmentIds: Set<String> = emptySet(),
 )
@@ -39,6 +51,7 @@ class DetailEditDraftViewModel : ViewModel() {
             username = entry.username,
             password = entry.password,
             notes = TextFieldValue(notesText),
+            customFields = entry.customFieldsList.map { it.toDraft() },
             selectedCategoryIds = entry.categoryIdsList.toSet(),
             selectedAttachmentIds = entry.attachmentIdsList.toSet(),
         )
@@ -53,6 +66,63 @@ class DetailEditDraftViewModel : ViewModel() {
     }
 
     fun updateNotes(value: TextFieldValue) = _draft.update { it.copy(notes = value) }
+
+    fun addCustomField(type: CustomFieldType): String? {
+        var addedId: String? = null
+        _draft.update { state ->
+            if (!state.isEditing || state.customFields.size >= AppConstants.MAX_CUSTOM_FIELDS_PER_ENTRY) {
+                state
+            } else {
+                val field = newCustomFieldDraft(type)
+                addedId = field.id
+                state.copy(customFields = state.customFields + field)
+            }
+        }
+        return addedId
+    }
+
+    fun updateCustomFieldName(fieldId: String, value: String) = _draft.update { state ->
+        if (!state.isEditing) state else state.copy(
+            customFields = state.customFields.updateCustomField(fieldId) { field ->
+                field.copy(name = normalizeCustomFieldNameInput(value))
+            }
+        )
+    }
+
+    fun updateCustomFieldValue(fieldId: String, value: String) = _draft.update { state ->
+        if (!state.isEditing) state else state.copy(
+            customFields = state.customFields.updateCustomField(fieldId) { field ->
+                field.copy(value = normalizeCustomFieldValueInput(value))
+            }
+        )
+    }
+
+    fun updateCustomFieldType(fieldId: String, type: CustomFieldType) = _draft.update { state ->
+        require(type == CustomFieldType.TEXT || type == CustomFieldType.CONCEALED)
+        if (!state.isEditing) state else state.copy(
+            customFields = state.customFields.updateCustomField(fieldId) { field ->
+                field.copy(type = type)
+            }
+        )
+    }
+
+    fun removeCustomField(fieldId: String) = _draft.update { state ->
+        if (!state.isEditing) state else state.copy(
+            customFields = state.customFields.filterNot { it.id == fieldId }
+        )
+    }
+
+    fun restoreCustomField(field: CustomFieldDraft, index: Int) = _draft.update { state ->
+        if (!state.isEditing) state else state.copy(
+            customFields = state.customFields.restoreCustomField(field, index)
+        )
+    }
+
+    fun moveCustomField(fieldId: String, targetIndex: Int) = _draft.update { state ->
+        if (!state.isEditing) state else state.copy(
+            customFields = state.customFields.moveCustomField(fieldId, targetIndex)
+        )
+    }
 
     fun addCategory(categoryId: String) = _draft.update {
         it.copy(selectedCategoryIds = it.selectedCategoryIds + categoryId)
@@ -80,6 +150,8 @@ class DetailEditDraftViewModel : ViewModel() {
             .addAllCategoryIds(state.selectedCategoryIds.toList())
             .clearAttachmentIds()
             .addAllAttachmentIds(state.selectedAttachmentIds.toList())
+            .clearCustomFields()
+            .addAllCustomFields(state.customFields.toProtoCustomFields())
 
         return if (entry.type == VaultItemType.NOTE) {
             builder.setContent(state.notes.text).build()

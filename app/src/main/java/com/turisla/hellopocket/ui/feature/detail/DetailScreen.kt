@@ -55,6 +55,10 @@ import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.ui.feature.common.CategoryCreationContent
 import com.turisla.hellopocket.ui.feature.common.ConfirmDeleteDialog
+import com.turisla.hellopocket.ui.feature.common.CustomFieldDraft
+import com.turisla.hellopocket.ui.feature.common.CustomFieldEditSection
+import com.turisla.hellopocket.ui.feature.common.CustomFieldViewSection
+import com.turisla.hellopocket.ui.feature.common.ResetSensitiveStateOnBackground
 import com.turisla.hellopocket.ui.feature.common.SelectCategoryContent
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.DialogProperties
@@ -127,11 +131,17 @@ fun DetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showEntryActions by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
+    var customFieldValidationAttempted by remember { mutableStateOf(false) }
     val isBusy = isSaving || isAttachmentLoading || isDeleting
+    val scrollState = rememberScrollState()
+    val customFieldSnackbarHostState = remember { SnackbarHostState() }
 
     // 编辑时返回会放弃草稿；持久化期间则阻止退出，避免取消页面作用域中的事务。
     BackHandler(enabled = isInEditMode || isBusy) {
-        if (!isBusy) editDraftViewModel.clear()
+        if (!isBusy) {
+            customFieldValidationAttempted = false
+            editDraftViewModel.clear()
+        }
     }
 
     LaunchedEffect(event) {
@@ -161,6 +171,7 @@ fun DetailScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(customFieldSnackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -176,7 +187,10 @@ fun DetailScreen(
                 navigationIcon = {
                     if (isInEditMode) {
                         IconButton(
-                            onClick = editDraftViewModel::clear,
+                            onClick = {
+                                customFieldValidationAttempted = false
+                                editDraftViewModel.clear()
+                            },
                             enabled = !isBusy,
                         ) {
                             Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
@@ -196,6 +210,10 @@ fun DetailScreen(
                                     it.type == VaultItemType.PASSWORD && editDraft.password.isBlank() -> {
                                         context.getString(R.string.title_and_password_required)
                                     }
+                                    editDraft.customFields.any { field -> field.name.isBlank() } -> {
+                                        customFieldValidationAttempted = true
+                                        context.getString(R.string.custom_field_name_required)
+                                    }
                                     else -> null
                                 }
                                 if (validationMessage != null) {
@@ -212,6 +230,7 @@ fun DetailScreen(
                                     isSaving = true
                                     try {
                                         viewModel.updatePassword(updatedEntry)
+                                        customFieldValidationAttempted = false
                                         editDraftViewModel.clear()
                                     } catch (error: CancellationException) {
                                         throw error
@@ -231,7 +250,10 @@ fun DetailScreen(
                         }
                     } else {
                         FilledTonalIconButton(
-                            onClick = { entry?.let(editDraftViewModel::beginEditing) },
+                            onClick = {
+                                customFieldValidationAttempted = false
+                                entry?.let(editDraftViewModel::beginEditing)
+                            },
                             enabled = !isBusy,
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
@@ -289,7 +311,7 @@ fun DetailScreen(
                     .padding(paddingValues)
                     .imePadding()
                     .padding(horizontal = 16.dp)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
             ) {
                 if (isInEditMode) {
                     EditModeContent(
@@ -302,6 +324,21 @@ fun DetailScreen(
                         onPasswordChange = editDraftViewModel::updatePassword,
                         notes = editDraft.notes,
                         onNotesChange = editDraftViewModel::updateNotes,
+                        customFields = editDraft.customFields,
+                        onCustomFieldAdd = editDraftViewModel::addCustomField,
+                        onCustomFieldNameChange = { id, value ->
+                            customFieldValidationAttempted = false
+                            editDraftViewModel.updateCustomFieldName(id, value)
+                        },
+                        onCustomFieldValueChange = editDraftViewModel::updateCustomFieldValue,
+                        onCustomFieldTypeChange = editDraftViewModel::updateCustomFieldType,
+                        onCustomFieldRemove = editDraftViewModel::removeCustomField,
+                        onCustomFieldRestore = editDraftViewModel::restoreCustomField,
+                        onCustomFieldMove = editDraftViewModel::moveCustomField,
+                        onCopyCustomFieldValue = viewModel::copyCustomFieldValue,
+                        showCustomFieldValidationErrors = customFieldValidationAttempted,
+                        parentScrollState = scrollState,
+                        customFieldSnackbarHostState = customFieldSnackbarHostState,
                         categories = categories,
                         selectedCategoryIds = editDraft.selectedCategoryIds,
                         onCategoryAdd = editDraftViewModel::addCategory,
@@ -322,6 +359,7 @@ fun DetailScreen(
                         attachments = attachments,
                         onCopyUsername = viewModel::onCopyUsername,
                         onCopyPassword = viewModel::onCopyPassword,
+                        onCopyCustomField = viewModel::onCopyCustomField,
                         onGetAttachmentFile = viewModel::getAttachmentFile,
                         onLoadAttachmentThumbnail = viewModel::loadAttachmentThumbnail,
                         isNote = passwordEntry.type == VaultItemType.NOTE  // 传递是否为笔记的标志
@@ -389,11 +427,13 @@ private fun ViewModeContent(
     attachments: List<AttachmentManifestEntry>,
     onCopyUsername: () -> Unit,
     onCopyPassword: () -> Unit,
+    onCopyCustomField: (String) -> Unit,
     onGetAttachmentFile: suspend (String) -> java.io.File?,
     onLoadAttachmentThumbnail: suspend (String) -> Any?,
     isNote: Boolean = false  // 新增：是否为笔记类型
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    ResetSensitiveStateOnBackground { passwordVisible = false }
 
     EntryIdentityHeader(entry = entry)
 
@@ -434,12 +474,18 @@ private fun ViewModeContent(
             )
         }
 
-        // Notes section (仅密码类型显示)
-        if (entry.notes.isNotBlank()) {
-            SectionHeader(title = stringResource(R.string.notes))
-            CardContainer {
-                DetailNotesSection(notes = entry.notes)
-            }
+    }
+
+    CustomFieldViewSection(
+        fields = entry.customFieldsList,
+        onCopy = onCopyCustomField,
+    )
+
+    // Notes section (仅密码类型显示)，放在结构化自定义字段之后。
+    if (!isNote && entry.notes.isNotBlank()) {
+        SectionHeader(title = stringResource(R.string.notes))
+        CardContainer {
+            DetailNotesSection(notes = entry.notes)
         }
     }
 
@@ -515,6 +561,18 @@ private fun EditModeContent(
     onPasswordChange: (String) -> Unit,
     notes: TextFieldValue,
     onNotesChange: (TextFieldValue) -> Unit,
+    customFields: List<CustomFieldDraft>,
+    onCustomFieldAdd: (com.turisla.hellopocket.model.CustomFieldType) -> String?,
+    onCustomFieldNameChange: (String, String) -> Unit,
+    onCustomFieldValueChange: (String, String) -> Unit,
+    onCustomFieldTypeChange: (String, com.turisla.hellopocket.model.CustomFieldType) -> Unit,
+    onCustomFieldRemove: (String) -> Unit,
+    onCustomFieldRestore: (CustomFieldDraft, Int) -> Unit,
+    onCustomFieldMove: (String, Int) -> Unit,
+    onCopyCustomFieldValue: (String) -> Unit,
+    showCustomFieldValidationErrors: Boolean,
+    parentScrollState: androidx.compose.foundation.ScrollState,
+    customFieldSnackbarHostState: SnackbarHostState,
     categories: List<Category>,
     selectedCategoryIds: Set<String>,
     onCategoryAdd: (String) -> Unit,
@@ -530,6 +588,7 @@ private fun EditModeContent(
 ) {
     val isNote = entry.type == VaultItemType.NOTE  // 判断是否为笔记类型
     var passwordVisible by remember { mutableStateOf(false) }
+    ResetSensitiveStateOnBackground { passwordVisible = false }
 
     // Title section
     SectionHeader(title = stringResource(R.string.title))
@@ -580,7 +639,25 @@ private fun EditModeContent(
             )
         }
 
-        // Notes section (仅密码类型显示)
+    }
+
+    CustomFieldEditSection(
+        fields = customFields,
+        parentScrollState = parentScrollState,
+        snackbarHostState = customFieldSnackbarHostState,
+        showValidationErrors = showCustomFieldValidationErrors,
+        onAdd = onCustomFieldAdd,
+        onNameChange = onCustomFieldNameChange,
+        onValueChange = onCustomFieldValueChange,
+        onTypeChange = onCustomFieldTypeChange,
+        onRemove = onCustomFieldRemove,
+        onRestore = onCustomFieldRestore,
+        onMove = onCustomFieldMove,
+        onCopy = onCopyCustomFieldValue,
+    )
+
+    // Notes section (仅密码类型显示)
+    if (!isNote) {
         SectionHeader(title = stringResource(R.string.notes))
         CardContainer {
             EditNoteSection(
@@ -669,15 +746,20 @@ private fun DetailItemSection(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SelectionContainer {
+            // SelectionContainer 才是 Row 的直接子项，权重必须放在这里，
+            // 否则长文本会按完整宽度测量并把右侧操作按钮挤出卡片。
+            SelectionContainer(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            ) {
                 Text(
                     text = value.ifEmpty { "" },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -730,14 +812,19 @@ private fun DetailPasswordSection(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SelectionContainer {
+            // 密码内容只使用操作区之外的剩余宽度；显示超长密码时允许文本换行，
+            // 查看和复制按钮始终保留在卡片右侧。
+            SelectionContainer(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            ) {
                 Text(
                     text = if (isVisible) createColoredPasswordText(value) else AnnotatedString("••••••••"),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 

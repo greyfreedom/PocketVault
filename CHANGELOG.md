@@ -2,7 +2,7 @@
 
 All notable changes to PocketVault will be documented in this file.
 
-## [2.5.1] - Unreleased
+## [2.5.1] - 2026-08-06
 
 ### Added
 

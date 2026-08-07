@@ -11,6 +11,13 @@ enum VaultItemType {
   NOTE = 1;      // 安全笔记
 }
 
+// 自定义字段的展示类型。零值不直接映射为可见文本，避免异常数据被意外明文展示。
+enum CustomFieldType {
+  CUSTOM_FIELD_TYPE_UNSPECIFIED = 0;
+  TEXT = 1;       // 始终显示的普通文本
+  CONCEALED = 2;  // 默认隐藏的敏感文本
+}
+
 message Vault {
   bytes salt = 1;
   bytes hashedPassword = 2;
@@ -30,6 +37,14 @@ message Category {
   int64 createdAt = 4; // 创建时间戳
 }
 
+// 密码和安全笔记共用的有序自定义字段。
+message CustomField {
+  string id = 1;
+  string name = 2;
+  string value = 3;
+  CustomFieldType type = 4;
+}
+
 message PasswordEntry {
   string id = 1;
   string title = 2;
@@ -42,6 +57,7 @@ message PasswordEntry {
   repeated string attachmentIds = 9; // 关联的附件ID列表
   VaultItemType type = 10;    // 条目类型，默认为 PASSWORD，用于区分密码和笔记
   string content = 11;         // 安全笔记的内容（仅当 type = NOTE 时使用）
+  repeated CustomField custom_fields = 12; // 列表顺序即用户定义的展示顺序
 }
 
 // 密码/笔记条目集合
@@ -74,4 +90,3 @@ message TotpEntries {
   repeated TotpEntry entries = 1;
   int32 schema_version = 2;
 }
-

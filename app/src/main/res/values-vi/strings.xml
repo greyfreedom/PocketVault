@@ -354,4 +354,30 @@
     <string name="show_password">Hiện mật khẩu</string>
     <string name="hide_password">Ẩn mật khẩu</string>
     <string name="title_cannot_be_empty">Tiêu đề không được để trống</string>
+    <!-- Trường tùy chỉnh -->
+    <string name="custom_fields">Trường tùy chỉnh</string>
+    <string name="custom_field">Trường tùy chỉnh</string>
+    <string name="add_custom_field">Thêm trường</string>
+    <string name="custom_field_text">Trường văn bản</string>
+    <string name="custom_field_text_description">Luôn hiển thị; vẫn được mã hóa trong kho.</string>
+    <string name="custom_field_concealed">Trường ẩn</string>
+    <string name="custom_field_concealed_description">Ẩn theo mặc định; phù hợp với mã PIN và câu trả lời nhạy cảm.</string>
+    <string name="custom_field_name">Tên trường</string>
+    <string name="custom_field_value">Giá trị trường</string>
+    <string name="custom_field_name_required">Tên trường không được để trống.</string>
+    <plurals name="custom_field_limit_reached">
+        <item quantity="other">Có thể thêm tối đa %1$d trường tùy chỉnh.</item>
+    </plurals>
+    <string name="custom_field_deleted">Đã xóa trường tùy chỉnh.</string>
+    <string name="undo">Hoàn tác</string>
+    <string name="change_to_text_field">Đổi thành trường văn bản</string>
+    <string name="change_to_concealed_field">Đổi thành trường ẩn</string>
+    <string name="delete_custom_field">Xóa trường</string>
+    <string name="show_custom_field">Hiện giá trị trường</string>
+    <string name="hide_custom_field">Ẩn giá trị trường</string>
+    <string name="drag_to_reorder">Nhấn giữ và kéo để sắp xếp lại</string>
+    <string name="move_up">Di chuyển lên</string>
+    <string name="move_down">Di chuyển xuống</string>
+    <string name="custom_field_value_hidden">Giá trị trường đang bị ẩn</string>
+    <string name="not_filled">Chưa điền</string>
 </resources>
