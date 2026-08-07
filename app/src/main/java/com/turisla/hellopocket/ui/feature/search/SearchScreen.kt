@@ -405,6 +405,7 @@ private fun HighlightedText(
 
 private fun VaultSearchResult.supportingLabelResId(): Int = when (supportingField) {
     SearchMatchField.ACCOUNT -> R.string.username
+    SearchMatchField.CUSTOM_FIELD -> R.string.custom_field
     SearchMatchField.NOTES -> if (entryType == VaultItemType.NOTE) {
         R.string.content
     } else {

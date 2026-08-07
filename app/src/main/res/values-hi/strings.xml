@@ -357,4 +357,31 @@
     <string name="show_password">पासवर्ड दिखाएँ</string>
     <string name="hide_password">पासवर्ड छिपाएँ</string>
     <string name="title_cannot_be_empty">शीर्षक खाली नहीं हो सकता</string>
+    <!-- कस्टम फ़ील्ड -->
+    <string name="custom_fields">कस्टम फ़ील्ड</string>
+    <string name="custom_field">कस्टम फ़ील्ड</string>
+    <string name="add_custom_field">फ़ील्ड जोड़ें</string>
+    <string name="custom_field_text">टेक्स्ट फ़ील्ड</string>
+    <string name="custom_field_text_description">हमेशा दिखाई देता है; तिजोरी में फिर भी एन्क्रिप्टेड रहता है।</string>
+    <string name="custom_field_concealed">छिपा हुआ फ़ील्ड</string>
+    <string name="custom_field_concealed_description">डिफ़ॉल्ट रूप से छिपा; PIN और संवेदनशील उत्तरों के लिए उपयुक्त।</string>
+    <string name="custom_field_name">फ़ील्ड का नाम</string>
+    <string name="custom_field_value">फ़ील्ड का मान</string>
+    <string name="custom_field_name_required">फ़ील्ड का नाम खाली नहीं हो सकता।</string>
+    <plurals name="custom_field_limit_reached">
+        <item quantity="one">अधिकतम %1$d कस्टम फ़ील्ड जोड़ा जा सकता है।</item>
+        <item quantity="other">अधिकतम %1$d कस्टम फ़ील्ड जोड़े जा सकते हैं।</item>
+    </plurals>
+    <string name="custom_field_deleted">कस्टम फ़ील्ड हटा दिया गया।</string>
+    <string name="undo">पूर्ववत करें</string>
+    <string name="change_to_text_field">टेक्स्ट फ़ील्ड में बदलें</string>
+    <string name="change_to_concealed_field">छिपे हुए फ़ील्ड में बदलें</string>
+    <string name="delete_custom_field">फ़ील्ड हटाएँ</string>
+    <string name="show_custom_field">फ़ील्ड का मान दिखाएँ</string>
+    <string name="hide_custom_field">फ़ील्ड का मान छिपाएँ</string>
+    <string name="drag_to_reorder">क्रम बदलने के लिए दबाकर रखें और खींचें</string>
+    <string name="move_up">ऊपर ले जाएँ</string>
+    <string name="move_down">नीचे ले जाएँ</string>
+    <string name="custom_field_value_hidden">फ़ील्ड का मान छिपा है</string>
+    <string name="not_filled">नहीं भरा गया</string>
 </resources>

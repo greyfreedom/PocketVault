@@ -1,6 +1,8 @@
 package com.turisla.hellopocket.ui.feature.detail
 
 import androidx.compose.ui.text.input.TextFieldValue
+import com.turisla.hellopocket.model.CustomField
+import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.VaultItemType
 import org.junit.Assert.assertEquals
@@ -21,6 +23,9 @@ class DetailEditDraftViewModelTest {
         viewModel.updateNotes(TextFieldValue("Updated notes"))
         viewModel.addCategory("category-2")
         viewModel.addAttachment("attachment-2")
+        viewModel.updateCustomFieldName("field-text", " Account alias ")
+        viewModel.updateCustomFieldValue("field-text", "alex")
+        viewModel.moveCustomField("field-hidden", 0)
         viewModel.updatePassword("generated-password")
 
         // 模拟从密码生成器返回后详情页再次请求初始化，现有草稿不能被旧条目覆盖。
@@ -34,12 +39,17 @@ class DetailEditDraftViewModelTest {
         assertEquals("Updated notes", draft.notes.text)
         assertEquals(setOf("category-1", "category-2"), draft.selectedCategoryIds)
         assertEquals(setOf("attachment-1", "attachment-2"), draft.selectedAttachmentIds)
+        assertEquals(listOf("field-hidden", "field-text"), draft.customFields.map { it.id })
 
         val updatedEntry = viewModel.buildUpdatedEntry(originalEntry)
         assertEquals("Updated title", updatedEntry.title)
         assertEquals("updated@example.com", updatedEntry.username)
         assertEquals("generated-password", updatedEntry.password)
         assertEquals("Updated notes", updatedEntry.notes)
+        assertEquals(listOf("field-hidden", "field-text"), updatedEntry.customFieldsList.map { it.id })
+        assertEquals("Account alias", updatedEntry.customFieldsList[1].name)
+        assertEquals("alex", updatedEntry.customFieldsList[1].value)
+        assertEquals(CustomFieldType.CONCEALED, updatedEntry.customFieldsList.first().type)
     }
 
     @Test
@@ -63,5 +73,19 @@ class DetailEditDraftViewModelTest {
         .setType(VaultItemType.PASSWORD)
         .addCategoryIds("category-1")
         .addAttachmentIds("attachment-1")
+        .addCustomFields(
+            CustomField.newBuilder()
+                .setId("field-text")
+                .setName("Alias")
+                .setValue("old")
+                .setType(CustomFieldType.TEXT)
+        )
+        .addCustomFields(
+            CustomField.newBuilder()
+                .setId("field-hidden")
+                .setName("PIN")
+                .setValue("1234")
+                .setType(CustomFieldType.CONCEALED)
+        )
         .build()
 }

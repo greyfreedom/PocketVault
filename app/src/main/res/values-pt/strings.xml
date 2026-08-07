@@ -360,4 +360,32 @@
     <string name="show_password">Mostrar senha</string>
     <string name="hide_password">Ocultar senha</string>
     <string name="title_cannot_be_empty">O título não pode ficar vazio</string>
+    <!-- Campos personalizados -->
+    <string name="custom_fields">Campos personalizados</string>
+    <string name="custom_field">Campo personalizado</string>
+    <string name="add_custom_field">Adicionar campo</string>
+    <string name="custom_field_text">Campo de texto</string>
+    <string name="custom_field_text_description">Sempre visível; continua criptografado no cofre.</string>
+    <string name="custom_field_concealed">Campo oculto</string>
+    <string name="custom_field_concealed_description">Oculto por padrão; ideal para PINs e respostas confidenciais.</string>
+    <string name="custom_field_name">Nome do campo</string>
+    <string name="custom_field_value">Valor do campo</string>
+    <string name="custom_field_name_required">O nome do campo não pode ficar vazio.</string>
+    <plurals name="custom_field_limit_reached">
+        <item quantity="one">É possível adicionar até %1$d campo personalizado.</item>
+        <item quantity="many">É possível adicionar até %1$d campos personalizados.</item>
+        <item quantity="other">É possível adicionar até %1$d campos personalizados.</item>
+    </plurals>
+    <string name="custom_field_deleted">Campo personalizado excluído.</string>
+    <string name="undo">Desfazer</string>
+    <string name="change_to_text_field">Alterar para campo de texto</string>
+    <string name="change_to_concealed_field">Alterar para campo oculto</string>
+    <string name="delete_custom_field">Excluir campo</string>
+    <string name="show_custom_field">Mostrar valor do campo</string>
+    <string name="hide_custom_field">Ocultar valor do campo</string>
+    <string name="drag_to_reorder">Toque e segure para reordenar</string>
+    <string name="move_up">Mover para cima</string>
+    <string name="move_down">Mover para baixo</string>
+    <string name="custom_field_value_hidden">Valor do campo oculto</string>
+    <string name="not_filled">Não preenchido</string>
 </resources>

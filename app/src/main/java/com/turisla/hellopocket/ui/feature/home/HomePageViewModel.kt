@@ -2,11 +2,14 @@ package com.turisla.hellopocket.ui.feature.home
 
 import androidx.lifecycle.viewModelScope
 import com.turisla.hellopocket.data.PasswordRepository
+import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.Category
+import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.ui.feature.common.viewmodel.RepositoryMutationViewModel
 import com.turisla.hellopocket.utils.AppConstants
+import com.turisla.hellopocket.utils.ClipboardManagerHelper
 import com.turisla.hellopocket.utils.loggerI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,6 +25,7 @@ import kotlinx.coroutines.launch
  */
 class HomePageViewModel(
     private val passwordRepository: PasswordRepository,
+    private val clipboardManagerHelper: ClipboardManagerHelper,
 ) : RepositoryMutationViewModel() {
 
     // 分类相关的状态
@@ -102,8 +106,24 @@ class HomePageViewModel(
     /**
      * 添加一个新的密码条目
      */
-    suspend fun addPassword(title: String, username: String, plainTextPassword: String, notes: String, categoryIds: List<String> = emptyList(), attachmentIds: List<String> = emptyList()) {
-        passwordRepository.addEntry(title, username, plainTextPassword, notes, categoryIds, attachmentIds)
+    suspend fun addPassword(
+        title: String,
+        username: String,
+        plainTextPassword: String,
+        notes: String,
+        categoryIds: List<String> = emptyList(),
+        attachmentIds: List<String> = emptyList(),
+        customFields: List<CustomField> = emptyList(),
+    ) {
+        passwordRepository.addEntry(
+            title,
+            username,
+            plainTextPassword,
+            notes,
+            categoryIds,
+            attachmentIds,
+            customFields,
+        )
     }
 
     /**
@@ -161,9 +181,14 @@ class HomePageViewModel(
         title: String,
         content: String,
         categoryIds: List<String> = emptyList(),
-        attachmentIds: List<String> = emptyList()
+        attachmentIds: List<String> = emptyList(),
+        customFields: List<CustomField> = emptyList(),
     ) {
-        passwordRepository.addSecureNote(title, content, categoryIds, attachmentIds)
+        passwordRepository.addSecureNote(title, content, categoryIds, attachmentIds, customFields)
+    }
+
+    fun copyCustomFieldValue(value: String) {
+        clipboardManagerHelper.copyTextToClipboard(R.string.custom_field, value)
     }
 
     suspend fun loadAttachmentThumbnail(attachmentId: String): Any? {

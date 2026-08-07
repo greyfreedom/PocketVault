@@ -46,6 +46,8 @@ import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -76,8 +78,10 @@ import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.ui.feature.common.AttachmentSection
 import com.turisla.hellopocket.ui.feature.common.CategoryCreationContent
+import com.turisla.hellopocket.ui.feature.common.CustomFieldEditSection
 import com.turisla.hellopocket.ui.feature.common.SelectCategoryContent
 import com.turisla.hellopocket.ui.feature.common.getCategoryDisplayName
+import com.turisla.hellopocket.ui.feature.common.toProtoCustomFields
 import com.turisla.hellopocket.ui.feature.home.HomePageViewModel
 import com.turisla.hellopocket.utils.AppConstants
 import kotlinx.coroutines.CancellationException
@@ -95,9 +99,11 @@ fun AddSecureNoteScreen(
     val draft by draftViewModel.draft.collectAsStateWithLifecycle()
     val title = draft.title
     val content = draft.content
+    val customFields = draft.customFields
     val selectedCategoryIds = draft.selectedCategoryIds
     val selectedAttachmentIds = draft.selectedAttachmentIds
     var error by remember { mutableStateOf<String?>(null) }
+    var customFieldValidationAttempted by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
 
     val categories by viewModel.categories.collectAsStateWithLifecycle()
@@ -107,6 +113,8 @@ fun AddSecureNoteScreen(
     val context = LocalContext.current
     val currentOnLoading by rememberUpdatedState(onLoading)
     val isBusy = isSaving || isAttachmentLoading
+    val scrollState = rememberScrollState()
+    val customFieldSnackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(isSaving, isAttachmentLoading) {
         currentOnLoading(isSaving || isAttachmentLoading)
@@ -124,6 +132,7 @@ fun AddSecureNoteScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(customFieldSnackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -156,7 +165,7 @@ fun AddSecureNoteScreen(
                 .padding(paddingValues)
                 .imePadding()
                 .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
             // 标题区域
             SectionHeader(title = stringResource(R.string.title))
@@ -177,6 +186,29 @@ fun AddSecureNoteScreen(
                     onValueChange = draftViewModel::updateContent,
                 )
             }
+
+            CustomFieldEditSection(
+                fields = customFields,
+                parentScrollState = scrollState,
+                snackbarHostState = customFieldSnackbarHostState,
+                showValidationErrors = customFieldValidationAttempted,
+                onAdd = { type ->
+                    error = null
+                    customFieldValidationAttempted = false
+                    draftViewModel.addCustomField(type)
+                },
+                onNameChange = { id, value ->
+                    error = null
+                    customFieldValidationAttempted = false
+                    draftViewModel.updateCustomFieldName(id, value)
+                },
+                onValueChange = draftViewModel::updateCustomFieldValue,
+                onTypeChange = draftViewModel::updateCustomFieldType,
+                onRemove = draftViewModel::removeCustomField,
+                onRestore = draftViewModel::restoreCustomField,
+                onMove = draftViewModel::moveCustomField,
+                onCopy = viewModel::copyCustomFieldValue,
+            )
 
             // 分类选择区域
             SectionHeader(title = stringResource(R.string.category))
@@ -254,8 +286,17 @@ fun AddSecureNoteScreen(
 
                 Button(
                     onClick = {
-                        if (title.isBlank()) {
-                            error = context.getString(R.string.title_required)
+                        val hasInvalidCustomField = customFields.any { it.name.isBlank() }
+                        customFieldValidationAttempted = title.isNotBlank() && hasInvalidCustomField
+                        val validationError = when {
+                            title.isBlank() -> context.getString(R.string.title_required)
+                            hasInvalidCustomField -> {
+                                context.getString(R.string.custom_field_name_required)
+                            }
+                            else -> null
+                        }
+                        if (validationError != null) {
+                            error = validationError
                         } else {
                             scope.launch {
                                 isSaving = true
@@ -264,8 +305,10 @@ fun AddSecureNoteScreen(
                                         title,
                                         content.text,
                                         selectedCategoryIds.toList(),
-                                        selectedAttachmentIds.toList()
+                                        selectedAttachmentIds.toList(),
+                                        customFields.toProtoCustomFields(),
                                     )
+                                    customFieldValidationAttempted = false
                                     draftViewModel.clear()
                                     onNavigateBack()
                                 } catch (error: CancellationException) {

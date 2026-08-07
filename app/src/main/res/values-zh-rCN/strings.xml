@@ -354,4 +354,30 @@
     <string name="show_password">显示密码</string>
     <string name="hide_password">隐藏密码</string>
     <string name="title_cannot_be_empty">标题不能为空</string>
+    <!-- 自定义字段 -->
+    <string name="custom_fields">自定义字段</string>
+    <string name="custom_field">自定义字段</string>
+    <string name="add_custom_field">添加字段</string>
+    <string name="custom_field_text">文本字段</string>
+    <string name="custom_field_text_description">始终显示，数据仍会在保险库中加密保存。</string>
+    <string name="custom_field_concealed">隐藏字段</string>
+    <string name="custom_field_concealed_description">默认隐藏，适合 PIN 和敏感问题答案。</string>
+    <string name="custom_field_name">字段名</string>
+    <string name="custom_field_value">字段值</string>
+    <string name="custom_field_name_required">字段名不能为空。</string>
+    <plurals name="custom_field_limit_reached">
+        <item quantity="other">最多可添加 %1$d 个自定义字段。</item>
+    </plurals>
+    <string name="custom_field_deleted">自定义字段已删除。</string>
+    <string name="undo">撤销</string>
+    <string name="change_to_text_field">改为文本字段</string>
+    <string name="change_to_concealed_field">改为隐藏字段</string>
+    <string name="delete_custom_field">删除字段</string>
+    <string name="show_custom_field">显示字段值</string>
+    <string name="hide_custom_field">隐藏字段值</string>
+    <string name="drag_to_reorder">长按并拖动以调整顺序</string>
+    <string name="move_up">上移</string>
+    <string name="move_down">下移</string>
+    <string name="custom_field_value_hidden">字段值已隐藏</string>
+    <string name="not_filled">未填写</string>
 </resources>

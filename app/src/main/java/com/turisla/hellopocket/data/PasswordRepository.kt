@@ -12,6 +12,7 @@ import androidx.core.content.edit
 import com.turisla.hellopocket.model.AttachmentManifestEntry
 import com.turisla.hellopocket.model.Categories
 import com.turisla.hellopocket.model.Category
+import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.PasswordEntries
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.TotpEntries
@@ -98,7 +99,9 @@ class PasswordRepository(
         const val TOTP_DATA_FILE = "totp.dat"
         const val ATTACHMENTS_DIR = "attachments"
         
-        const val CURRENT_SCHEMA_VERSION = 1 // Protobuf schema 版本
+        // 公开保险库仍为 V2；内部 schema 2 增加有序自定义字段。
+        const val MIN_SUPPORTED_SCHEMA_VERSION = 1
+        const val CURRENT_SCHEMA_VERSION = 2
 
         private const val SALT_SIZE_BYTES = 16
         private const val LEGACY_VAULT_VERSION = 1
@@ -354,6 +357,7 @@ class PasswordRepository(
                     )
                 )
                 val newManifest = VaultManifestV2(
+                    schemaVersion = CURRENT_SCHEMA_VERSION,
                     vaultId = vaultId,
                     createdAt = System.currentTimeMillis(),
                     fileDigests = initialMetadata.digests,
@@ -592,7 +596,7 @@ class PasswordRepository(
             require(manifest.attachments.size <= MAX_ATTACHMENT_COUNT) {
                 "Vault contains too many attachments"
             }
-            if (manifest.schemaVersion != CURRENT_SCHEMA_VERSION) {
+            if (!isSchemaVersionSupported(manifest.schemaVersion)) {
                 return@withContext VaultLoadResult.UnsupportedVersion(manifest.schemaVersion) to null
             }
             if (manifest.vaultId != config.vaultId) {
@@ -621,7 +625,7 @@ class PasswordRepository(
             require(loadedPasswords.entriesCount <= MAX_PASSWORD_ENTRY_COUNT) {
                 "Vault contains too many password entries"
             }
-            if (loadedPasswords.schemaVersion != CURRENT_SCHEMA_VERSION) {
+            if (!isSchemaVersionSupported(loadedPasswords.schemaVersion)) {
                 return@withContext VaultLoadResult.UnsupportedVersion(loadedPasswords.schemaVersion) to null
             }
 
@@ -641,7 +645,7 @@ class PasswordRepository(
             require(loadedCategories.categoriesCount <= MAX_CATEGORY_COUNT) {
                 "Vault contains too many categories"
             }
-            if (loadedCategories.schemaVersion != CURRENT_SCHEMA_VERSION) {
+            if (!isSchemaVersionSupported(loadedCategories.schemaVersion)) {
                 return@withContext VaultLoadResult.UnsupportedVersion(loadedCategories.schemaVersion) to null
             }
 
@@ -695,7 +699,7 @@ class PasswordRepository(
             val manifestSchemaSupported = if (allowMissingAuthenticatedMetadata) {
                 manifest.schemaVersion in 0..CURRENT_SCHEMA_VERSION
             } else {
-                manifest.schemaVersion == CURRENT_SCHEMA_VERSION
+                isSchemaVersionSupported(manifest.schemaVersion)
             }
             if (!manifestSchemaSupported) {
                 return@withContext VaultLoadResult.UnsupportedVersion(manifest.schemaVersion) to null
@@ -738,7 +742,7 @@ class PasswordRepository(
             val passwordSchemaSupported = if (allowMissingAuthenticatedMetadata) {
                 passwords.schemaVersion in 0..CURRENT_SCHEMA_VERSION
             } else {
-                passwords.schemaVersion == CURRENT_SCHEMA_VERSION
+                isSchemaVersionSupported(passwords.schemaVersion)
             }
             if (!passwordSchemaSupported) {
                 return@withContext VaultLoadResult.UnsupportedVersion(passwords.schemaVersion) to null
@@ -759,7 +763,7 @@ class PasswordRepository(
             val categorySchemaSupported = if (allowMissingAuthenticatedMetadata) {
                 categories.schemaVersion in 0..CURRENT_SCHEMA_VERSION
             } else {
-                categories.schemaVersion == CURRENT_SCHEMA_VERSION
+                isSchemaVersionSupported(categories.schemaVersion)
             }
             if (!categorySchemaSupported) {
                 return@withContext VaultLoadResult.UnsupportedVersion(categories.schemaVersion) to null
@@ -782,7 +786,7 @@ class PasswordRepository(
                 val totpSchemaSupported = if (allowMissingAuthenticatedMetadata) {
                     totp.schemaVersion in 0..CURRENT_SCHEMA_VERSION
                 } else {
-                    totp.schemaVersion == CURRENT_SCHEMA_VERSION
+                    isSchemaVersionSupported(totp.schemaVersion)
                 }
                 if (!totpSchemaSupported) {
                     return@withContext VaultLoadResult.UnsupportedVersion(totp.schemaVersion) to null
@@ -1053,6 +1057,16 @@ class PasswordRepository(
             VaultFileTransaction.recover(vaultDir)
             val writeSession = captureActiveVaultWriteSession()
                 ?: throw CancellationException("Vault is locked")
+            // schema 1 保险库第一次写成 schema 2 前先保留一份可由旧版本恢复的完整备份。
+            val schemaUpgradeBackup = if (
+                writeSession.manifest.schemaVersion < CURRENT_SCHEMA_VERSION
+            ) {
+                requireNotNull(backupCurrentVault()) {
+                    "Failed to back up the vault before schema upgrade"
+                }
+            } else {
+                null
+            }
             val config = writeSession.config
             val keyset = writeSession.keyset
             val streamingAead = tinkCryptoManager.getStreamingAead(keyset)
@@ -1140,6 +1154,7 @@ class PasswordRepository(
                         vaultConfig = updatedConfig
                     },
                 )
+                schemaUpgradeBackup?.let(::pruneAutomaticBackups)
             } finally {
                 listOf(passwordPending, categoryPending, manifestPending, configPending).forEach(File::delete)
             }
@@ -1157,6 +1172,15 @@ class PasswordRepository(
             VaultFileTransaction.recover(vaultDir)
             val writeSession = captureActiveVaultWriteSession()
                 ?: throw CancellationException("Vault is locked")
+            val schemaUpgradeBackup = if (
+                writeSession.manifest.schemaVersion < CURRENT_SCHEMA_VERSION
+            ) {
+                requireNotNull(backupCurrentVault()) {
+                    "Failed to back up the vault before schema upgrade"
+                }
+            } else {
+                null
+            }
             val config = writeSession.config
             val keyset = writeSession.keyset
             val currentManifest = writeSession.manifest
@@ -1227,6 +1251,7 @@ class PasswordRepository(
                         vaultConfig = updatedConfig
                     },
                 )
+                schemaUpgradeBackup?.let(::pruneAutomaticBackups)
             } finally {
                 listOf(totpPending, manifestPending, configPending).forEach(File::delete)
             }
@@ -1403,6 +1428,9 @@ class PasswordRepository(
         return null
     }
 
+    private fun isSchemaVersionSupported(schemaVersion: Int): Boolean =
+        schemaVersion in MIN_SUPPORTED_SCHEMA_VERSION..CURRENT_SCHEMA_VERSION
+
     suspend fun addEntry(
         title: String,
         username: String,
@@ -1410,6 +1438,7 @@ class PasswordRepository(
         notes: String,
         categoryIds: List<String> = emptyList(),
         attachmentIds: List<String> = emptyList(),
+        customFields: List<CustomField> = emptyList(),
     ) = stateMutationMutex.withLock {
         require(title.isNotBlank()) { "Password title must not be blank" }
         require(plainTextPassword.isNotBlank()) { "Password value must not be blank" }
@@ -1423,6 +1452,7 @@ class PasswordRepository(
             .setType(VaultItemType.PASSWORD)  // 显式设置为密码类型
             .addAllCategoryIds(categoryIds)
             .addAllAttachmentIds(attachmentIds)
+            .addAllCustomFields(customFields)
             .setCreatedAt(currentTime)
             .setUpdatedAt(currentTime)
             .build()
@@ -1452,12 +1482,14 @@ class PasswordRepository(
      * @param content 笔记内容（可选）
      * @param categoryIds 分类ID列表
      * @param attachmentIds 附件ID列表
+     * @param customFields 有序自定义字段列表
      */
     suspend fun addSecureNote(
         title: String,
         content: String,
         categoryIds: List<String> = emptyList(),
         attachmentIds: List<String> = emptyList(),
+        customFields: List<CustomField> = emptyList(),
     ) = stateMutationMutex.withLock {
         require(title.isNotBlank()) { "Secure note title must not be blank" }
         val currentTime = System.currentTimeMillis()
@@ -1468,6 +1500,7 @@ class PasswordRepository(
             .setType(VaultItemType.NOTE)  // 设置为笔记类型
             .addAllCategoryIds(categoryIds)
             .addAllAttachmentIds(attachmentIds)
+            .addAllCustomFields(customFields)
             .setCreatedAt(currentTime)
             .setUpdatedAt(currentTime)
             .build()
@@ -1838,7 +1871,7 @@ class PasswordRepository(
                 readUtf8WithLimit(input, MAX_MANIFEST_PLAINTEXT_BYTES)
             )
         }
-        require(importedManifest.schemaVersion == CURRENT_SCHEMA_VERSION) {
+        require(isSchemaVersionSupported(importedManifest.schemaVersion)) {
             "Imported manifest schema is unsupported"
         }
         require(importedManifest.vaultId == config.vaultId) { "Imported vault id does not match" }
@@ -1864,7 +1897,7 @@ class PasswordRepository(
         require(importedPasswords.entriesCount <= MAX_PASSWORD_ENTRY_COUNT) {
             "Imported vault contains too many password entries"
         }
-        require(importedPasswords.schemaVersion == CURRENT_SCHEMA_VERSION) {
+        require(isSchemaVersionSupported(importedPasswords.schemaVersion)) {
             "Imported password schema is unsupported"
         }
 
@@ -1880,7 +1913,7 @@ class PasswordRepository(
         require(importedCategories.categoriesCount <= MAX_CATEGORY_COUNT) {
             "Imported vault contains too many categories"
         }
-        require(importedCategories.schemaVersion == CURRENT_SCHEMA_VERSION) {
+        require(isSchemaVersionSupported(importedCategories.schemaVersion)) {
             "Imported category schema is unsupported"
         }
 
@@ -1925,7 +1958,7 @@ class PasswordRepository(
             require(importedTotp.entriesCount <= MAX_TOTP_ENTRY_COUNT) {
                 "Imported vault contains too many TOTP entries"
             }
-            require(importedTotp.schemaVersion == CURRENT_SCHEMA_VERSION) {
+            require(isSchemaVersionSupported(importedTotp.schemaVersion)) {
                 "Imported TOTP schema is unsupported"
             }
             importedTotp.entriesList

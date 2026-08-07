@@ -38,7 +38,6 @@ class TotpRepository(
     companion object {
         private const val VAULT_DIRECTORY_NAME = "hellopocket_vault"
         private const val TOTP_DATA_FILE = PasswordRepository.TOTP_DATA_FILE
-        private const val CURRENT_SCHEMA_VERSION = 1
         private const val MAX_TOTP_PLAINTEXT_BYTES = 16 * 1024 * 1024
         private const val MAX_TOTP_ENTRY_COUNT = 10_000
         private const val PROTOBUF_RECURSION_LIMIT = 100
@@ -93,7 +92,11 @@ class TotpRepository(
                         require(totpEntries.entriesCount <= MAX_TOTP_ENTRY_COUNT) {
                             "Vault contains too many TOTP entries"
                         }
-                        if (totpEntries.schemaVersion != CURRENT_SCHEMA_VERSION) {
+                        if (
+                            totpEntries.schemaVersion !in
+                            PasswordRepository.MIN_SUPPORTED_SCHEMA_VERSION..
+                                PasswordRepository.CURRENT_SCHEMA_VERSION
+                        ) {
                             return@withContext VaultLoadResult.UnsupportedVersion(totpEntries.schemaVersion)
                         }
                         totpEntries.entriesList

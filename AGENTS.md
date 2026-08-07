@@ -48,6 +48,7 @@ HelloPocket is an Android password manager built with Kotlin and Jetpack Compose
 
 6. **重要提示**:
     *   **build**: 每次代码修改完成后，默认只需运行 `./gradlew :app:compileGooglePlayDebugKotlin`，确认代码没有编译问题；**不需要**运行 `./gradlew assembleGooglePlayDebug` 生成 APK。只有在用户明确要求打包、安装或验证 APK 时，才运行对应的 `assemble` 或 `install` 任务。
+    *   **Compose 审计**: 除非用户明确要求进行 Compose 审计，否则不要主动调用 `jetpack-compose-audit`、生成 Compose Compiler 审计指标或创建 Compose 审计报告。普通功能实现、代码审查和编译验证不视为已授权执行 Compose 审计。
     *   **禁止省略代码**: 在修改任何文件时，**必须提供完整、全量的代码**，严禁使用 `/* ... */` 或其他方式省略已有代码。
     *   **修改前先读取**: 在对一个已存在的文件进行复杂修改前，**必须先使用 `read_file` 工具读取其最新内容**，确保操作是基于最新状态，而不是依赖可能有偏差的短期记忆。
     *   **注意依赖关系**: 在引入需要特定库支持的功能时，必须检查并确保相关的Gradle依赖已被正确添加。
