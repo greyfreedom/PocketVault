@@ -6,7 +6,9 @@ import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.TotpEntry
+import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.utils.AppConstants
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -175,6 +177,31 @@ class VaultSemanticValidatorTest {
         }
     }
 
+    @Test
+    fun acceptsAValidPaymentCardAndRejectsSensitiveFieldViolations() {
+        VaultSemanticValidator.validateCore(
+            passwords = listOf(paymentCardEntry()),
+            categories = listOf(category()),
+            attachments = listOf(attachment()),
+        )
+
+        listOf(
+            paymentCardEntry().toBuilder().setCardNumber("4111-1111").build(),
+            paymentCardEntry().toBuilder().setCardNumber("٤١١١١١١١").build(),
+            paymentCardEntry().toBuilder().setExpirationMonth(0).build(),
+            paymentCardEntry().toBuilder().setSecurityCode("12").build(),
+            paymentCardEntry().toBuilder().setSecurityCode("١٢٣").build(),
+        ).forEach { invalidCard ->
+            assertThrows(IllegalArgumentException::class.java) {
+                VaultSemanticValidator.validateCore(
+                    passwords = listOf(invalidCard),
+                    categories = listOf(category()),
+                    attachments = listOf(attachment()),
+                )
+            }
+        }
+    }
+
     private fun passwordEntry(
         categoryId: String = "category-1",
         attachmentId: String = "attachment-1",
@@ -197,6 +224,20 @@ class VaultSemanticValidatorTest {
         .setName(name)
         .setValue(value)
         .setType(type)
+        .build()
+
+    private fun paymentCardEntry(): PasswordEntry = PasswordEntry.newBuilder()
+        .setId("card-1")
+        .setTitle("Travel card")
+        .setType(VaultItemType.PAYMENT_CARD)
+        .setCardholderName("Alex Example")
+        .setCardNumber("4111111111111111")
+        .setCardBrand(PaymentCardBrand.VISA)
+        .setExpirationMonth(12)
+        .setExpirationYear(2032)
+        .setSecurityCode("123")
+        .addCategoryIds("category-1")
+        .addAttachmentIds("attachment-1")
         .build()
 
     private fun category(color: String = "#2196F3"): Category = Category.newBuilder()

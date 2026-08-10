@@ -39,13 +39,13 @@
     <string name="detail">상세 정보</string>
     <string name="add_new_password">새 비밀번호 추가</string>
     <string name="add_item">추가</string>
-    <string name="no_passwords_found">비밀번호 기록이 없습니다</string>
+    <string name="no_passwords_found">보관함 항목이 없습니다</string>
     <string name="search_vault">보관함 검색</string>
-    <string name="search_hint">제목, 계정 또는 메모</string>
-    <string name="search_empty_message">제목, 계정 또는 메모로 비밀번호와 보안 메모를 찾으세요.</string>
-    <string name="vault_empty_message">"보관함이 비어 있습니다.\n우측 하단의 \'+\' 버튼을 눌러 새 비밀번호를 추가하세요!"</string>
+    <string name="search_hint">제목, 계정, 카드 소유자 또는 메모</string>
+    <string name="search_empty_message">민감한 값을 검색하지 않고 비밀번호, 보안 메모 및 결제 카드를 찾습니다.</string>
+    <string name="vault_empty_message">보관함이 비어 있습니다.\n항목을 추가하려면 \'+\'를 누르세요.</string>
     <string name="no_search_results">일치하는 결과가 없습니다</string>
-    <string name="search_no_results_hint">다른 제목, 계정 또는 메모 키워드를 사용해 보세요.</string>
+    <string name="search_no_results_hint">다른 제목, 계정, 카드 소유자, 브랜드 또는 메모 키워드를 사용해 보세요.</string>
     <string name="clear_search">검색어 지우기</string>
     <plurals name="search_result_count">
         <item quantity="other">%1$d개 결과</item>
@@ -63,6 +63,35 @@
     <string name="notes_optional">메모 (선택 사항)</string>
     <string name="title_and_password_required">제목과 비밀번호는 필수입니다</string>
     <string name="password_hidden">••••••••</string>
+
+    <!-- 결제 카드 -->
+    <string name="add_payment_card">결제 카드 추가</string>
+    <string name="card_information">카드 정보</string>
+    <string name="cardholder_name">카드 소유자 이름</string>
+    <string name="cardholder_name_optional">카드 소유자 이름 (선택 사항)</string>
+    <string name="card_number">카드 번호</string>
+    <string name="card_number_required">카드 번호 (필수)</string>
+    <string name="card_brand">브랜드</string>
+    <string name="expiration_month">만료 월</string>
+    <string name="expiration_year">만료 연도</string>
+    <string name="expiration_date">만료일</string>
+    <string name="security_code">보안 코드</string>
+    <string name="security_code_optional">보안 코드 (선택 사항)</string>
+    <string name="not_set">설정 안 됨</string>
+    <string name="invalid_card_number">8–19자리 카드 번호를 입력하세요.</string>
+    <string name="expiration_date_incomplete">만료 월과 연도를 모두 선택하세요.</string>
+    <string name="invalid_security_code">보안 코드는 3자리 또는 4자리여야 합니다.</string>
+    <string name="show_sensitive_value">민감한 값 표시</string>
+    <string name="hide_sensitive_value">민감한 값 숨기기</string>
+    <string name="card_brand_not_set">설정 안 됨</string>
+    <string name="card_brand_visa">Visa</string>
+    <string name="card_brand_mastercard">Mastercard</string>
+    <string name="card_brand_american_express">American Express</string>
+    <string name="card_brand_discover">Discover</string>
+    <string name="card_brand_jcb">JCB</string>
+    <string name="card_brand_unionpay">UnionPay</string>
+    <string name="card_brand_diners_club">Diners Club</string>
+    <string name="card_brand_other">기타</string>
     
     <!-- Action Buttons -->
     <string name="save">저장</string>
@@ -281,6 +310,7 @@
     <string name="all_types">모든 유형</string>
     <string name="type_password">비밀번호</string>
     <string name="type_note">보안 메모</string>
+    <string name="type_payment_card">결제 카드</string>
     <string name="select_type">유형 선택</string>
 
     <!-- Q&A Page -->

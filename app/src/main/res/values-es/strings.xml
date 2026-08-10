@@ -41,13 +41,13 @@
     <string name="detail">Detalle</string>
     <string name="add_new_password">Añadir Nueva Contraseña</string>
     <string name="add_item">Añadir</string>
-    <string name="no_passwords_found">No se encontraron registros de contraseñas</string>
+    <string name="no_passwords_found">No se encontraron elementos en la bóveda</string>
     <string name="search_vault">Buscar en la bóveda</string>
-    <string name="search_hint">Título, cuenta o notas</string>
-    <string name="search_empty_message">Busca contraseñas y notas seguras por título, cuenta o notas.</string>
-    <string name="vault_empty_message">"La bóveda está vacía,\n¡Toque el botón \'+\' en la parte inferior derecha para añadir una nueva contraseña!"</string>
+    <string name="search_hint">Título, cuenta, titular o notas</string>
+    <string name="search_empty_message">Busca contraseñas, notas seguras y tarjetas de pago sin consultar valores confidenciales.</string>
+    <string name="vault_empty_message">La bóveda está vacía.\nToca \'+\' para añadir un elemento.</string>
     <string name="no_search_results">No se encontraron resultados coincidentes</string>
-    <string name="search_no_results_hint">Prueba con otro título, cuenta o término de notas.</string>
+    <string name="search_no_results_hint">Prueba con otro título, cuenta, titular, marca o término de notas.</string>
     <string name="clear_search">Borrar búsqueda</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d resultado</item>
@@ -67,6 +67,35 @@
     <string name="notes_optional">Notas (Opcional)</string>
     <string name="title_and_password_required">El título y la contraseña son obligatorios</string>
     <string name="password_hidden">••••••••</string>
+
+    <!-- Tarjeta de pago -->
+    <string name="add_payment_card">Añadir Tarjeta de Pago</string>
+    <string name="card_information">Información de la Tarjeta</string>
+    <string name="cardholder_name">Nombre del Titular</string>
+    <string name="cardholder_name_optional">Nombre del Titular (Opcional)</string>
+    <string name="card_number">Número de Tarjeta</string>
+    <string name="card_number_required">Número de Tarjeta (Obligatorio)</string>
+    <string name="card_brand">Marca</string>
+    <string name="expiration_month">Mes de Vencimiento</string>
+    <string name="expiration_year">Año de Vencimiento</string>
+    <string name="expiration_date">Fecha de Vencimiento</string>
+    <string name="security_code">Código de Seguridad</string>
+    <string name="security_code_optional">Código de Seguridad (Opcional)</string>
+    <string name="not_set">Sin configurar</string>
+    <string name="invalid_card_number">Introduce un número de tarjeta de 8 a 19 dígitos.</string>
+    <string name="expiration_date_incomplete">Selecciona el mes y el año de vencimiento.</string>
+    <string name="invalid_security_code">El código de seguridad debe tener 3 o 4 dígitos.</string>
+    <string name="show_sensitive_value">Mostrar valor confidencial</string>
+    <string name="hide_sensitive_value">Ocultar valor confidencial</string>
+    <string name="card_brand_not_set">Sin configurar</string>
+    <string name="card_brand_visa">Visa</string>
+    <string name="card_brand_mastercard">Mastercard</string>
+    <string name="card_brand_american_express">American Express</string>
+    <string name="card_brand_discover">Discover</string>
+    <string name="card_brand_jcb">JCB</string>
+    <string name="card_brand_unionpay">UnionPay</string>
+    <string name="card_brand_diners_club">Diners Club</string>
+    <string name="card_brand_other">Otra</string>
     
     <!-- Action Buttons -->
     <string name="save">Guardar</string>
@@ -287,6 +316,7 @@
     <string name="all_types">Todos los Tipos</string>
     <string name="type_password">Contraseña</string>
     <string name="type_note">Nota Segura</string>
+    <string name="type_payment_card">Tarjeta de Pago</string>
     <string name="select_type">Seleccionar Tipo</string>
 
     <!-- Q&A Page -->

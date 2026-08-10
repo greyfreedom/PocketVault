@@ -6,6 +6,7 @@ import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.ui.feature.common.viewmodel.RepositoryMutationViewModel
 import com.turisla.hellopocket.utils.AppConstants
@@ -185,6 +186,35 @@ class HomePageViewModel(
         customFields: List<CustomField> = emptyList(),
     ) {
         passwordRepository.addSecureNote(title, content, categoryIds, attachmentIds, customFields)
+    }
+
+    /** 添加与密码、笔记并列的支付卡条目。 */
+    suspend fun addPaymentCard(
+        title: String,
+        cardholderName: String,
+        cardNumber: String,
+        cardBrand: PaymentCardBrand,
+        expirationMonth: Int,
+        expirationYear: Int,
+        securityCode: String,
+        notes: String,
+        categoryIds: List<String> = emptyList(),
+        attachmentIds: List<String> = emptyList(),
+        customFields: List<CustomField> = emptyList(),
+    ) {
+        passwordRepository.addPaymentCard(
+            title = title,
+            cardholderName = cardholderName,
+            cardNumber = cardNumber,
+            cardBrand = cardBrand,
+            expirationMonth = expirationMonth,
+            expirationYear = expirationYear,
+            securityCode = securityCode,
+            notes = notes,
+            categoryIds = categoryIds,
+            attachmentIds = attachmentIds,
+            customFields = customFields,
+        )
     }
 
     fun copyCustomFieldValue(value: String) {

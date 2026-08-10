@@ -2,12 +2,15 @@ package com.turisla.hellopocket.ui.feature.search
 
 import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.VaultItemType
 import java.util.Locale
 
 internal enum class SearchMatchField {
     TITLE,
     ACCOUNT,
+    CARDHOLDER,
+    CARD_BRAND,
     CUSTOM_FIELD,
     NOTES,
 }
@@ -24,8 +27,8 @@ internal data class VaultSearchResult(
 /**
  * 保险库本地搜索引擎。
  *
- * 索引标题、账号、自定义字段名、明文自定义字段值和备注/笔记内容。
- * 密码正文与隐藏型自定义字段值始终不进入索引，避免搜索结果意外暴露秘密。
+ * 索引标题、账号、持卡人、卡品牌、自定义字段名、明文自定义字段值和备注/笔记内容。
+ * 密码、卡号、安全码与隐藏型自定义字段值始终不进入索引，避免搜索结果意外暴露秘密。
  */
 internal object VaultSearchEngine {
     private val whitespaceRegex = Regex("\\s+")
@@ -82,16 +85,40 @@ internal object VaultSearchEngine {
 
     private fun PasswordEntry.searchableFields(): List<SearchableField> = buildList {
         add(SearchableField(FieldKind.TITLE, title))
-        if (type == VaultItemType.NOTE) {
-            if (content.isNotBlank()) {
-                add(SearchableField(FieldKind.NOTES, content))
+        when (type) {
+            VaultItemType.NOTE -> {
+                if (content.isNotBlank()) {
+                    add(SearchableField(FieldKind.NOTES, content))
+                }
             }
-        } else {
-            if (username.isNotBlank()) {
-                add(SearchableField(FieldKind.ACCOUNT, username))
+            VaultItemType.PAYMENT_CARD -> {
+                if (cardholderName.isNotBlank()) {
+                    add(SearchableField(FieldKind.CARDHOLDER, cardholderName))
+                }
+                if (
+                    cardBrand != PaymentCardBrand.PAYMENT_CARD_BRAND_UNSPECIFIED &&
+                    cardBrand != PaymentCardBrand.UNRECOGNIZED
+                ) {
+                    add(
+                        SearchableField(
+                            FieldKind.CARD_BRAND,
+                            cardBrand.name.replace('_', ' '),
+                        )
+                    )
+                }
+                if (notes.isNotBlank()) {
+                    add(SearchableField(FieldKind.NOTES, notes))
+                }
             }
-            if (notes.isNotBlank()) {
-                add(SearchableField(FieldKind.NOTES, notes))
+            VaultItemType.PASSWORD,
+            VaultItemType.UNRECOGNIZED,
+            -> {
+                if (username.isNotBlank()) {
+                    add(SearchableField(FieldKind.ACCOUNT, username))
+                }
+                if (notes.isNotBlank()) {
+                    add(SearchableField(FieldKind.NOTES, notes))
+                }
             }
         }
 
@@ -129,7 +156,10 @@ internal object VaultSearchEngine {
         terms: List<String>,
     ): Int {
         val title = first { it.kind == FieldKind.TITLE }
-        val account = firstOrNull { it.kind == FieldKind.ACCOUNT }
+        val identity = firstOrNull {
+            it.kind == FieldKind.ACCOUNT || it.kind == FieldKind.CARDHOLDER
+        }
+        val brands = filter { it.kind == FieldKind.CARD_BRAND }
         val customNames = filter { it.kind == FieldKind.CUSTOM_NAME }
         val customValues = filter { it.kind == FieldKind.CUSTOM_VALUE }
         val notes = filter { it.kind == FieldKind.NOTES }
@@ -138,17 +168,20 @@ internal object VaultSearchEngine {
             title.originalText.equals(queryPhrase, ignoreCase = true) -> 0
             title.originalText.startsWith(queryPhrase, ignoreCase = true) -> 1
             title.matchesAll(terms) -> 2
-            account?.originalText?.equals(queryPhrase, ignoreCase = true) == true -> 3
-            account?.originalText?.startsWith(queryPhrase, ignoreCase = true) == true -> 4
-            account?.matchesAll(terms) == true -> 5
-            customNames.any { it.originalText.equals(queryPhrase, ignoreCase = true) } -> 6
-            customNames.any { it.originalText.startsWith(queryPhrase, ignoreCase = true) } -> 7
-            customNames.any { it.matchesAll(terms) } -> 8
-            customValues.any { it.originalText.equals(queryPhrase, ignoreCase = true) } -> 9
-            customValues.any { it.originalText.startsWith(queryPhrase, ignoreCase = true) } -> 10
-            customValues.any { it.matchesAll(terms) } -> 11
-            notes.any { it.matchesAll(terms) } -> 12
-            else -> 13
+            identity?.originalText?.equals(queryPhrase, ignoreCase = true) == true -> 3
+            identity?.originalText?.startsWith(queryPhrase, ignoreCase = true) == true -> 4
+            identity?.matchesAll(terms) == true -> 5
+            brands.any { it.originalText.equals(queryPhrase, ignoreCase = true) } -> 6
+            brands.any { it.originalText.startsWith(queryPhrase, ignoreCase = true) } -> 7
+            brands.any { it.matchesAll(terms) } -> 8
+            customNames.any { it.originalText.equals(queryPhrase, ignoreCase = true) } -> 9
+            customNames.any { it.originalText.startsWith(queryPhrase, ignoreCase = true) } -> 10
+            customNames.any { it.matchesAll(terms) } -> 11
+            customValues.any { it.originalText.equals(queryPhrase, ignoreCase = true) } -> 12
+            customValues.any { it.originalText.startsWith(queryPhrase, ignoreCase = true) } -> 13
+            customValues.any { it.matchesAll(terms) } -> 14
+            notes.any { it.matchesAll(terms) } -> 15
+            else -> 16
         }
     }
 
@@ -204,6 +237,8 @@ internal object VaultSearchEngine {
     private enum class FieldKind(val matchField: SearchMatchField) {
         TITLE(SearchMatchField.TITLE),
         ACCOUNT(SearchMatchField.ACCOUNT),
+        CARDHOLDER(SearchMatchField.CARDHOLDER),
+        CARD_BRAND(SearchMatchField.CARD_BRAND),
         CUSTOM_NAME(SearchMatchField.CUSTOM_FIELD),
         CUSTOM_VALUE(SearchMatchField.CUSTOM_FIELD),
         NOTES(SearchMatchField.NOTES),

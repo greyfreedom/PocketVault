@@ -15,6 +15,7 @@ import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntries
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.TotpEntries
 import com.turisla.hellopocket.model.TotpEntry
 import com.turisla.hellopocket.model.VaultConfig
@@ -163,7 +164,7 @@ class PasswordRepositoryLegacyV2MigrationTest {
     }
 
     @Test
-    fun `schema one first core write creates a restorable backup before schema two activation`() =
+    fun `schema one first core write creates a restorable backup before current schema activation`() =
         runBlocking {
             val password = "schema-one-master-password"
             val manager = TinkCryptoManager()
@@ -178,7 +179,7 @@ class PasswordRepositoryLegacyV2MigrationTest {
                 notes = "",
             )
             val encryptionContext = requireNotNull(repository.getVaultEncryptionContext())
-            rewriteCurrentVaultAsSchemaOne(encryptionContext)
+            rewriteCurrentVaultAsSchema(encryptionContext, schemaVersion = 1)
             repository.lock()
 
             val upgradingRepository = PasswordRepository(context, manager, guard)
@@ -227,6 +228,69 @@ class PasswordRepositoryLegacyV2MigrationTest {
         }
 
     @Test
+    fun `schema two payment card write upgrades safely and keeps a restorable backup`() = runBlocking {
+        val password = "schema-two-card-master-password"
+        val manager = TinkCryptoManager()
+        val guard = VaultSessionGuard().apply { enterForeground() }
+        val repository = PasswordRepository(context, manager, guard)
+
+        repository.setupNewVault(password)
+        repository.addEntry(
+            title = "Existing password",
+            username = "before@example.com",
+            plainTextPassword = "before-secret",
+            notes = "",
+        )
+        rewriteCurrentVaultAsSchema(
+            encryptionContext = requireNotNull(repository.getVaultEncryptionContext()),
+            schemaVersion = 2,
+        )
+        repository.lock()
+
+        val upgradingRepository = PasswordRepository(context, manager, guard)
+        assertTrue(upgradingRepository.loadAndDecryptData(password) is VaultLoadResult.Success)
+        assertTrue(upgradingRepository.getBackupHistory().isEmpty())
+
+        upgradingRepository.addPaymentCard(
+            title = "Travel card",
+            cardholderName = "Alex Example",
+            cardNumber = "٤١١١ ١١١١ ١١١١ ١١١١",
+            cardBrand = PaymentCardBrand.VISA,
+            expirationMonth = 12,
+            expirationYear = 2032,
+            securityCode = "١٢٣",
+            notes = "Use abroad",
+        )
+
+        val upgradedContext = requireNotNull(upgradingRepository.getVaultEncryptionContext())
+        assertEquals(
+            PasswordRepository.CURRENT_SCHEMA_VERSION,
+            readCurrentManifest(upgradedContext).schemaVersion,
+        )
+        assertEquals(
+            PasswordRepository.CURRENT_SCHEMA_VERSION,
+            readCurrentPasswords(upgradedContext).schemaVersion,
+        )
+        val schemaTwoBackup = upgradingRepository.getBackupHistory().single()
+        assertTrue(schemaTwoBackup.isFile && schemaTwoBackup.length() > 0L)
+
+        upgradingRepository.lock()
+        assertTrue(upgradingRepository.loadAndDecryptData(password) is VaultLoadResult.Success)
+        val restoredCard = upgradingRepository.passwordEntries.value.single {
+            it.type == VaultItemType.PAYMENT_CARD
+        }
+        assertEquals("4111111111111111", restoredCard.cardNumber)
+        assertEquals("123", restoredCard.securityCode)
+
+        assertTrue(upgradingRepository.restoreFromBackup(schemaTwoBackup, password))
+        assertTrue(upgradingRepository.loadAndDecryptData(password) is VaultLoadResult.Success)
+        assertEquals(
+            listOf("Existing password"),
+            upgradingRepository.passwordEntries.value.map(PasswordEntry::getTitle),
+        )
+    }
+
+    @Test
     fun `schema one first totp write keeps mixed core schema readable after upgrade`() = runBlocking {
         val password = "schema-one-totp-master-password"
         val manager = TinkCryptoManager()
@@ -240,7 +304,10 @@ class PasswordRepositoryLegacyV2MigrationTest {
             plainTextPassword = "existing-secret",
             notes = "",
         )
-        rewriteCurrentVaultAsSchemaOne(requireNotNull(repository.getVaultEncryptionContext()))
+        rewriteCurrentVaultAsSchema(
+            encryptionContext = requireNotNull(repository.getVaultEncryptionContext()),
+            schemaVersion = 1,
+        )
         repository.lock()
 
         val upgradingRepository = PasswordRepository(context, manager, guard)
@@ -465,7 +532,14 @@ class PasswordRepositoryLegacyV2MigrationTest {
         }
     }
 
-    private fun rewriteCurrentVaultAsSchemaOne(encryptionContext: VaultEncryptionContext) {
+    private fun rewriteCurrentVaultAsSchema(
+        encryptionContext: VaultEncryptionContext,
+        schemaVersion: Int,
+    ) {
+        require(
+            schemaVersion in PasswordRepository.MIN_SUPPORTED_SCHEMA_VERSION until
+                PasswordRepository.CURRENT_SCHEMA_VERSION
+        )
         val vaultDirectory = File(context.filesDir, PasswordRepository.VAULT_DIRECTORY_NAME)
         val streamingAead = TinkCryptoManager().getStreamingAead(encryptionContext.keysetHandle)
         val passwords = readCurrentPasswords(encryptionContext)
@@ -479,13 +553,13 @@ class PasswordRepositoryLegacyV2MigrationTest {
 
         writeLegacyMessage(
             File(vaultDirectory, PasswordRepository.PASSWORDS_DATA_FILE),
-            passwords.toBuilder().setSchemaVersion(1).build(),
+            passwords.toBuilder().setSchemaVersion(schemaVersion).build(),
             streamingAead,
             encryptionContext.associatedData(PasswordRepository.PASSWORDS_DATA_FILE),
         )
         writeLegacyMessage(
             categoriesFile,
-            categories.toBuilder().setSchemaVersion(1).build(),
+            categories.toBuilder().setSchemaVersion(schemaVersion).build(),
             streamingAead,
             encryptionContext.associatedData(PasswordRepository.CATEGORIES_DATA_FILE),
         )
@@ -500,14 +574,14 @@ class PasswordRepositoryLegacyV2MigrationTest {
                 .takeIf(File::isFile)
                 ?.let { put(PasswordRepository.TOTP_DATA_FILE, it) }
         }
-        val schemaOneManifest = manifest.copy(
-            schemaVersion = 1,
+        val downgradedManifest = manifest.copy(
+            schemaVersion = schemaVersion,
             fileDigests = snapshotFiles.mapValues { (_, file) -> calculateFileDigest(file) },
             fileSizes = snapshotFiles.mapValues { (_, file) -> file.length() },
         )
         writeLegacyBytes(
             File(vaultDirectory, PasswordRepository.MANIFEST_DATA_FILE),
-            Json.encodeToString(schemaOneManifest).toByteArray(Charsets.UTF_8),
+            Json.encodeToString(downgradedManifest).toByteArray(Charsets.UTF_8),
             streamingAead,
             encryptionContext.associatedData(PasswordRepository.MANIFEST_DATA_FILE),
         )

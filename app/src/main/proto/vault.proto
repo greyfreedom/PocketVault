@@ -9,6 +9,20 @@ option java_multiple_files = true;
 enum VaultItemType {
   PASSWORD = 0;  // 登录凭证
   NOTE = 1;      // 安全笔记
+  PAYMENT_CARD = 2; // 支付卡
+}
+
+// 支付卡品牌。零值表示用户尚未选择品牌。
+enum PaymentCardBrand {
+  PAYMENT_CARD_BRAND_UNSPECIFIED = 0;
+  VISA = 1;
+  MASTERCARD = 2;
+  AMERICAN_EXPRESS = 3;
+  DISCOVER = 4;
+  JCB = 5;
+  UNIONPAY = 6;
+  DINERS_CLUB = 7;
+  OTHER = 8;
 }
 
 // 自定义字段的展示类型。零值不直接映射为可见文本，避免异常数据被意外明文展示。
@@ -37,7 +51,7 @@ message Category {
   int64 createdAt = 4; // 创建时间戳
 }
 
-// 密码和安全笔记共用的有序自定义字段。
+// 密码、安全笔记和支付卡共用的有序自定义字段。
 message CustomField {
   string id = 1;
   string name = 2;
@@ -55,12 +69,18 @@ message PasswordEntry {
   int64 createdAt = 7;
   int64 updatedAt = 8;
   repeated string attachmentIds = 9; // 关联的附件ID列表
-  VaultItemType type = 10;    // 条目类型，默认为 PASSWORD，用于区分密码和笔记
+  VaultItemType type = 10;    // 条目类型，默认为 PASSWORD，用于区分密码、笔记和支付卡
   string content = 11;         // 安全笔记的内容（仅当 type = NOTE 时使用）
   repeated CustomField custom_fields = 12; // 列表顺序即用户定义的展示顺序
+  string cardholder_name = 13; // 持卡人姓名（仅当 type = PAYMENT_CARD 时使用）
+  string card_number = 14;     // 仅保存数字；整个 passwords.dat 已加密
+  PaymentCardBrand card_brand = 15;
+  int32 expiration_month = 16; // 1-12；0 表示未设置
+  int32 expiration_year = 17;  // 四位年份；0 表示未设置
+  string security_code = 18;   // 3-4 位数字；整个 passwords.dat 已加密
 }
 
-// 密码/笔记条目集合
+// 密码/笔记/支付卡条目集合
 message PasswordEntries {
     repeated PasswordEntry entries = 1;  // 保持原有编号，确保向后兼容
     int32 schema_version = 2;  // 新字段使用新编号

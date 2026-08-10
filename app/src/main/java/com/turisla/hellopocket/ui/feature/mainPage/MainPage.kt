@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Settings
@@ -58,6 +59,7 @@ import androidx.navigation.NavController
 import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.router.RouteAddPassword
+import com.turisla.hellopocket.router.RouteAddPaymentCard
 import com.turisla.hellopocket.router.RouteAddSecureNote
 import com.turisla.hellopocket.router.RouteAddTotpManual
 import com.turisla.hellopocket.router.RouteCategoryManagement
@@ -205,6 +207,10 @@ fun MainPage(
                 showAddSheet = false
                 navController.navigate(RouteAddSecureNote)
             },
+            onAddPaymentCard = {
+                showAddSheet = false
+                navController.navigate(RouteAddPaymentCard)
+            },
             onScanTotp = {
                 showAddSheet = false
                 navController.navigate(RouteTotpScanner)
@@ -291,6 +297,7 @@ private fun AddItemSheet(
     onDismiss: () -> Unit,
     onAddPassword: () -> Unit,
     onAddNote: () -> Unit,
+    onAddPaymentCard: () -> Unit,
     onScanTotp: () -> Unit,
     onAddTotpManually: () -> Unit,
 ) {
@@ -357,6 +364,20 @@ private fun AddItemSheet(
                             AddSheetIcon(
                                 imageVector = Icons.Filled.NoteAlt,
                                 color = MaterialTheme.colorScheme.tertiary,
+                            )
+                        },
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 68.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    AppListRow(
+                        headline = stringResource(R.string.add_payment_card),
+                        onClick = onAddPaymentCard,
+                        leading = {
+                            AddSheetIcon(
+                                imageVector = Icons.Outlined.CreditCard,
+                                color = MaterialTheme.colorScheme.secondary,
                             )
                         },
                     )

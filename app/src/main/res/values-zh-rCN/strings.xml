@@ -39,13 +39,13 @@
     <string name="detail">详情</string>
     <string name="add_new_password">添加新密码</string>
     <string name="add_item">添加</string>
-    <string name="no_passwords_found">暂无密码记录</string>
+    <string name="no_passwords_found">暂无保险库条目</string>
     <string name="search_vault">搜索保险库</string>
-    <string name="search_hint">标题、账号或备注</string>
-    <string name="search_empty_message">可按标题、账号或备注查找密码和安全笔记。</string>
-    <string name="vault_empty_message">保险库是空的，\n点击右下角 \'+\' 添加一个新密码吧！</string>
+    <string name="search_hint">标题、账号、持卡人或备注</string>
+    <string name="search_empty_message">查找密码、安全笔记和支付卡，但不会检索敏感值。</string>
+    <string name="vault_empty_message">保险库是空的。\n点击 \'+\' 添加条目。</string>
     <string name="no_search_results">没有找到匹配的结果</string>
-    <string name="search_no_results_hint">试试其他标题、账号或备注关键词。</string>
+    <string name="search_no_results_hint">试试其他标题、账号、持卡人、品牌或备注关键词。</string>
     <string name="clear_search">清除搜索</string>
     <plurals name="search_result_count">
         <item quantity="other">%1$d 个结果</item>
@@ -63,6 +63,35 @@
     <string name="notes_optional">备注 (非必填)</string>
     <string name="title_and_password_required">标题和密码不能为空</string>
     <string name="password_hidden">••••••••</string>
+
+    <!-- 支付卡 -->
+    <string name="add_payment_card">添加支付卡</string>
+    <string name="card_information">卡片信息</string>
+    <string name="cardholder_name">持卡人姓名</string>
+    <string name="cardholder_name_optional">持卡人姓名（非必填）</string>
+    <string name="card_number">卡号</string>
+    <string name="card_number_required">卡号（必填）</string>
+    <string name="card_brand">品牌</string>
+    <string name="expiration_month">过期月份</string>
+    <string name="expiration_year">过期年份</string>
+    <string name="expiration_date">过期日期</string>
+    <string name="security_code">安全码</string>
+    <string name="security_code_optional">安全码（非必填）</string>
+    <string name="not_set">未设置</string>
+    <string name="invalid_card_number">请输入 8–19 位卡号。</string>
+    <string name="expiration_date_incomplete">请同时选择过期月份和年份。</string>
+    <string name="invalid_security_code">安全码必须为 3 或 4 位数字。</string>
+    <string name="show_sensitive_value">显示敏感值</string>
+    <string name="hide_sensitive_value">隐藏敏感值</string>
+    <string name="card_brand_not_set">未设置</string>
+    <string name="card_brand_visa">Visa</string>
+    <string name="card_brand_mastercard">Mastercard</string>
+    <string name="card_brand_american_express">American Express</string>
+    <string name="card_brand_discover">Discover</string>
+    <string name="card_brand_jcb">JCB</string>
+    <string name="card_brand_unionpay">银联</string>
+    <string name="card_brand_diners_club">Diners Club</string>
+    <string name="card_brand_other">其他</string>
 
     <!-- 操作按钮 -->
     <string name="save">保存</string>
@@ -281,6 +310,7 @@
     <string name="all_types">全部类型</string>
     <string name="type_password">密码</string>
     <string name="type_note">安全笔记</string>
+    <string name="type_payment_card">支付卡</string>
     <string name="select_type">选择类型</string>
 
     <!-- Q&A Page -->

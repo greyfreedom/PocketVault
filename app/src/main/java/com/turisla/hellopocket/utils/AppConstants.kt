@@ -26,6 +26,15 @@ object AppConstants {
     const val MAX_CUSTOM_FIELD_NAME_LENGTH = 100
     const val MAX_CUSTOM_FIELD_VALUE_LENGTH = 5_000
 
+    // 支付卡输入限制同时用于新增、编辑和保险库导入语义校验。
+    const val MIN_PAYMENT_CARD_NUMBER_LENGTH = 8
+    const val MAX_PAYMENT_CARD_NUMBER_LENGTH = 19
+    const val MAX_CARDHOLDER_NAME_LENGTH = 200
+    const val MIN_SECURITY_CODE_LENGTH = 3
+    const val MAX_SECURITY_CODE_LENGTH = 4
+    const val MIN_EXPIRATION_YEAR = 1900
+    const val MAX_EXPIRATION_YEAR = 9999
+
     // 产品允许的最低输入门槛；6 位不代表安全强度充足，仍应鼓励用户使用更长的主密码。
     const val MIN_MASTER_PASSWORD_LENGTH = 6
 }

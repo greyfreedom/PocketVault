@@ -39,13 +39,13 @@
     <string name="detail">Chi tiết</string>
     <string name="add_new_password">Thêm mật khẩu mới</string>
     <string name="add_item">Thêm</string>
-    <string name="no_passwords_found">Không tìm thấy hồ sơ mật khẩu</string>
+    <string name="no_passwords_found">Không tìm thấy mục nào trong kho</string>
     <string name="search_vault">Tìm kiếm trong kho</string>
-    <string name="search_hint">Tiêu đề, tài khoản hoặc ghi chú</string>
-    <string name="search_empty_message">Tìm mật khẩu và ghi chú bảo mật theo tiêu đề, tài khoản hoặc ghi chú.</string>
-    <string name="vault_empty_message">"Kho lưu trữ trống,\nNhấn nút '+' ở góc dưới bên phải để thêm mật khẩu mới!"</string>
+    <string name="search_hint">Tiêu đề, tài khoản, chủ thẻ hoặc ghi chú</string>
+    <string name="search_empty_message">Tìm mật khẩu, ghi chú an toàn và thẻ thanh toán mà không tìm kiếm giá trị nhạy cảm.</string>
+    <string name="vault_empty_message">Kho đang trống.\nNhấn \'+\' để thêm một mục.</string>
     <string name="no_search_results">Không tìm thấy kết quả phù hợp</string>
-    <string name="search_no_results_hint">Hãy thử từ khóa khác cho tiêu đề, tài khoản hoặc ghi chú.</string>
+    <string name="search_no_results_hint">Hãy thử từ khóa khác cho tiêu đề, tài khoản, chủ thẻ, thương hiệu hoặc ghi chú.</string>
     <string name="clear_search">Xóa tìm kiếm</string>
     <plurals name="search_result_count">
         <item quantity="other">%1$d kết quả</item>
@@ -63,6 +63,35 @@
     <string name="notes_optional">Ghi chú (Tùy chọn)</string>
     <string name="title_and_password_required">Tiêu đề và mật khẩu là bắt buộc</string>
     <string name="password_hidden">••••••••</string>
+
+    <!-- Thẻ thanh toán -->
+    <string name="add_payment_card">Thêm Thẻ Thanh Toán</string>
+    <string name="card_information">Thông tin Thẻ</string>
+    <string name="cardholder_name">Tên Chủ thẻ</string>
+    <string name="cardholder_name_optional">Tên Chủ thẻ (Tùy chọn)</string>
+    <string name="card_number">Số Thẻ</string>
+    <string name="card_number_required">Số Thẻ (Bắt buộc)</string>
+    <string name="card_brand">Thương hiệu</string>
+    <string name="expiration_month">Tháng Hết hạn</string>
+    <string name="expiration_year">Năm Hết hạn</string>
+    <string name="expiration_date">Ngày Hết hạn</string>
+    <string name="security_code">Mã Bảo mật</string>
+    <string name="security_code_optional">Mã Bảo mật (Tùy chọn)</string>
+    <string name="not_set">Chưa đặt</string>
+    <string name="invalid_card_number">Nhập số thẻ gồm 8–19 chữ số.</string>
+    <string name="expiration_date_incomplete">Chọn cả tháng và năm hết hạn.</string>
+    <string name="invalid_security_code">Mã bảo mật phải gồm 3 hoặc 4 chữ số.</string>
+    <string name="show_sensitive_value">Hiện giá trị nhạy cảm</string>
+    <string name="hide_sensitive_value">Ẩn giá trị nhạy cảm</string>
+    <string name="card_brand_not_set">Chưa đặt</string>
+    <string name="card_brand_visa">Visa</string>
+    <string name="card_brand_mastercard">Mastercard</string>
+    <string name="card_brand_american_express">American Express</string>
+    <string name="card_brand_discover">Discover</string>
+    <string name="card_brand_jcb">JCB</string>
+    <string name="card_brand_unionpay">UnionPay</string>
+    <string name="card_brand_diners_club">Diners Club</string>
+    <string name="card_brand_other">Khác</string>
     
     <!-- Action Buttons -->
     <string name="save">Lưu</string>
@@ -281,6 +310,7 @@
     <string name="all_types">Tất cả các loại</string>
     <string name="type_password">Mật khẩu</string>
     <string name="type_note">Ghi chú an toàn</string>
+    <string name="type_payment_card">Thẻ Thanh Toán</string>
     <string name="select_type">Chọn loại</string>
 
     <!-- Q&A Page -->

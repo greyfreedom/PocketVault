@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.NoteAlt
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Search
@@ -323,14 +324,21 @@ private fun SearchResultItem(
                 .padding(AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val isNote = result.entryType == VaultItemType.NOTE
-            val iconColor = if (isNote) {
-                MaterialTheme.colorScheme.tertiary
-            } else {
-                MaterialTheme.colorScheme.primary
+            val iconColor = when (result.entryType) {
+                VaultItemType.NOTE -> MaterialTheme.colorScheme.tertiary
+                VaultItemType.PAYMENT_CARD -> MaterialTheme.colorScheme.secondary
+                VaultItemType.PASSWORD,
+                VaultItemType.UNRECOGNIZED,
+                -> MaterialTheme.colorScheme.primary
             }
             AppIconTile(
-                imageVector = if (isNote) Icons.Filled.NoteAlt else Icons.Outlined.Key,
+                imageVector = when (result.entryType) {
+                    VaultItemType.NOTE -> Icons.Filled.NoteAlt
+                    VaultItemType.PAYMENT_CARD -> Icons.Filled.CreditCard
+                    VaultItemType.PASSWORD,
+                    VaultItemType.UNRECOGNIZED,
+                    -> Icons.Outlined.Key
+                },
                 contentDescription = null,
                 containerColor = Color.Transparent,
                 contentColor = iconColor,
@@ -405,6 +413,8 @@ private fun HighlightedText(
 
 private fun VaultSearchResult.supportingLabelResId(): Int = when (supportingField) {
     SearchMatchField.ACCOUNT -> R.string.username
+    SearchMatchField.CARDHOLDER -> R.string.cardholder_name
+    SearchMatchField.CARD_BRAND -> R.string.card_brand
     SearchMatchField.CUSTOM_FIELD -> R.string.custom_field
     SearchMatchField.NOTES -> if (entryType == VaultItemType.NOTE) {
         R.string.content

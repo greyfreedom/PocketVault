@@ -15,6 +15,7 @@ import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.PasswordEntries
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.TotpEntries
 import com.turisla.hellopocket.model.TotpEntry
 import com.turisla.hellopocket.model.VaultConfig
@@ -69,6 +70,14 @@ data class ImportDataFileResult(
     val biometricsWereDisabled: Boolean,
     val failureReason: ImportDataFailureReason? = null,
 )
+
+// 接受本地化数字键盘输入，但持久化前统一转为可互操作的 ASCII 数字。
+private fun String.toAsciiDecimalDigits(): String = buildString(length) {
+    this@toAsciiDecimalDigits.forEach { character ->
+        character.digitToIntOrNull()?.let { digit -> append(('0'.code + digit).toChar()) }
+    }
+}
+
 data class VaultEncryptionContext(
     val keysetHandle: KeysetHandle,
     val vaultId: String,
@@ -99,9 +108,9 @@ class PasswordRepository(
         const val TOTP_DATA_FILE = "totp.dat"
         const val ATTACHMENTS_DIR = "attachments"
         
-        // 公开保险库仍为 V2；内部 schema 2 增加有序自定义字段。
+        // 公开保险库仍为 V2；内部 schema 3 增加支付卡条目及其专用字段。
         const val MIN_SUPPORTED_SCHEMA_VERSION = 1
-        const val CURRENT_SCHEMA_VERSION = 2
+        const val CURRENT_SCHEMA_VERSION = 3
 
         private const val SALT_SIZE_BYTES = 16
         private const val LEGACY_VAULT_VERSION = 1
@@ -1057,7 +1066,7 @@ class PasswordRepository(
             VaultFileTransaction.recover(vaultDir)
             val writeSession = captureActiveVaultWriteSession()
                 ?: throw CancellationException("Vault is locked")
-            // schema 1 保险库第一次写成 schema 2 前先保留一份可由旧版本恢复的完整备份。
+            // 旧 schema 第一次升级写入前保留完整备份，便于使用旧版本回退恢复。
             val schemaUpgradeBackup = if (
                 writeSession.manifest.schemaVersion < CURRENT_SCHEMA_VERSION
             ) {
@@ -1507,10 +1516,120 @@ class PasswordRepository(
         persistVaultState(_passwordEntries.value + newNote, _categories.value, _attachments.value)
     }
 
+    /**
+     * 添加支付卡。卡号和安全码只会进入已加密的 passwords.dat，绝不写入公开配置或清单。
+     */
+    suspend fun addPaymentCard(
+        title: String,
+        cardholderName: String,
+        cardNumber: String,
+        cardBrand: PaymentCardBrand,
+        expirationMonth: Int,
+        expirationYear: Int,
+        securityCode: String,
+        notes: String,
+        categoryIds: List<String> = emptyList(),
+        attachmentIds: List<String> = emptyList(),
+        customFields: List<CustomField> = emptyList(),
+    ) = stateMutationMutex.withLock {
+        val normalizedCardNumber = cardNumber.toAsciiDecimalDigits()
+        val normalizedSecurityCode = securityCode.toAsciiDecimalDigits()
+        require(title.isNotBlank()) { "Payment card title must not be blank" }
+        require(
+            normalizedCardNumber.length in
+                AppConstants.MIN_PAYMENT_CARD_NUMBER_LENGTH..AppConstants.MAX_PAYMENT_CARD_NUMBER_LENGTH
+        ) { "Payment card number has an invalid length" }
+        require(
+            cardNumber.all {
+                it.digitToIntOrNull() != null || it.isWhitespace() || it == '-'
+            }
+        ) {
+            "Payment card number contains unsupported characters"
+        }
+        require(cardholderName.length <= AppConstants.MAX_CARDHOLDER_NAME_LENGTH) {
+            "Payment card holder name is too long"
+        }
+        require(
+            expirationMonth == 0 || expirationMonth in 1..12
+        ) { "Payment card expiration month is invalid" }
+        require(
+            expirationYear == 0 || expirationYear in
+                AppConstants.MIN_EXPIRATION_YEAR..AppConstants.MAX_EXPIRATION_YEAR
+        ) { "Payment card expiration year is invalid" }
+        require((expirationMonth == 0) == (expirationYear == 0)) {
+            "Payment card expiration month and year must be set together"
+        }
+        require(
+            normalizedSecurityCode.isEmpty() || normalizedSecurityCode.length in
+                AppConstants.MIN_SECURITY_CODE_LENGTH..AppConstants.MAX_SECURITY_CODE_LENGTH
+        ) { "Payment card security code has an invalid length" }
+        require(securityCode.all { it.digitToIntOrNull() != null }) {
+            "Payment card security code contains unsupported characters"
+        }
+        require(cardBrand != PaymentCardBrand.UNRECOGNIZED) {
+            "Payment card brand is unsupported"
+        }
+
+        val currentTime = System.currentTimeMillis()
+        val newCard = PasswordEntry.newBuilder()
+            .setId(UUID.randomUUID().toString())
+            .setTitle(title)
+            .setType(VaultItemType.PAYMENT_CARD)
+            .setCardholderName(cardholderName)
+            .setCardNumber(normalizedCardNumber)
+            .setCardBrand(cardBrand)
+            .setExpirationMonth(expirationMonth)
+            .setExpirationYear(expirationYear)
+            .setSecurityCode(normalizedSecurityCode)
+            .setNotes(notes)
+            .addAllCategoryIds(categoryIds)
+            .addAllAttachmentIds(attachmentIds)
+            .addAllCustomFields(customFields)
+            .setCreatedAt(currentTime)
+            .setUpdatedAt(currentTime)
+            .build()
+        persistVaultState(_passwordEntries.value + newCard, _categories.value, _attachments.value)
+    }
+
     private fun requireValidEntry(entry: PasswordEntry) {
         require(entry.title.isNotBlank()) { "Vault entry title must not be blank" }
-        if (entry.type == VaultItemType.PASSWORD) {
-            require(entry.password.isNotBlank()) { "Password value must not be blank" }
+        when (entry.type) {
+            VaultItemType.PASSWORD -> {
+                require(entry.password.isNotBlank()) { "Password value must not be blank" }
+            }
+            VaultItemType.PAYMENT_CARD -> {
+                require(
+                    entry.cardNumber.length in
+                        AppConstants.MIN_PAYMENT_CARD_NUMBER_LENGTH..AppConstants.MAX_PAYMENT_CARD_NUMBER_LENGTH &&
+                        entry.cardNumber.all { it in '0'..'9' }
+                ) { "Payment card number is invalid" }
+                require(entry.cardholderName.length <= AppConstants.MAX_CARDHOLDER_NAME_LENGTH) {
+                    "Payment card holder name is too long"
+                }
+                require(entry.expirationMonth == 0 || entry.expirationMonth in 1..12) {
+                    "Payment card expiration month is invalid"
+                }
+                require(
+                    entry.expirationYear == 0 || entry.expirationYear in
+                        AppConstants.MIN_EXPIRATION_YEAR..AppConstants.MAX_EXPIRATION_YEAR
+                ) { "Payment card expiration year is invalid" }
+                require((entry.expirationMonth == 0) == (entry.expirationYear == 0)) {
+                    "Payment card expiration month and year must be set together"
+                }
+                require(
+                    entry.securityCode.isEmpty() ||
+                        entry.securityCode.length in
+                            AppConstants.MIN_SECURITY_CODE_LENGTH..AppConstants.MAX_SECURITY_CODE_LENGTH
+                ) { "Payment card security code is invalid" }
+                require(entry.securityCode.all { it in '0'..'9' }) {
+                    "Payment card security code is invalid"
+                }
+                require(entry.cardBrand != PaymentCardBrand.UNRECOGNIZED) {
+                    "Payment card brand is unsupported"
+                }
+            }
+            VaultItemType.NOTE -> Unit
+            VaultItemType.UNRECOGNIZED -> error("Unsupported vault item type")
         }
     }
 

@@ -3,6 +3,7 @@ package com.turisla.hellopocket.ui.feature.search
 import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.VaultItemType
 import kotlinx.coroutines.CancellationException
 import org.junit.Assert.assertEquals
@@ -109,6 +110,35 @@ class VaultSearchEngineTest {
         )
 
         assertTrue(VaultSearchEngine.search(listOf(entry), "unique-secret-value").isEmpty())
+    }
+
+    @Test
+    fun searchesPaymentCardMetadataButNeverCardNumberOrSecurityCode() {
+        val card = passwordEntry(
+            id = "travel-card",
+            title = "Travel card",
+            type = VaultItemType.PAYMENT_CARD,
+            cardholderName = "Alex Example",
+            cardNumber = "4111111111111111",
+            cardBrand = PaymentCardBrand.AMERICAN_EXPRESS,
+            securityCode = "9876",
+            notes = "No foreign transaction fee",
+        )
+
+        assertEquals(
+            SearchMatchField.CARDHOLDER,
+            VaultSearchEngine.search(listOf(card), "Alex Example").single().matchedField,
+        )
+        assertEquals(
+            SearchMatchField.CARD_BRAND,
+            VaultSearchEngine.search(listOf(card), "American Express").single().matchedField,
+        )
+        assertEquals(
+            SearchMatchField.NOTES,
+            VaultSearchEngine.search(listOf(card), "foreign transaction").single().matchedField,
+        )
+        assertTrue(VaultSearchEngine.search(listOf(card), "4111111111111111").isEmpty())
+        assertTrue(VaultSearchEngine.search(listOf(card), "9876").isEmpty())
     }
 
     @Test
@@ -266,6 +296,10 @@ class VaultSearchEngineTest {
         content: String = "",
         updatedAt: Long = 0,
         customFields: List<CustomField> = emptyList(),
+        cardholderName: String = "",
+        cardNumber: String = "",
+        cardBrand: PaymentCardBrand = PaymentCardBrand.PAYMENT_CARD_BRAND_UNSPECIFIED,
+        securityCode: String = "",
     ): PasswordEntry = PasswordEntry.newBuilder()
         .setId(id)
         .setTitle(title)
@@ -275,6 +309,10 @@ class VaultSearchEngineTest {
         .setType(type)
         .setContent(content)
         .setUpdatedAt(updatedAt)
+        .setCardholderName(cardholderName)
+        .setCardNumber(cardNumber)
+        .setCardBrand(cardBrand)
+        .setSecurityCode(securityCode)
         .addAllCustomFields(customFields)
         .build()
 

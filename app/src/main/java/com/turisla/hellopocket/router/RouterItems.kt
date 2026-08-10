@@ -45,6 +45,9 @@ data object RouteOpenSourceLicenses
 data object RouteAddSecureNote  // 添加安全笔记路由
 
 @Serializable
+data object RouteAddPaymentCard // 添加支付卡路由
+
+@Serializable
 data object RouteTotpScanner    // TOTP 二维码扫描页面
 
 @Serializable

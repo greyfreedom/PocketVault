@@ -40,13 +40,13 @@
     <string name="detail">विवरण</string>
     <string name="add_new_password">नया पासवर्ड जोड़ें</string>
     <string name="add_item">जोड़ें</string>
-    <string name="no_passwords_found">कोई पासवर्ड रिकॉर्ड नहीं मिला</string>
+    <string name="no_passwords_found">वॉल्ट में कोई आइटम नहीं मिला</string>
     <string name="search_vault">वॉल्ट में खोजें</string>
-    <string name="search_hint">शीर्षक, खाता या नोट्स</string>
-    <string name="search_empty_message">शीर्षक, खाते या नोट्स से पासवर्ड और सुरक्षित नोट खोजें।</string>
-    <string name="vault_empty_message">"वॉल्ट खाली है,\nनया पासवर्ड जोड़ने के लिए नीचे दाईं ओर \'+\' बटन टैप करें!"</string>
+    <string name="search_hint">शीर्षक, खाता, कार्डधारक या नोट्स</string>
+    <string name="search_empty_message">संवेदनशील मानों को खोजे बिना पासवर्ड, सुरक्षित नोट और भुगतान कार्ड खोजें।</string>
+    <string name="vault_empty_message">वॉल्ट खाली है।\nकोई आइटम जोड़ने के लिए \'+\' टैप करें।</string>
     <string name="no_search_results">कोई मेल खाते परिणाम नहीं मिले</string>
-    <string name="search_no_results_hint">कोई दूसरा शीर्षक, खाता या नोट का कीवर्ड आज़माएँ।</string>
+    <string name="search_no_results_hint">कोई दूसरा शीर्षक, खाता, कार्डधारक, ब्रांड या नोट कीवर्ड आज़माएँ।</string>
     <string name="clear_search">खोज साफ़ करें</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d परिणाम</item>
@@ -65,6 +65,35 @@
     <string name="notes_optional">नोट्स (वैकल्पिक)</string>
     <string name="title_and_password_required">शीर्षक और पासवर्ड आवश्यक हैं</string>
     <string name="password_hidden">••••••••</string>
+
+    <!-- भुगतान कार्ड -->
+    <string name="add_payment_card">भुगतान कार्ड जोड़ें</string>
+    <string name="card_information">कार्ड की जानकारी</string>
+    <string name="cardholder_name">कार्डधारक का नाम</string>
+    <string name="cardholder_name_optional">कार्डधारक का नाम (वैकल्पिक)</string>
+    <string name="card_number">कार्ड नंबर</string>
+    <string name="card_number_required">कार्ड नंबर (आवश्यक)</string>
+    <string name="card_brand">ब्रांड</string>
+    <string name="expiration_month">समाप्ति माह</string>
+    <string name="expiration_year">समाप्ति वर्ष</string>
+    <string name="expiration_date">समाप्ति तिथि</string>
+    <string name="security_code">सुरक्षा कोड</string>
+    <string name="security_code_optional">सुरक्षा कोड (वैकल्पिक)</string>
+    <string name="not_set">सेट नहीं</string>
+    <string name="invalid_card_number">8–19 अंकों वाला कार्ड नंबर दर्ज करें।</string>
+    <string name="expiration_date_incomplete">समाप्ति माह और वर्ष दोनों चुनें।</string>
+    <string name="invalid_security_code">सुरक्षा कोड में 3 या 4 अंक होने चाहिए।</string>
+    <string name="show_sensitive_value">संवेदनशील मान दिखाएँ</string>
+    <string name="hide_sensitive_value">संवेदनशील मान छिपाएँ</string>
+    <string name="card_brand_not_set">सेट नहीं</string>
+    <string name="card_brand_visa">Visa</string>
+    <string name="card_brand_mastercard">Mastercard</string>
+    <string name="card_brand_american_express">American Express</string>
+    <string name="card_brand_discover">Discover</string>
+    <string name="card_brand_jcb">JCB</string>
+    <string name="card_brand_unionpay">UnionPay</string>
+    <string name="card_brand_diners_club">Diners Club</string>
+    <string name="card_brand_other">अन्य</string>
     
     <!-- Action Buttons -->
     <string name="save">सहेजें</string>
@@ -284,6 +313,7 @@
     <string name="all_types">सभी प्रकार</string>
     <string name="type_password">पासवर्ड</string>
     <string name="type_note">सुरक्षित नोट</string>
+    <string name="type_payment_card">भुगतान कार्ड</string>
     <string name="select_type">प्रकार चुनें</string>
 
     <!-- Q&A Page -->

@@ -4,12 +4,17 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.ui.feature.common.CustomFieldDraft
 import com.turisla.hellopocket.ui.feature.common.moveCustomField
 import com.turisla.hellopocket.ui.feature.common.newCustomFieldDraft
+import com.turisla.hellopocket.ui.feature.common.normalizeCardholderNameInput
 import com.turisla.hellopocket.ui.feature.common.normalizeCustomFieldNameInput
 import com.turisla.hellopocket.ui.feature.common.normalizeCustomFieldValueInput
+import com.turisla.hellopocket.ui.feature.common.normalizePaymentCardNumberInput
+import com.turisla.hellopocket.ui.feature.common.normalizeSecurityCodeInput
+import com.turisla.hellopocket.ui.feature.common.paymentCardNumberDigits
 import com.turisla.hellopocket.ui.feature.common.restoreCustomField
 import com.turisla.hellopocket.ui.feature.common.toDraft
 import com.turisla.hellopocket.ui.feature.common.toProtoCustomFields
@@ -30,6 +35,12 @@ data class DetailEditDraftState(
     val title: String = "",
     val username: String = "",
     val password: String = "",
+    val cardholderName: String = "",
+    val cardNumber: String = "",
+    val cardBrand: PaymentCardBrand = PaymentCardBrand.PAYMENT_CARD_BRAND_UNSPECIFIED,
+    val expirationMonth: Int = 0,
+    val expirationYear: Int = 0,
+    val securityCode: String = "",
     val notes: TextFieldValue = TextFieldValue(""),
     val customFields: List<CustomFieldDraft> = emptyList(),
     val selectedCategoryIds: Set<String> = emptySet(),
@@ -50,6 +61,12 @@ class DetailEditDraftViewModel : ViewModel() {
             title = entry.title,
             username = entry.username,
             password = entry.password,
+            cardholderName = entry.cardholderName,
+            cardNumber = normalizePaymentCardNumberInput(entry.cardNumber),
+            cardBrand = entry.cardBrand,
+            expirationMonth = entry.expirationMonth,
+            expirationYear = entry.expirationYear,
+            securityCode = entry.securityCode,
             notes = TextFieldValue(notesText),
             customFields = entry.customFieldsList.map { it.toDraft() },
             selectedCategoryIds = entry.categoryIdsList.toSet(),
@@ -63,6 +80,45 @@ class DetailEditDraftViewModel : ViewModel() {
 
     fun updatePassword(value: String) = _draft.update { state ->
         if (state.isEditing) state.copy(password = value) else state
+    }
+
+    fun updateCardholderName(value: String) = _draft.update { state ->
+        if (state.isEditing) {
+            state.copy(cardholderName = normalizeCardholderNameInput(value))
+        } else {
+            state
+        }
+    }
+
+    fun updateCardNumber(value: String) = _draft.update { state ->
+        if (state.isEditing) {
+            state.copy(cardNumber = normalizePaymentCardNumberInput(value))
+        } else {
+            state
+        }
+    }
+
+    fun updateCardBrand(value: PaymentCardBrand) = _draft.update { state ->
+        require(value != PaymentCardBrand.UNRECOGNIZED)
+        if (state.isEditing) state.copy(cardBrand = value) else state
+    }
+
+    fun updateExpirationMonth(value: Int) = _draft.update { state ->
+        require(value == 0 || value in 1..12)
+        if (state.isEditing) state.copy(expirationMonth = value) else state
+    }
+
+    fun updateExpirationYear(value: Int) = _draft.update { state ->
+        require(value == 0 || value in AppConstants.MIN_EXPIRATION_YEAR..AppConstants.MAX_EXPIRATION_YEAR)
+        if (state.isEditing) state.copy(expirationYear = value) else state
+    }
+
+    fun updateSecurityCode(value: String) = _draft.update { state ->
+        if (state.isEditing) {
+            state.copy(securityCode = normalizeSecurityCodeInput(value))
+        } else {
+            state
+        }
     }
 
     fun updateNotes(value: TextFieldValue) = _draft.update { it.copy(notes = value) }
@@ -153,10 +209,20 @@ class DetailEditDraftViewModel : ViewModel() {
             .clearCustomFields()
             .addAllCustomFields(state.customFields.toProtoCustomFields())
 
-        return if (entry.type == VaultItemType.NOTE) {
-            builder.setContent(state.notes.text).build()
-        } else {
-            builder
+        return when (entry.type) {
+            VaultItemType.NOTE -> builder.setContent(state.notes.text).build()
+            VaultItemType.PAYMENT_CARD -> builder
+                .setCardholderName(state.cardholderName)
+                .setCardNumber(paymentCardNumberDigits(state.cardNumber))
+                .setCardBrand(state.cardBrand)
+                .setExpirationMonth(state.expirationMonth)
+                .setExpirationYear(state.expirationYear)
+                .setSecurityCode(state.securityCode)
+                .setNotes(state.notes.text)
+                .build()
+            VaultItemType.PASSWORD,
+            VaultItemType.UNRECOGNIZED,
+            -> builder
                 .setUsername(state.username)
                 .setPassword(state.password)
                 .setNotes(state.notes.text)

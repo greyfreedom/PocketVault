@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,7 +66,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -79,6 +82,7 @@ import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.ui.feature.common.AttachmentSection
 import com.turisla.hellopocket.ui.feature.common.CategoryCreationContent
 import com.turisla.hellopocket.ui.feature.common.CustomFieldEditSection
+import com.turisla.hellopocket.ui.feature.common.EntryCategorySelectionSection
 import com.turisla.hellopocket.ui.feature.common.SelectCategoryContent
 import com.turisla.hellopocket.ui.feature.common.getCategoryDisplayName
 import com.turisla.hellopocket.ui.feature.common.toProtoCustomFields
@@ -111,6 +115,7 @@ fun AddSecureNoteScreen(
     val isAttachmentLoading by viewModel.isAttachmentLoading.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val currentOnLoading by rememberUpdatedState(onLoading)
     val isBusy = isSaving || isAttachmentLoading
     val scrollState = rememberScrollState()
@@ -166,6 +171,9 @@ fun AddSecureNoteScreen(
                 .imePadding()
                 .padding(horizontal = 16.dp)
                 .verticalScroll(scrollState)
+                .pointerInput(focusManager) {
+                    detectTapGestures(onTap = { focusManager.clearFocus() })
+                }
         ) {
             // 标题区域
             SectionHeader(title = stringResource(R.string.title))
@@ -213,16 +221,12 @@ fun AddSecureNoteScreen(
             // 分类选择区域
             SectionHeader(title = stringResource(R.string.category))
             CardContainer {
-                CategorySelectionSection(
-                    categories = categories, 
-                    selectedCategoryIds = selectedCategoryIds, 
-                    onCategoryAdd = { categoryId ->
-                        draftViewModel.addCategory(categoryId)
-                    }, 
-                    onCategoryRemove = { categoryId ->
-                        draftViewModel.removeCategory(categoryId)
-                    }, 
-                    viewModel = viewModel
+                EntryCategorySelectionSection(
+                    categories = categories,
+                    selectedCategoryIds = selectedCategoryIds,
+                    onCategoryAdd = draftViewModel::addCategory,
+                    onCategoryRemove = draftViewModel::removeCategory,
+                    onCreateCategory = viewModel::addCategory,
                 )
             }
 

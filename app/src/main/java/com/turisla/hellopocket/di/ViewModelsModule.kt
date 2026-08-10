@@ -2,6 +2,7 @@ package com.turisla.hellopocket.di
 
 import com.turisla.hellopocket.MainViewModel
 import com.turisla.hellopocket.ui.feature.addPassword.AddPasswordDraftViewModel
+import com.turisla.hellopocket.ui.feature.addPaymentCard.AddPaymentCardDraftViewModel
 import com.turisla.hellopocket.ui.feature.addSecureNote.AddSecureNoteDraftViewModel
 import com.turisla.hellopocket.ui.feature.category.CategoryManagementViewModel
 import com.turisla.hellopocket.ui.feature.detail.DetailEditDraftViewModel
@@ -24,6 +25,7 @@ val viewModelsModule = module {
     viewModelOf(::HomePageViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::AddPasswordDraftViewModel)
+    viewModelOf(::AddPaymentCardDraftViewModel)
     viewModelOf(::AddSecureNoteDraftViewModel)
     viewModel { SettingsPageViewModel(get(), get(), get(), get()) }
     viewModelOf(::ChangePasswordViewModel)
