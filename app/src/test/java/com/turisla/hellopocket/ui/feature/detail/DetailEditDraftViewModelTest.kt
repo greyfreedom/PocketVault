@@ -4,6 +4,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.VaultItemType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -62,6 +63,42 @@ class DetailEditDraftViewModelTest {
 
         assertFalse(viewModel.draft.value.isEditing)
         assertTrue(viewModel.draft.value.password.isEmpty())
+    }
+
+    @Test
+    fun paymentCardFieldsSurviveDetailEditingAndAreNormalized() {
+        val originalEntry = PasswordEntry.newBuilder()
+            .setId("card-1")
+            .setTitle("Travel card")
+            .setType(VaultItemType.PAYMENT_CARD)
+            .setCardholderName("Alex Example")
+            .setCardNumber("4111111111111111")
+            .setCardBrand(PaymentCardBrand.VISA)
+            .setExpirationMonth(12)
+            .setExpirationYear(2032)
+            .setSecurityCode("123")
+            .setNotes("Original notes")
+            .build()
+        val viewModel = DetailEditDraftViewModel()
+
+        viewModel.beginEditing(originalEntry)
+        assertEquals("4111111111111111", viewModel.draft.value.cardNumber)
+        viewModel.updateCardholderName("Taylor Example")
+        viewModel.updateCardNumber("5555-5555-5555-4444")
+        viewModel.updateCardBrand(PaymentCardBrand.MASTERCARD)
+        viewModel.updateExpirationMonth(8)
+        viewModel.updateExpirationYear(2035)
+        viewModel.updateSecurityCode("9a876")
+        viewModel.updateNotes(TextFieldValue("Updated notes"))
+
+        val updatedEntry = viewModel.buildUpdatedEntry(originalEntry)
+        assertEquals("Taylor Example", updatedEntry.cardholderName)
+        assertEquals("5555555555554444", updatedEntry.cardNumber)
+        assertEquals(PaymentCardBrand.MASTERCARD, updatedEntry.cardBrand)
+        assertEquals(8, updatedEntry.expirationMonth)
+        assertEquals(2035, updatedEntry.expirationYear)
+        assertEquals("9876", updatedEntry.securityCode)
+        assertEquals("Updated notes", updatedEntry.notes)
     }
 
     private fun createPasswordEntry(): PasswordEntry = PasswordEntry.newBuilder()

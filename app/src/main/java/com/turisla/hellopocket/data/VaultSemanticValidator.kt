@@ -4,7 +4,9 @@ import com.turisla.hellopocket.model.AttachmentManifestEntry
 import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.model.CustomFieldType
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.TotpEntry
+import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.utils.AppConstants
 
 /**
@@ -55,6 +57,47 @@ internal object VaultSemanticValidator {
         }
 
         passwords.forEach { entry ->
+            require(
+                entry.type == VaultItemType.PASSWORD ||
+                    entry.type == VaultItemType.NOTE ||
+                    entry.type == VaultItemType.PAYMENT_CARD
+            ) { "Vault contains an unsupported entry type" }
+
+            if (entry.type == VaultItemType.PAYMENT_CARD) {
+                require(entry.title.isNotBlank()) {
+                    "Vault contains a payment card with an empty title"
+                }
+                require(
+                    entry.cardNumber.length in
+                        AppConstants.MIN_PAYMENT_CARD_NUMBER_LENGTH..AppConstants.MAX_PAYMENT_CARD_NUMBER_LENGTH &&
+                        entry.cardNumber.all { it in '0'..'9' }
+                ) { "Vault contains an invalid payment card number" }
+                require(entry.cardholderName.length <= AppConstants.MAX_CARDHOLDER_NAME_LENGTH) {
+                    "Vault contains an oversized cardholder name"
+                }
+                require(entry.cardBrand != PaymentCardBrand.UNRECOGNIZED) {
+                    "Vault contains an unsupported payment card brand"
+                }
+                require(entry.expirationMonth == 0 || entry.expirationMonth in 1..12) {
+                    "Vault contains an invalid payment card expiration month"
+                }
+                require(
+                    entry.expirationYear == 0 || entry.expirationYear in
+                        AppConstants.MIN_EXPIRATION_YEAR..AppConstants.MAX_EXPIRATION_YEAR
+                ) { "Vault contains an invalid payment card expiration year" }
+                require((entry.expirationMonth == 0) == (entry.expirationYear == 0)) {
+                    "Vault contains an incomplete payment card expiration date"
+                }
+                require(
+                    entry.securityCode.isEmpty() ||
+                        entry.securityCode.length in
+                            AppConstants.MIN_SECURITY_CODE_LENGTH..AppConstants.MAX_SECURITY_CODE_LENGTH
+                ) { "Vault contains an invalid payment card security code" }
+                require(entry.securityCode.all { it in '0'..'9' }) {
+                    "Vault contains an invalid payment card security code"
+                }
+            }
+
             val customFields = entry.customFieldsList
             require(customFields.size <= AppConstants.MAX_CUSTOM_FIELDS_PER_ENTRY) {
                 "Vault entry contains too many custom fields"

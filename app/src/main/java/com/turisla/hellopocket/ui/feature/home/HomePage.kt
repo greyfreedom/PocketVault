@@ -24,9 +24,11 @@ import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.NoteAlt
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Key
@@ -68,6 +70,7 @@ import com.turisla.hellopocket.ui.feature.common.AppEmptyState
 import com.turisla.hellopocket.ui.feature.common.AppIconTile
 import com.turisla.hellopocket.ui.feature.common.ConfirmDeleteDialog
 import com.turisla.hellopocket.ui.feature.common.getCategoryDisplayName
+import com.turisla.hellopocket.ui.feature.common.labelResId
 import com.turisla.hellopocket.ui.theme.AppSpacing
 import com.turisla.hellopocket.utils.AppConstants
 
@@ -193,15 +196,18 @@ private fun VaultTypeFilterChip(
 ) {
     var showDropdown by remember { mutableStateOf(false) }
     val isFiltered = selectedItemType == VaultItemType.PASSWORD ||
-        selectedItemType == VaultItemType.NOTE
+        selectedItemType == VaultItemType.NOTE ||
+        selectedItemType == VaultItemType.PAYMENT_CARD
     val labelResId = when (selectedItemType) {
         VaultItemType.PASSWORD -> R.string.type_password
         VaultItemType.NOTE -> R.string.type_note
+        VaultItemType.PAYMENT_CARD -> R.string.type_payment_card
         VaultItemType.UNRECOGNIZED, null -> R.string.all_types
     }
     val leadingIcon = when (selectedItemType) {
         VaultItemType.PASSWORD -> Icons.Outlined.Password
         VaultItemType.NOTE -> Icons.AutoMirrored.Filled.Note
+        VaultItemType.PAYMENT_CARD -> Icons.Outlined.CreditCard
         VaultItemType.UNRECOGNIZED, null -> Icons.Filled.Apps
     }
 
@@ -295,6 +301,25 @@ private fun VaultTypeFilterChip(
                 },
                 onClick = {
                     onItemTypeSelected(VaultItemType.NOTE)
+                    showDropdown = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.type_payment_card)) },
+                leadingIcon = {
+                    Icon(Icons.Outlined.CreditCard, contentDescription = null)
+                },
+                trailingIcon = {
+                    if (selectedItemType == VaultItemType.PAYMENT_CARD) {
+                        Icon(
+                            imageVector = Icons.Outlined.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                },
+                onClick = {
+                    onItemTypeSelected(VaultItemType.PAYMENT_CARD)
                     showDropdown = false
                 },
             )
@@ -472,15 +497,21 @@ fun PasswordListItem(
     modifier: Modifier = Modifier,
 ) {
     var showActions by remember { mutableStateOf(false) }
-    val subtitle = if (entry.type == VaultItemType.NOTE) {
-        entry.content.replace(Regex("\\s+"), " ").trim()
-    } else {
-        entry.username.trim()
+    val subtitle = when (entry.type) {
+        VaultItemType.NOTE -> entry.content.replace(Regex("\\s+"), " ").trim()
+        VaultItemType.PAYMENT_CARD -> entry.cardholderName.trim().ifBlank {
+            stringResource(entry.cardBrand.labelResId())
+        }
+        VaultItemType.PASSWORD,
+        VaultItemType.UNRECOGNIZED,
+        -> entry.username.trim()
     }
-    val iconColor = if (entry.type == VaultItemType.NOTE) {
-        MaterialTheme.colorScheme.tertiary
-    } else {
-        MaterialTheme.colorScheme.primary
+    val iconColor = when (entry.type) {
+        VaultItemType.NOTE -> MaterialTheme.colorScheme.tertiary
+        VaultItemType.PAYMENT_CARD -> MaterialTheme.colorScheme.secondary
+        VaultItemType.PASSWORD,
+        VaultItemType.UNRECOGNIZED,
+        -> MaterialTheme.colorScheme.primary
     }
 
     Surface(
@@ -499,10 +530,12 @@ fun PasswordListItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AppIconTile(
-                imageVector = if (entry.type == VaultItemType.NOTE) {
-                    Icons.Filled.NoteAlt
-                } else {
-                    Icons.Outlined.Key
+                imageVector = when (entry.type) {
+                    VaultItemType.NOTE -> Icons.Filled.NoteAlt
+                    VaultItemType.PAYMENT_CARD -> Icons.Filled.CreditCard
+                    VaultItemType.PASSWORD,
+                    VaultItemType.UNRECOGNIZED,
+                    -> Icons.Outlined.Key
                 },
                 contentDescription = null,
                 containerColor = Color.Transparent,

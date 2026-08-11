@@ -3,14 +3,13 @@ package com.turisla.hellopocket.ui.feature.detail
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +31,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -52,12 +53,17 @@ import com.turisla.hellopocket.R
 import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.model.AttachmentManifestEntry
 import com.turisla.hellopocket.model.PasswordEntry
+import com.turisla.hellopocket.model.PaymentCardBrand
 import com.turisla.hellopocket.model.VaultItemType
 import com.turisla.hellopocket.ui.feature.common.CategoryCreationContent
 import com.turisla.hellopocket.ui.feature.common.ConfirmDeleteDialog
 import com.turisla.hellopocket.ui.feature.common.CustomFieldDraft
 import com.turisla.hellopocket.ui.feature.common.CustomFieldEditSection
 import com.turisla.hellopocket.ui.feature.common.CustomFieldViewSection
+import com.turisla.hellopocket.ui.feature.common.EntryFormSelectionField
+import com.turisla.hellopocket.ui.feature.common.EntryFormTextArea
+import com.turisla.hellopocket.ui.feature.common.EntryCategorySelectionSection
+import com.turisla.hellopocket.ui.feature.common.PaymentCardNumberVisualTransformation
 import com.turisla.hellopocket.ui.feature.common.ResetSensitiveStateOnBackground
 import com.turisla.hellopocket.ui.feature.common.SelectCategoryContent
 import androidx.compose.runtime.rememberCoroutineScope
@@ -68,6 +74,13 @@ import org.koin.androidx.compose.koinViewModel
 import androidx.core.graphics.toColorInt
 import com.turisla.hellopocket.ui.feature.common.getCategoryDisplayName
 import com.turisla.hellopocket.ui.feature.common.AttachmentSection
+import com.turisla.hellopocket.ui.feature.common.formatExpirationDate
+import com.turisla.hellopocket.ui.feature.common.formatPaymentCardNumber
+import com.turisla.hellopocket.ui.feature.common.labelResId
+import com.turisla.hellopocket.ui.feature.common.paymentCardNumberDigits
+import com.turisla.hellopocket.ui.feature.common.selectablePaymentCardBrands
+import com.turisla.hellopocket.utils.AppConstants
+import java.util.Calendar
 
 /**
  * Create colored password text with different colors for different character types
@@ -116,6 +129,7 @@ fun DetailScreen(
     val event by viewModel.event.collectAsStateWithLifecycle()
     val isInEditMode = editDraft.isEditing
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel, context) {
@@ -136,11 +150,76 @@ fun DetailScreen(
     val scrollState = rememberScrollState()
     val customFieldSnackbarHostState = remember { SnackbarHostState() }
 
+    val cancelEdit: () -> Unit = {
+        focusManager.clearFocus()
+        customFieldValidationAttempted = false
+        editDraftViewModel.clear()
+    }
+    val saveEdit: () -> Unit = {
+        focusManager.clearFocus()
+        entry?.let { currentEntry ->
+            val validationMessage = when {
+                editDraft.title.isBlank() -> context.getString(R.string.title_cannot_be_empty)
+                currentEntry.type == VaultItemType.PASSWORD && editDraft.password.isBlank() -> {
+                    context.getString(R.string.title_and_password_required)
+                }
+                currentEntry.type == VaultItemType.PAYMENT_CARD &&
+                    paymentCardNumberDigits(editDraft.cardNumber).length !in
+                        AppConstants.MIN_PAYMENT_CARD_NUMBER_LENGTH..
+                            AppConstants.MAX_PAYMENT_CARD_NUMBER_LENGTH -> {
+                    context.getString(R.string.invalid_card_number)
+                }
+                currentEntry.type == VaultItemType.PAYMENT_CARD &&
+                    (editDraft.expirationMonth == 0) != (editDraft.expirationYear == 0) -> {
+                    context.getString(R.string.expiration_date_incomplete)
+                }
+                currentEntry.type == VaultItemType.PAYMENT_CARD &&
+                    editDraft.securityCode.isNotEmpty() &&
+                    editDraft.securityCode.length !in
+                        AppConstants.MIN_SECURITY_CODE_LENGTH..
+                            AppConstants.MAX_SECURITY_CODE_LENGTH -> {
+                    context.getString(R.string.invalid_security_code)
+                }
+                editDraft.customFields.any { field -> field.name.isBlank() } -> {
+                    customFieldValidationAttempted = true
+                    context.getString(R.string.custom_field_name_required)
+                }
+                else -> null
+            }
+            if (validationMessage != null) {
+                android.widget.Toast.makeText(
+                    context,
+                    validationMessage,
+                    android.widget.Toast.LENGTH_SHORT,
+                ).show()
+            } else {
+                val updatedEntry = editDraftViewModel.buildUpdatedEntry(currentEntry)
+                scope.launch {
+                    isSaving = true
+                    try {
+                        viewModel.updatePassword(updatedEntry)
+                        customFieldValidationAttempted = false
+                        editDraftViewModel.clear()
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (_: Exception) {
+                        android.widget.Toast.makeText(
+                            context,
+                            context.getString(R.string.save_failed),
+                            android.widget.Toast.LENGTH_SHORT,
+                        ).show()
+                    } finally {
+                        isSaving = false
+                    }
+                }
+            }
+        }
+    }
+
     // 编辑时返回会放弃草稿；持久化期间则阻止退出，避免取消页面作用域中的事务。
     BackHandler(enabled = isInEditMode || isBusy) {
         if (!isBusy) {
-            customFieldValidationAttempted = false
-            editDraftViewModel.clear()
+            cancelEdit()
         }
     }
 
@@ -187,13 +266,13 @@ fun DetailScreen(
                 navigationIcon = {
                     if (isInEditMode) {
                         IconButton(
-                            onClick = {
-                                customFieldValidationAttempted = false
-                                editDraftViewModel.clear()
-                            },
+                            onClick = cancelEdit,
                             enabled = !isBusy,
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                            )
                         }
                     } else {
                         IconButton(onClick = onBack, enabled = !isBusy) {
@@ -202,53 +281,7 @@ fun DetailScreen(
                     }
                 },
                 actions = {
-                    if (isInEditMode) {
-                        IconButton(onClick = {
-                            entry?.let {
-                                val validationMessage = when {
-                                    editDraft.title.isBlank() -> context.getString(R.string.title_cannot_be_empty)
-                                    it.type == VaultItemType.PASSWORD && editDraft.password.isBlank() -> {
-                                        context.getString(R.string.title_and_password_required)
-                                    }
-                                    editDraft.customFields.any { field -> field.name.isBlank() } -> {
-                                        customFieldValidationAttempted = true
-                                        context.getString(R.string.custom_field_name_required)
-                                    }
-                                    else -> null
-                                }
-                                if (validationMessage != null) {
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        validationMessage,
-                                        android.widget.Toast.LENGTH_SHORT
-                                    ).show()
-                                    return@let
-                                }
-                                val updatedEntry = editDraftViewModel.buildUpdatedEntry(it)
-                                
-                                scope.launch {
-                                    isSaving = true
-                                    try {
-                                        viewModel.updatePassword(updatedEntry)
-                                        customFieldValidationAttempted = false
-                                        editDraftViewModel.clear()
-                                    } catch (error: CancellationException) {
-                                        throw error
-                                    } catch (e: Exception) {
-                                        android.widget.Toast.makeText(
-                                            context,
-                                            context.getString(R.string.save_failed),
-                                            android.widget.Toast.LENGTH_SHORT
-                                        ).show()
-                                    } finally {
-                                        isSaving = false
-                                    }
-                                }
-                            }
-                        }, enabled = !isBusy) {
-                            Icon(Icons.Default.Check, contentDescription = stringResource(R.string.save))
-                        }
-                    } else {
+                    if (!isInEditMode) {
                         FilledTonalIconButton(
                             onClick = {
                                 customFieldValidationAttempted = false
@@ -312,6 +345,11 @@ fun DetailScreen(
                     .imePadding()
                     .padding(horizontal = 16.dp)
                     .verticalScroll(scrollState)
+                    .pointerInput(isInEditMode, focusManager) {
+                        if (isInEditMode) {
+                            detectTapGestures(onTap = { focusManager.clearFocus() })
+                        }
+                    }
             ) {
                 if (isInEditMode) {
                     EditModeContent(
@@ -322,6 +360,18 @@ fun DetailScreen(
                         onUsernameChange = editDraftViewModel::updateUsername,
                         password = editDraft.password,
                         onPasswordChange = editDraftViewModel::updatePassword,
+                        cardholderName = editDraft.cardholderName,
+                        onCardholderNameChange = editDraftViewModel::updateCardholderName,
+                        cardNumber = editDraft.cardNumber,
+                        onCardNumberChange = editDraftViewModel::updateCardNumber,
+                        cardBrand = editDraft.cardBrand,
+                        onCardBrandChange = editDraftViewModel::updateCardBrand,
+                        expirationMonth = editDraft.expirationMonth,
+                        onExpirationMonthChange = editDraftViewModel::updateExpirationMonth,
+                        expirationYear = editDraft.expirationYear,
+                        onExpirationYearChange = editDraftViewModel::updateExpirationYear,
+                        securityCode = editDraft.securityCode,
+                        onSecurityCodeChange = editDraftViewModel::updateSecurityCode,
                         notes = editDraft.notes,
                         onNotesChange = editDraftViewModel::updateNotes,
                         customFields = editDraft.customFields,
@@ -350,7 +400,10 @@ fun DetailScreen(
                         attachments = attachments,
                         onAddAttachment = viewModel::addAttachment,
                         onLoadAttachmentThumbnail = viewModel::loadAttachmentThumbnail,
-                        onCreateCategory = viewModel::addCategory
+                        onCreateCategory = viewModel::addCategory,
+                        isBusy = isBusy,
+                        onCancel = cancelEdit,
+                        onSave = saveEdit,
                     )
                 } else {
                     ViewModeContent(
@@ -359,10 +412,11 @@ fun DetailScreen(
                         attachments = attachments,
                         onCopyUsername = viewModel::onCopyUsername,
                         onCopyPassword = viewModel::onCopyPassword,
+                        onCopyCardNumber = viewModel::onCopyCardNumber,
+                        onCopySecurityCode = viewModel::onCopySecurityCode,
                         onCopyCustomField = viewModel::onCopyCustomField,
                         onGetAttachmentFile = viewModel::getAttachmentFile,
                         onLoadAttachmentThumbnail = viewModel::loadAttachmentThumbnail,
-                        isNote = passwordEntry.type == VaultItemType.NOTE  // 传递是否为笔记的标志
                     )
                 }
             }
@@ -372,7 +426,34 @@ fun DetailScreen(
 
 @Composable
 private fun EntryIdentityHeader(entry: PasswordEntry) {
-    val isNote = entry.type == VaultItemType.NOTE
+    val containerColor = when (entry.type) {
+        VaultItemType.NOTE -> MaterialTheme.colorScheme.tertiaryContainer
+        VaultItemType.PAYMENT_CARD -> MaterialTheme.colorScheme.secondaryContainer
+        VaultItemType.PASSWORD,
+        VaultItemType.UNRECOGNIZED,
+        -> MaterialTheme.colorScheme.primaryContainer
+    }
+    val contentColor = when (entry.type) {
+        VaultItemType.NOTE -> MaterialTheme.colorScheme.onTertiaryContainer
+        VaultItemType.PAYMENT_CARD -> MaterialTheme.colorScheme.onSecondaryContainer
+        VaultItemType.PASSWORD,
+        VaultItemType.UNRECOGNIZED,
+        -> MaterialTheme.colorScheme.onPrimaryContainer
+    }
+    val icon = when (entry.type) {
+        VaultItemType.NOTE -> Icons.Filled.NoteAlt
+        VaultItemType.PAYMENT_CARD -> Icons.Outlined.CreditCard
+        VaultItemType.PASSWORD,
+        VaultItemType.UNRECOGNIZED,
+        -> Icons.Outlined.Key
+    }
+    val typeLabel = when (entry.type) {
+        VaultItemType.NOTE -> R.string.type_note
+        VaultItemType.PAYMENT_CARD -> R.string.type_payment_card
+        VaultItemType.PASSWORD,
+        VaultItemType.UNRECOGNIZED,
+        -> R.string.type_password
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -383,22 +464,14 @@ private fun EntryIdentityHeader(entry: PasswordEntry) {
         Surface(
             modifier = Modifier.size(64.dp),
             shape = MaterialTheme.shapes.extraLarge,
-            color = if (isNote) {
-                MaterialTheme.colorScheme.tertiaryContainer
-            } else {
-                MaterialTheme.colorScheme.primaryContainer
-            },
+            color = containerColor,
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = if (isNote) Icons.Filled.NoteAlt else Icons.Outlined.Key,
+                    imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier.size(30.dp),
-                    tint = if (isNote) {
-                        MaterialTheme.colorScheme.onTertiaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    },
+                    tint = contentColor,
                 )
             }
         }
@@ -411,9 +484,7 @@ private fun EntryIdentityHeader(entry: PasswordEntry) {
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = stringResource(
-                if (isNote) R.string.type_note else R.string.type_password,
-            ),
+            text = stringResource(typeLabel),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -422,58 +493,101 @@ private fun EntryIdentityHeader(entry: PasswordEntry) {
 
 @Composable
 private fun ViewModeContent(
-    entry: PasswordEntry, 
+    entry: PasswordEntry,
     categories: List<Category>,
     attachments: List<AttachmentManifestEntry>,
     onCopyUsername: () -> Unit,
     onCopyPassword: () -> Unit,
+    onCopyCardNumber: () -> Unit,
+    onCopySecurityCode: () -> Unit,
     onCopyCustomField: (String) -> Unit,
     onGetAttachmentFile: suspend (String) -> java.io.File?,
     onLoadAttachmentThumbnail: suspend (String) -> Any?,
-    isNote: Boolean = false  // 新增：是否为笔记类型
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    ResetSensitiveStateOnBackground { passwordVisible = false }
+    var cardNumberVisible by remember { mutableStateOf(false) }
+    var securityCodeVisible by remember { mutableStateOf(false) }
+    ResetSensitiveStateOnBackground {
+        passwordVisible = false
+        cardNumberVisible = false
+        securityCodeVisible = false
+    }
 
     EntryIdentityHeader(entry = entry)
 
-    // 根据类型显示不同的内容区域
-    if (isNote) {
-        // 笔记类型：显示内容区域
-        if (entry.content.isNotBlank()) {
-            SectionHeader(title = stringResource(R.string.content))
-            CardContainer {
-                DetailNotesSection(notes = entry.content)  // 复用DetailNotesSection组件
+    when (entry.type) {
+        VaultItemType.NOTE -> {
+            if (entry.content.isNotBlank()) {
+                SectionHeader(title = stringResource(R.string.content))
+                CardContainer {
+                    DetailNotesSection(notes = entry.content)
+                }
             }
         }
-    } else {
-        // 密码类型：显示登录信息区域
-        SectionHeader(title = stringResource(R.string.login_info))
-        CardContainer {
-            // Username section
-            DetailItemSection(
-                title = stringResource(R.string.username),
-                value = entry.username,
-                trailingIcon = Icons.Outlined.PersonOutline,
-                onCopy = onCopyUsername
-            )
-
-            HorizontalDivider(
-                Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 0.5.dp
-            )
-
-            // Password section
-            DetailPasswordSection(
-                title = stringResource(R.string.password),
-                value = entry.password,
-                isVisible = passwordVisible,
-                onVisibilityToggle = { passwordVisible = !passwordVisible },
-                onCopy = onCopyPassword
-            )
+        VaultItemType.PAYMENT_CARD -> {
+            SectionHeader(title = stringResource(R.string.card_information))
+            CardContainer {
+                DetailItemSection(
+                    title = stringResource(R.string.cardholder_name),
+                    value = entry.cardholderName,
+                    trailingIcon = Icons.Outlined.PersonOutline,
+                )
+                DetailFieldDivider()
+                DetailPasswordSection(
+                    title = stringResource(R.string.card_number),
+                    value = formatPaymentCardNumber(entry.cardNumber),
+                    isVisible = cardNumberVisible,
+                    onVisibilityToggle = { cardNumberVisible = !cardNumberVisible },
+                    onCopy = onCopyCardNumber,
+                )
+                DetailFieldDivider()
+                DetailItemSection(
+                    title = stringResource(R.string.card_brand),
+                    value = stringResource(entry.cardBrand.labelResId()),
+                    trailingIcon = Icons.Outlined.CreditCard,
+                )
+                DetailFieldDivider()
+                DetailItemSection(
+                    title = stringResource(R.string.expiration_date),
+                    value = formatExpirationDate(
+                        entry.expirationMonth,
+                        entry.expirationYear,
+                    ).ifBlank { stringResource(R.string.not_set) },
+                    trailingIcon = Icons.Outlined.CalendarMonth,
+                )
+                if (entry.securityCode.isNotBlank()) {
+                    DetailFieldDivider()
+                    DetailPasswordSection(
+                        title = stringResource(R.string.security_code),
+                        value = entry.securityCode,
+                        isVisible = securityCodeVisible,
+                        onVisibilityToggle = { securityCodeVisible = !securityCodeVisible },
+                        onCopy = onCopySecurityCode,
+                    )
+                }
+            }
         }
-
+        VaultItemType.PASSWORD,
+        VaultItemType.UNRECOGNIZED,
+        -> {
+            SectionHeader(title = stringResource(R.string.login_info))
+            CardContainer {
+                DetailItemSection(
+                    title = stringResource(R.string.username),
+                    value = entry.username,
+                    trailingIcon = Icons.Outlined.PersonOutline,
+                    onCopy = onCopyUsername,
+                )
+                DetailFieldDivider()
+                DetailPasswordSection(
+                    title = stringResource(R.string.password),
+                    value = entry.password,
+                    isVisible = passwordVisible,
+                    onVisibilityToggle = { passwordVisible = !passwordVisible },
+                    onCopy = onCopyPassword,
+                )
+            }
+        }
     }
 
     CustomFieldViewSection(
@@ -481,8 +595,8 @@ private fun ViewModeContent(
         onCopy = onCopyCustomField,
     )
 
-    // Notes section (仅密码类型显示)，放在结构化自定义字段之后。
-    if (!isNote && entry.notes.isNotBlank()) {
+    // 密码与支付卡的备注放在结构化自定义字段之后。
+    if (entry.type != VaultItemType.NOTE && entry.notes.isNotBlank()) {
         SectionHeader(title = stringResource(R.string.notes))
         CardContainer {
             DetailNotesSection(notes = entry.notes)
@@ -559,6 +673,18 @@ private fun EditModeContent(
     onUsernameChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit,
+    cardholderName: String,
+    onCardholderNameChange: (String) -> Unit,
+    cardNumber: String,
+    onCardNumberChange: (String) -> Unit,
+    cardBrand: PaymentCardBrand,
+    onCardBrandChange: (PaymentCardBrand) -> Unit,
+    expirationMonth: Int,
+    onExpirationMonthChange: (Int) -> Unit,
+    expirationYear: Int,
+    onExpirationYearChange: (Int) -> Unit,
+    securityCode: String,
+    onSecurityCodeChange: (String) -> Unit,
     notes: TextFieldValue,
     onNotesChange: (TextFieldValue) -> Unit,
     customFields: List<CustomFieldDraft>,
@@ -584,11 +710,19 @@ private fun EditModeContent(
     attachments: List<AttachmentManifestEntry>,
     onAddAttachment: suspend (android.net.Uri) -> String,
     onLoadAttachmentThumbnail: suspend (String) -> Any?,
-    onCreateCategory: suspend (String, String) -> String
+    onCreateCategory: suspend (String, String) -> String,
+    isBusy: Boolean,
+    onCancel: () -> Unit,
+    onSave: () -> Unit,
 ) {
-    val isNote = entry.type == VaultItemType.NOTE  // 判断是否为笔记类型
     var passwordVisible by remember { mutableStateOf(false) }
-    ResetSensitiveStateOnBackground { passwordVisible = false }
+    var cardNumberVisible by remember { mutableStateOf(false) }
+    var securityCodeVisible by remember { mutableStateOf(false) }
+    ResetSensitiveStateOnBackground {
+        passwordVisible = false
+        cardNumberVisible = false
+        securityCodeVisible = false
+    }
 
     // Title section
     SectionHeader(title = stringResource(R.string.title))
@@ -600,45 +734,64 @@ private fun EditModeContent(
         )
     }
 
-    // 根据类型显示不同的编辑区域
-    if (isNote) {
-        // 笔记类型：显示内容编辑区域
-        SectionHeader(title = stringResource(R.string.content))
-        CardContainer {
-            EditNoteSection(
-                value = notes,  // 笔记类型使用notes字段存储content
-                onValueChange = onNotesChange
+    when (entry.type) {
+        VaultItemType.NOTE -> {
+            SectionHeader(title = stringResource(R.string.content))
+            CardContainer {
+                EntryFormTextArea(
+                    label = stringResource(R.string.content_optional),
+                    value = notes,
+                    onValueChange = onNotesChange,
+                    minHeight = 120.dp,
+                )
+            }
+        }
+        VaultItemType.PAYMENT_CARD -> {
+            EditPaymentCardInfo(
+                cardholderName = cardholderName,
+                onCardholderNameChange = onCardholderNameChange,
+                cardNumber = cardNumber,
+                onCardNumberChange = onCardNumberChange,
+                cardNumberVisible = cardNumberVisible,
+                onCardNumberVisibilityToggle = {
+                    cardNumberVisible = !cardNumberVisible
+                },
+                cardBrand = cardBrand,
+                onCardBrandChange = onCardBrandChange,
+                expirationMonth = expirationMonth,
+                onExpirationMonthChange = onExpirationMonthChange,
+                expirationYear = expirationYear,
+                onExpirationYearChange = onExpirationYearChange,
+                securityCode = securityCode,
+                onSecurityCodeChange = onSecurityCodeChange,
+                securityCodeVisible = securityCodeVisible,
+                onSecurityCodeVisibilityToggle = {
+                    securityCodeVisible = !securityCodeVisible
+                },
             )
         }
-    } else {
-        // 密码类型：显示登录信息编辑区域
-        SectionHeader(title = stringResource(R.string.login_info))
-        CardContainer {
-            // Username section
-            EditItemSection(
-                title = stringResource(R.string.username_optional),
-                value = username,
-                onValueChange = onUsernameChange,
-                trailingIcon = Icons.Outlined.PersonOutline
-            )
-
-            HorizontalDivider(
-                Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 0.5.dp
-            )
-
-            // Password section
-            EditPasswordSection(
-                title = stringResource(R.string.password_required),
-                value = password,
-                onValueChange = onPasswordChange,
-                isVisible = passwordVisible,
-                onVisibilityToggle = { passwordVisible = !passwordVisible },
-                onGenerateClick = onNavigateToGenerator
-            )
+        VaultItemType.PASSWORD,
+        VaultItemType.UNRECOGNIZED,
+        -> {
+            SectionHeader(title = stringResource(R.string.login_info))
+            CardContainer {
+                EditItemSection(
+                    title = stringResource(R.string.username_optional),
+                    value = username,
+                    onValueChange = onUsernameChange,
+                    trailingIcon = Icons.Outlined.PersonOutline,
+                )
+                DetailFieldDivider()
+                EditPasswordSection(
+                    title = stringResource(R.string.password_required),
+                    value = password,
+                    onValueChange = onPasswordChange,
+                    isVisible = passwordVisible,
+                    onVisibilityToggle = { passwordVisible = !passwordVisible },
+                    onGenerateClick = onNavigateToGenerator,
+                )
+            }
         }
-
     }
 
     CustomFieldEditSection(
@@ -656,13 +809,14 @@ private fun EditModeContent(
         onCopy = onCopyCustomFieldValue,
     )
 
-    // Notes section (仅密码类型显示)
-    if (!isNote) {
+    // 密码和支付卡均支持备注。
+    if (entry.type != VaultItemType.NOTE) {
         SectionHeader(title = stringResource(R.string.notes))
         CardContainer {
-            EditNoteSection(
+            EntryFormTextArea(
+                label = stringResource(R.string.notes_optional),
                 value = notes,
-                onValueChange = onNotesChange
+                onValueChange = onNotesChange,
             )
         }
     }
@@ -670,12 +824,12 @@ private fun EditModeContent(
     // 分类选择区域
     SectionHeader(title = stringResource(R.string.category))
     CardContainer {
-        EditCategorySection(
+        EntryCategorySelectionSection(
             categories = categories,
             selectedCategoryIds = selectedCategoryIds,
             onCategoryAdd = onCategoryAdd,
             onCategoryRemove = onCategoryRemove,
-            onCreateCategory = onCreateCategory
+            onCreateCategory = onCreateCategory,
         )
     }
 
@@ -707,8 +861,28 @@ private fun EditModeContent(
             loadThumbnail = onLoadAttachmentThumbnail
         )
     }
-    
-    Spacer(modifier = Modifier.height(16.dp))
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        OutlinedButton(
+            onClick = onCancel,
+            modifier = Modifier.weight(1f),
+            enabled = !isBusy,
+        ) {
+            Text(stringResource(R.string.cancel))
+        }
+        Button(
+            onClick = onSave,
+            modifier = Modifier.weight(1f),
+            enabled = !isBusy,
+        ) {
+            Text(stringResource(R.string.save))
+        }
+    }
 }
 
 @Composable
@@ -722,6 +896,162 @@ private fun CardContainer(content: @Composable () -> Unit) {
         ),
     ) {
         content()
+    }
+}
+
+@Composable
+private fun DetailFieldDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        color = MaterialTheme.colorScheme.outlineVariant,
+        thickness = 0.5.dp,
+    )
+}
+
+@Composable
+private fun EditPaymentCardInfo(
+    cardholderName: String,
+    onCardholderNameChange: (String) -> Unit,
+    cardNumber: String,
+    onCardNumberChange: (String) -> Unit,
+    cardNumberVisible: Boolean,
+    onCardNumberVisibilityToggle: () -> Unit,
+    cardBrand: PaymentCardBrand,
+    onCardBrandChange: (PaymentCardBrand) -> Unit,
+    expirationMonth: Int,
+    onExpirationMonthChange: (Int) -> Unit,
+    expirationYear: Int,
+    onExpirationYearChange: (Int) -> Unit,
+    securityCode: String,
+    onSecurityCodeChange: (String) -> Unit,
+    securityCodeVisible: Boolean,
+    onSecurityCodeVisibilityToggle: () -> Unit,
+) {
+    SectionHeader(title = stringResource(R.string.card_information))
+    CardContainer {
+        EditItemSection(
+            title = stringResource(R.string.cardholder_name_optional),
+            value = cardholderName,
+            onValueChange = onCardholderNameChange,
+            trailingIcon = Icons.Outlined.PersonOutline,
+        )
+        DetailFieldDivider()
+        EditPasswordSection(
+            title = stringResource(R.string.card_number_required),
+            value = cardNumber,
+            onValueChange = onCardNumberChange,
+            isVisible = cardNumberVisible,
+            onVisibilityToggle = onCardNumberVisibilityToggle,
+            showGenerator = false,
+            keyboardType = KeyboardType.NumberPassword,
+            visibleVisualTransformation = PaymentCardNumberVisualTransformation,
+        )
+        DetailFieldDivider()
+        EditDropdownField(
+            label = stringResource(R.string.card_brand),
+            value = stringResource(cardBrand.labelResId()),
+            options = selectablePaymentCardBrands.map { brand ->
+                brand to stringResource(brand.labelResId())
+            },
+            onSelect = onCardBrandChange,
+        )
+        DetailFieldDivider()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+        ) {
+            EditDropdownField(
+                label = stringResource(R.string.expiration_month),
+                value = if (expirationMonth == 0) {
+                    stringResource(R.string.not_set)
+                } else {
+                    expirationMonth.toString().padStart(2, '0')
+                },
+                options = listOf(0 to stringResource(R.string.not_set)) +
+                    (1..12).map { month ->
+                        month to month.toString().padStart(2, '0')
+                    },
+                onSelect = onExpirationMonthChange,
+                modifier = Modifier.weight(1f),
+            )
+            VerticalDivider(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 12.dp),
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 0.5.dp,
+            )
+            val currentYear = remember { Calendar.getInstance().get(Calendar.YEAR) }
+            val years = remember(currentYear, expirationYear) {
+                buildList {
+                    addAll(
+                        ((currentYear - 20).coerceAtLeast(AppConstants.MIN_EXPIRATION_YEAR)..
+                            (currentYear + 30)).toList(),
+                    )
+                    if (expirationYear > 0) add(expirationYear)
+                }.distinct().sorted()
+            }
+            EditDropdownField(
+                label = stringResource(R.string.expiration_year),
+                value = if (expirationYear == 0) {
+                    stringResource(R.string.not_set)
+                } else {
+                    expirationYear.toString()
+                },
+                options = listOf(0 to stringResource(R.string.not_set)) +
+                    years.map { year -> year to year.toString() },
+                onSelect = onExpirationYearChange,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        DetailFieldDivider()
+        EditPasswordSection(
+            title = stringResource(R.string.security_code_optional),
+            value = securityCode,
+            onValueChange = onSecurityCodeChange,
+            isVisible = securityCodeVisible,
+            onVisibilityToggle = onSecurityCodeVisibilityToggle,
+            showGenerator = false,
+            keyboardType = KeyboardType.NumberPassword,
+        )
+    }
+}
+
+@Composable
+private fun <T> EditDropdownField(
+    label: String,
+    value: String,
+    options: List<Pair<T, String>>,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    Box(modifier = modifier.fillMaxWidth()) {
+        EntryFormSelectionField(
+            label = label,
+            value = value,
+            onClick = {
+                focusManager.clearFocus()
+                expanded = true
+            },
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.heightIn(max = 320.dp),
+        ) {
+            options.forEach { (option, optionLabel) ->
+                DropdownMenuItem(
+                    text = { Text(optionLabel) },
+                    onClick = {
+                        onSelect(option)
+                        expanded = false
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -814,19 +1144,19 @@ private fun DetailPasswordSection(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 密码内容只使用操作区之外的剩余宽度；显示超长密码时允许文本换行，
-            // 查看和复制按钮始终保留在卡片右侧。
-            SelectionContainer(
+            // 敏感值不能进入系统文本选区，否则长按复制会绕过应用的 60 秒剪贴板清理。
+            // 文本仍只占用操作区之外的剩余宽度，受控复制统一走右侧按钮。
+            Text(
+                text = if (isVisible) {
+                    createColoredPasswordText(value)
+                } else {
+                    AnnotatedString("••••••••")
+                },
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp)
-            ) {
-                Text(
-                    text = if (isVisible) createColoredPasswordText(value) else AnnotatedString("••••••••"),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+                    .padding(end = 8.dp),
+                style = MaterialTheme.typography.bodyLarge,
+            )
 
             Row {
                 IconButton(
@@ -835,7 +1165,11 @@ private fun DetailPasswordSection(
                     Icon(
                         imageVector = if (isVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                         contentDescription = stringResource(
-                            if (isVisible) R.string.hide_password else R.string.show_password
+                            if (isVisible) {
+                                R.string.hide_sensitive_value
+                            } else {
+                                R.string.show_sensitive_value
+                            }
                         ),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
@@ -940,7 +1274,10 @@ private fun EditPasswordSection(
     isVisible: Boolean,
     onVisibilityToggle: () -> Unit,
     onGenerateClick: () -> Unit = {},
-    isError: Boolean = false
+    isError: Boolean = false,
+    showGenerator: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Password,
+    visibleVisualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     Column(
         modifier = Modifier
@@ -967,9 +1304,13 @@ private fun EditPasswordSection(
                     color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (isVisible) {
+                    visibleVisualTransformation
+                } else {
+                    PasswordVisualTransformation()
+                },
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
+                    keyboardType = keyboardType,
                     autoCorrectEnabled = false
                 ),
                 decorationBox = { innerTextField ->
@@ -991,74 +1332,31 @@ private fun EditPasswordSection(
                     Icon(
                         imageVector = if (isVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                         contentDescription = stringResource(
-                            if (isVisible) R.string.hide_password else R.string.show_password
+                            if (isVisible) {
+                                R.string.hide_sensitive_value
+                            } else {
+                                R.string.show_sensitive_value
+                            }
                         ),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
 
-                IconButton(
-                    onClick = onGenerateClick,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.AutoFixHigh,
-                        contentDescription = stringResource(R.string.generate_password),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                if (showGenerator) {
+                    IconButton(
+                        onClick = onGenerateClick,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.AutoFixHigh,
+                            contentDescription = stringResource(R.string.generate_password),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun EditNoteSection(
-    value: TextFieldValue,
-    onValueChange: (TextFieldValue) -> Unit
-) {
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
-    val coroutineScope = rememberCoroutineScope()
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            onTextLayout = { layoutResult ->
-                coroutineScope.launch {
-                    try {
-                        if (value.selection.collapsed) {
-                            val rect = layoutResult.getCursorRect(value.selection.end)
-                            bringIntoViewRequester.bringIntoView(rect)
-                        }
-                    } catch (e: Exception) {
-                        // Ignore layout errors during scrolling
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 80.dp)
-                .bringIntoViewRequester(bringIntoViewRequester),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurface
-            ),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            decorationBox = { innerTextField ->
-                if (value.text.isEmpty()) {
-                    Text(
-                        text = "",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                innerTextField()
-            }
-        )
     }
 }
 
@@ -1171,7 +1469,11 @@ private fun EditCategorySection(
             categories = categories.filter { !it.id.startsWith("default_") },
             selectedCategoryIds = selectedCategoryIds,
             onCategorySelect = { categoryId ->
-                onCategoryAdd(categoryId)
+                if (categoryId in selectedCategoryIds) {
+                    onCategoryRemove(categoryId)
+                } else {
+                    onCategoryAdd(categoryId)
+                }
             },
             onDismiss = { showCategoryDialog = false },
             onCreateCategory = onCreateCategory

@@ -43,6 +43,7 @@ import com.turisla.hellopocket.router.RouteSearch
 import com.turisla.hellopocket.router.RouteSetup
 import com.turisla.hellopocket.router.RouteUnlock
 import com.turisla.hellopocket.router.RouteAddPassword
+import com.turisla.hellopocket.router.RouteAddPaymentCard
 import com.turisla.hellopocket.router.RoutePasswordGenerator
 import com.turisla.hellopocket.router.RouteAbout
 import com.turisla.hellopocket.router.RoutePrivacyPolicy
@@ -58,6 +59,8 @@ import com.turisla.hellopocket.router.RouteEditTotp
 import com.turisla.hellopocket.router.RouteTotpScanner
 import com.turisla.hellopocket.ui.feature.addPassword.AddPasswordScreen
 import com.turisla.hellopocket.ui.feature.addPassword.AddPasswordDraftViewModel
+import com.turisla.hellopocket.ui.feature.addPaymentCard.AddPaymentCardDraftViewModel
+import com.turisla.hellopocket.ui.feature.addPaymentCard.AddPaymentCardScreen
 import com.turisla.hellopocket.ui.feature.addSecureNote.AddSecureNoteDraftViewModel
 import com.turisla.hellopocket.ui.feature.addSecureNote.AddSecureNoteScreen
 import com.turisla.hellopocket.ui.feature.auth.SetupScreen
@@ -369,6 +372,17 @@ private fun AppNavigation(viewModel: MainViewModel) {
                 viewModelStoreOwner = backStackEntry
             )
             AddSecureNoteScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onLoading = { viewModel.setAttachmentLoading(it) },
+                draftViewModel = draftViewModel,
+            )
+        }
+        composable<RouteAddPaymentCard> { backStackEntry ->
+            // 支付卡草稿跟随当前返回栈条目，离开页面或锁库后立即释放敏感字段。
+            val draftViewModel = koinViewModel<AddPaymentCardDraftViewModel>(
+                viewModelStoreOwner = backStackEntry
+            )
+            AddPaymentCardScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onLoading = { viewModel.setAttachmentLoading(it) },
                 draftViewModel = draftViewModel,

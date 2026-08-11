@@ -64,6 +64,18 @@ class DetailViewModel(
         }
     }
 
+    fun onCopyCardNumber() {
+        passwordEntry.value?.cardNumber?.takeIf(String::isNotBlank)?.let {
+            clipboardManagerHelper.copyTextToClipboard(R.string.card_number, it)
+        }
+    }
+
+    fun onCopySecurityCode() {
+        passwordEntry.value?.securityCode?.takeIf(String::isNotBlank)?.let {
+            clipboardManagerHelper.copyTextToClipboard(R.string.security_code, it)
+        }
+    }
+
     fun onCopyCustomField(fieldId: String) {
         passwordEntry.value?.customFieldsList
             ?.firstOrNull { it.id == fieldId }

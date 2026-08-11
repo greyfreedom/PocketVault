@@ -40,13 +40,13 @@
     <string name="detail">Detail</string>
     <string name="add_new_password">Add New Password</string>
     <string name="add_item">Add</string>
-    <string name="no_passwords_found">No password records found</string>
+    <string name="no_passwords_found">No vault items found</string>
     <string name="search_vault">Search vault</string>
-    <string name="search_hint">Title, account, or notes</string>
-    <string name="search_empty_message">Find passwords and secure notes by title, account, or notes.</string>
-    <string name="vault_empty_message">The vault is empty,\nTap the \'+\' button in the bottom right to add a new password!</string>
+    <string name="search_hint">Title, account, cardholder, or notes</string>
+    <string name="search_empty_message">Find passwords, secure notes, and payment cards without searching sensitive values.</string>
+    <string name="vault_empty_message">The vault is empty.\nTap the \'+\' button to add an item.</string>
     <string name="no_search_results">No matching results found</string>
-    <string name="search_no_results_hint">Try another title, account, or note keyword.</string>
+    <string name="search_no_results_hint">Try another title, account, cardholder, brand, or note keyword.</string>
     <string name="clear_search">Clear search</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d result</item>
@@ -65,6 +65,35 @@
     <string name="notes_optional">Notes (Optional)</string>
     <string name="title_and_password_required">Title and password are required</string>
     <string name="password_hidden">••••••••</string>
+
+    <!-- Payment Card -->
+    <string name="add_payment_card">Add Payment Card</string>
+    <string name="card_information">Card Information</string>
+    <string name="cardholder_name">Cardholder Name</string>
+    <string name="cardholder_name_optional">Cardholder Name (Optional)</string>
+    <string name="card_number">Card Number</string>
+    <string name="card_number_required">Card Number (Required)</string>
+    <string name="card_brand">Brand</string>
+    <string name="expiration_month">Expiration Month</string>
+    <string name="expiration_year">Expiration Year</string>
+    <string name="expiration_date">Expiration Date</string>
+    <string name="security_code">Security Code</string>
+    <string name="security_code_optional">Security Code (Optional)</string>
+    <string name="not_set">Not set</string>
+    <string name="invalid_card_number">Enter a card number with 8–19 digits.</string>
+    <string name="expiration_date_incomplete">Select both the expiration month and year.</string>
+    <string name="invalid_security_code">Security code must contain 3 or 4 digits.</string>
+    <string name="show_sensitive_value">Show sensitive value</string>
+    <string name="hide_sensitive_value">Hide sensitive value</string>
+    <string name="card_brand_not_set">Not set</string>
+    <string name="card_brand_visa">Visa</string>
+    <string name="card_brand_mastercard">Mastercard</string>
+    <string name="card_brand_american_express">American Express</string>
+    <string name="card_brand_discover">Discover</string>
+    <string name="card_brand_jcb">JCB</string>
+    <string name="card_brand_unionpay">UnionPay</string>
+    <string name="card_brand_diners_club">Diners Club</string>
+    <string name="card_brand_other">Other</string>
     
     <!-- Action Buttons -->
     <string name="save">Save</string>
@@ -285,6 +314,7 @@
     <string name="all_types">All Types</string>
     <string name="type_password">Password</string>
     <string name="type_note">Secure Note</string>
+    <string name="type_payment_card">Payment Card</string>
     <string name="select_type">Select Type</string>
 
     <!-- Q&A Page -->
