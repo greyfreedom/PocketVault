@@ -32,7 +32,7 @@ PocketVault is designed as a strictly local Android application:
 - it contains no analytics, advertising, telemetry, or crash-reporting SDK;
 - the master password is not persisted;
 - new, re-keyed, and current-format vaults derive a wrapping key with PBKDF2-HMAC-SHA256 using 600,000 iterations; the historical 100,000-iteration V2 parameter is read only during authenticated one-time migration;
-- vault content is encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF;
+- passwords, secure notes, payment cards, custom fields, TOTP entries, manifests, and attachments are encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF;
 - biometric unlock is a convenience mechanism backed by Android Keystore, not a replacement for the master password;
 - automatic locking, screenshot protection, authenticated encryption, import validation, and timed clipboard clearing reduce common exposure paths.
 
@@ -42,11 +42,13 @@ The app enforces a six-character minimum master password as an input floor, not 
 
 ## Vault format compatibility
 
-Version 2.5.1 restores a narrowly scoped migration for early V2 vaults rejected by 2.5.0. Compatibility is not a general downgrade mode: the public configuration must carry an early-V2 marker, the historical KDF range is accepted only for decryption, and authenticated metadata may be absent only when stronger structural legacy markers are present.
+Version 2.5.1 and later provide a narrowly scoped migration for early V2 vaults rejected by 2.5.0. Compatibility is not a general downgrade mode: the public configuration must carry an early-V2 marker, the historical KDF range is accepted only for decryption, and authenticated metadata may be absent only when stronger structural legacy markers are present.
 
 After the master password unwraps the historical Keyset, PocketVault authenticates and validates passwords, notes, categories, TOTP entries, the encrypted manifest, and every referenced attachment. It writes a complete current-format vault to a separate directory, verifies it again through the fresh 600,000-iteration wrapper, creates an automatic backup of the installed legacy vault, and then uses an atomic directory transaction. Failure before the switch leaves the original directory untouched. Biometric convenience unlock cannot perform this migration because the master password is required to re-wrap the Keyset.
 
 V1 vaults remain recognized but unsupported; they are not decrypted, migrated, imported, or silently overwritten. Test migration procedures with synthetic data or a disposable copy, and never send a real vault to a public issue.
+
+Version 2.6.0 introduces internal schema 3 for custom fields and payment cards. Supported schema 1 and 2 vaults remain readable; before the first write upgrades one to schema 3, PocketVault creates an automatic encrypted backup and commits the new core files and manifest transactionally. Vaults and backups written with schema 3 should be opened with PocketVault 2.6.0 or later because older releases do not understand the newer schema boundary.
 
 ## Security limitations
 

@@ -4,7 +4,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project Overview
 
-HelloPocket is an Android password manager built with Kotlin and Jetpack Compose. It uses Google Tink for encryption (AES-256-GCM-HKDF-1MB) with PBKDF2 key derivation (600,000 iterations for current writes; 100,000 retained only for early V2 authenticated migration). The app follows an offline-first architecture with MVVM pattern and Koin for dependency injection.
+HelloPocket is an Android password manager built with Kotlin and Jetpack Compose. It supports passwords, secure notes, payment cards, TOTP entries, and ordered custom fields. It uses Google Tink for encryption (AES-256-GCM-HKDF-1MB) with PBKDF2 key derivation (600,000 iterations for current writes; 100,000 retained only for early V2 authenticated migration). The app follows an offline-first architecture with MVVM pattern and Koin for dependency injection.
 
 ## 协作备忘录 (重要)
 
@@ -15,7 +15,7 @@ HelloPocket is an Android password manager built with Kotlin and Jetpack Compose
 
 2.  **安全模型**:
     *   **主密码是唯一信源**: 主密码和 `vault_v2.json` 中的随机盐通过 PBKDF2-HMAC-SHA256（当前写入 600,000 次；历史 100,000 次仅用于旧 V2 认证迁移）派生密钥加密密钥，用于包装随机生成的 `StreamingAead Keyset`；项目只持久化加密后的 Keyset，绝不存储主密码、派生密钥或明文 Keyset。
-    *   **当前格式边界**: 2.5.1 可在主密码认证后一次性迁移早期 V2：先全量认证核心数据、TOTP 与附件，在独立目录写入当前格式并复验，创建自动备份后再原子切换；新写入仍固定 600,000 次。V1 只识别并明确拒绝，不解密、不导入、不覆盖。
+    *   **当前格式边界**: 2.6.0 保留 2.5.1 的早期 V2 主密码认证迁移，并使用内部 schema 3 保存自定义字段和支付卡。schema 1/2 可读取，第一次写入 schema 3 前必须创建自动加密备份并事务提交；新写入仍固定 600,000 次。V1 只识别并明确拒绝，不解密、不导入、不覆盖。
     *   **Google Tink 加密**: 采用 Google Tink 库的 `StreamingAead` (AES-256-GCM-HKDF-1MB) 流式认证加密方案。
     *   **流式加密优势**: 使用流式加密避免将整个附件同时加载到内存；可处理的实际大小仍受设备存储、Android 平台和应用安全限制影响。
     *   **数据完整性保护**: 内置 SHA-256 完整性校验，确保保险库数据未被篡改。同时 GCM 模式本身也提供认证加密 (AEAD)。
@@ -23,7 +23,7 @@ HelloPocket is an Android password manager built with Kotlin and Jetpack Compose
     *   **修改主密码优化**: 修改主密码时，只需要重新加密 `Keyset`，而不需要重新加密所有数据文件，大幅提升了性能和用户体验。
 
 3.  **关键功能实现决策**:
-    *   **搜索**: 采用**独立搜索页面**，本地检索标题、账号、密码备注和安全笔记正文；不索引密码值或 TOTP 密钥，并按命中字段和更新时间排序结果。
+    *   **搜索**: 采用**独立搜索页面**，本地检索标题、账号、持卡人、卡品牌、备注、安全笔记正文、自定义字段名和普通文本字段值；不索引密码、卡号、安全码、TOTP 密钥或隐藏字段值，并按命中字段和更新时间排序结果。
     *   **自动锁定**: 应用进入后台**1分钟**后自动锁定，返回前台时需重新认证。
     *   **剪贴板管理**: 复制的密码在**60秒**后，会自动从系统剪贴板中清除。
     *   **防截屏**: 应用主窗口统一添加 `FLAG_SECURE` 标志，以禁止常规截屏、录屏和最近任务缩略图。
@@ -102,8 +102,9 @@ com.turisla.hellopocket/
 │   └── feature/       # Feature-based UI organization
 │       ├── auth/      # Setup, unlock screens
 │       ├── home/      # Main password list
-│       ├── detail/    # Password/note detail view
+│       ├── detail/    # Password/note/payment-card detail view
 │       ├── addPassword/
+│       ├── addPaymentCard/
 │       ├── addSecureNote/
 │       ├── settings/  # Settings (appearance, security, data, other)
 │       ├── passwordGenerator/
