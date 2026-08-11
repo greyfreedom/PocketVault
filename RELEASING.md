@@ -30,7 +30,13 @@ The version-specific candidate checklist for this release is [`docs/release-chec
 
 For each production release:
 
-1. Create a signed Git tag matching the version, such as `v2.6.0`.
+1. From the clean release commit, create, verify, and push the signed Git tag:
+
+   ```bash
+   ./scripts/tag-release.sh
+   ```
+
+   The script reads `versionName` from `app/build.gradle.kts`, so the version is not repeated in the command. It refuses to tag a dirty working tree, an `Unreleased` changelog entry, or a tag that already exists on `origin`.
 2. Build the `googlePlayRelease` AAB from that exact tag with the untracked upload-signing configuration.
 3. Record the AAB SHA-256 digest, then upload that exact AAB to Google Play.
 4. In Play Console, open **Test and release → Latest releases and bundles**, select the uploaded bundle, open **Downloads**, and download the signed Universal APK.
