@@ -2,6 +2,24 @@
 
 All notable changes to PocketVault will be documented in this file.
 
+## [2.6.0] - 2026-08-11
+
+### Added
+
+- A dedicated payment-card entry type with encrypted cardholder name, card number, brand, expiration date, security code, notes, categories, attachments, and custom fields. Card numbers and security codes remain masked until explicitly revealed.
+- Ordered custom fields for passwords, secure notes, and payment cards. Fields can be plain text or concealed, reordered, copied, removed, and restored while editing.
+
+### Changed
+
+- Unified password, secure-note, payment-card, and manual-TOTP add/edit forms around the same Material 3 section, card, input, selector, and action patterns. Tapping outside an editor now clears focus consistently.
+- Extended local search to payment-card holder names and brands, custom-field names, and non-concealed custom-field values. Passwords, card numbers, security codes, TOTP secrets, and concealed custom-field values remain excluded.
+- Advanced the encrypted vault's internal schema to version 3. The first write to an older supported schema creates an automatic backup before the transactional upgrade.
+
+### Fixed
+
+- Payment-card number formatting now preserves the logical cursor position, preventing digits from moving behind the cursor while typing or editing.
+- Payment-card add and edit screens now use consistent borderless fields, lighter selectors, clearer empty states, and matching category, attachment, notes, and action sections.
+
 ## [2.5.1] - 2026-08-06
 
 ### Added

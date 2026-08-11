@@ -45,7 +45,7 @@
 <body>
 <div class="container">
     <h1>PocketVault Privacy Policy</h1>
-    <p><strong>Last Updated:</strong> August 6, 2026</p>
+    <p><strong>Last Updated:</strong> August 11, 2026</p>
 
     <h2>Introduction</h2>
     <p>PocketVault is a local password manager. The app does not request Android Internet permission and contains no analytics, advertising, telemetry, or crash-reporting SDK. It does not operate an account system or a remote server.</p>
@@ -55,7 +55,7 @@
     <p><strong>PocketVault does not collect or transmit personal data.</strong> In particular, the developer does not receive:</p>
     <ul>
         <li>Your master password or password hint.</li>
-        <li>Passwords, usernames, notes, TOTP secrets, attachments, categories, or other vault content.</li>
+        <li>Passwords, usernames, notes, payment-card details, custom fields, TOTP secrets, attachments, categories, or other vault content.</li>
         <li>Usage analytics, crash reports, device identifiers, advertising identifiers, or installation identifiers.</li>
         <li>Your name, email address, contacts, or location.</li>
     </ul>
@@ -87,7 +87,7 @@
     <h2>5. Data Backup and Restoration</h2>
     <p>You are responsible for protecting exported backups and remembering the applicable master password. PocketVault has no account, recovery service, escrow key, or master-password reset mechanism. Losing the master password can make the encrypted vault permanently inaccessible.</p>
     <p>Changing the master password does not rewrite backups you exported earlier. An older backup must be opened with the password that protected it when it was created.</p>
-    <p>Version 2.5.1 can authenticate and normalize early V2 vaults and backups. For an installed legacy V2 vault, the app verifies the data, creates an automatic encrypted backup, and atomically activates the current format. V1 remains unsupported. PocketVault does not transmit the vault or backup during this local process.</p>
+    <p>Version 2.5.1 and later can authenticate and normalize early V2 vaults and backups. For an installed legacy V2 vault, the app verifies the data, creates an automatic encrypted backup, and atomically activates the current format. Version 2.6.0 also creates an automatic encrypted backup before the first transactional upgrade of a supported older internal schema to schema 3. V1 remains unsupported. PocketVault does not transmit the vault or backup during these local processes.</p>
 
     <h2>6. Data Retention and Deletion</h2>
     <p>Vault data and automatic backup history remain in the app's private storage until you delete app data or uninstall PocketVault. Exported backups are outside the app's control and must be deleted separately from every location to which you saved or shared them.</p>

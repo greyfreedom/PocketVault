@@ -18,19 +18,19 @@ Google Play and this repository's GitHub Releases distribute one official applic
    ```
 
 5. Perform a Play-signed upgrade test over the latest production version using a synthetic vault. A debug build is a separate application and is not an upgrade-path test.
-6. Verify passwords, secure notes, TOTP, categories, attachments, biometrics, password changes, export, import, automatic backup, and backup restoration after the upgrade.
+6. Verify passwords, secure notes, payment cards, custom fields, TOTP, categories, attachments, biometrics, password changes, export, import, automatic backup, and backup restoration after the upgrade.
 7. For a release that changes vault compatibility, verify both paths: the newest supported vault and backup must open successfully, while deliberately unsupported formats must fail without modifying the original data.
 8. Confirm the merged release manifest contains no Internet or network-state permission and no Firebase or Crashlytics component.
 9. Review runtime dependencies and update `THIRD_PARTY_NOTICES.md` and the in-app notices when a dependency family or license changes.
 10. Confirm that GitHub will receive only the Play-generated Universal APK—not a locally signed APK.
 
-The version-specific candidate checklist for this release is [`docs/release-checklists/2.5.0.md`](docs/release-checklists/2.5.0.md), and copy-ready Play Console text is in [`docs/release-notes/2.5.0.md`](docs/release-notes/2.5.0.md).
+The version-specific candidate checklist for this release is [`docs/release-checklists/2.6.0.md`](docs/release-checklists/2.6.0.md), and copy-ready Play Console text is in [`docs/release-notes/2.6.0.md`](docs/release-notes/2.6.0.md).
 
 ## Source and artifact traceability
 
 For each production release:
 
-1. Create a signed Git tag matching the version, such as `v2.5.0`.
+1. Create a signed Git tag matching the version, such as `v2.6.0`.
 2. Build the `googlePlayRelease` AAB from that exact tag with the untracked upload-signing configuration.
 3. Record the AAB SHA-256 digest, then upload that exact AAB to Google Play.
 4. In Play Console, open **Test and release → Latest releases and bundles**, select the uploaded bundle, open **Downloads**, and download the signed Universal APK.
