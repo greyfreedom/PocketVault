@@ -3,76 +3,2370 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="PocketVault privacy and project information.">
-    <title>PocketVault</title>
+    <meta name="theme-color" content="#070b14">
+    <meta name="description" content="PocketVault is a strictly offline, open-source Android password manager. No account, no cloud, no tracking—your encrypted vault stays on your device.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="PocketVault — Private by architecture">
+    <meta property="og:description" content="A beautifully simple Android password manager with no Internet permission, no account, and no remote server.">
+    <meta property="og:url" content="https://greyfreedom.github.io/PocketVault/">
+    <meta property="og:image" content="https://greyfreedom.github.io/PocketVault/assets/pocketvault-social.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PocketVault — Private by architecture">
+    <meta name="twitter:description" content="Your passwords, cards, notes, and TOTP codes. Encrypted locally. Yours alone.">
+    <meta name="twitter:image" content="https://greyfreedom.github.io/PocketVault/assets/pocketvault-social.png">
+    <link rel="icon" type="image/png" href="assets/app-icon.png">
+    <title>PocketVault — Private by architecture</title>
     <style>
         :root {
-            color-scheme: light dark;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color-scheme: dark;
+            --bg: #070b14;
+            --bg-deep: #04070d;
+            --surface: #0c1320;
+            --surface-raised: #111b2b;
+            --surface-soft: rgba(17, 27, 43, 0.72);
+            --text: #f5f8ff;
+            --text-soft: #c8d1df;
+            --muted: #8d9aae;
+            --line: rgba(255, 255, 255, 0.1);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --blue: #5e91ff;
+            --blue-bright: #76b2ff;
+            --violet: #9b8cff;
+            --mint: #75e5c3;
+            --shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
+            --radius-xl: 36px;
+            --radius-lg: 28px;
+            --radius-md: 20px;
+            --shell: min(1180px, calc(100% - 40px));
+            font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-synthesis: none;
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             margin: 0;
-            background: #f4f1f8;
-            color: #211b25;
+            min-width: 320px;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at 78% 3%, rgba(54, 100, 255, 0.16), transparent 30rem),
+                radial-gradient(circle at 4% 22%, rgba(112, 80, 255, 0.1), transparent 28rem),
+                var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
         }
-        .page {
-            box-sizing: border-box;
-            max-width: 760px;
-            min-height: 100vh;
-            margin: 0 auto;
-            padding: 64px 24px;
+
+        body::before {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            pointer-events: none;
+            content: "";
+            opacity: 0.18;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+            background-size: 64px 64px;
+            mask-image: linear-gradient(to bottom, black, transparent 76%);
         }
-        .card {
-            padding: 40px;
+
+        a {
+            color: inherit;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        button,
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--blue-bright);
+            outline-offset: 4px;
+        }
+
+        .skip-link {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 100;
+            padding: 10px 14px;
+            transform: translateY(-150%);
+            border-radius: 12px;
             background: #fff;
-            border-radius: 28px;
-            box-shadow: 0 16px 48px rgba(58, 43, 65, 0.12);
+            color: #07101f;
+            font-weight: 800;
+            transition: transform 180ms ease;
         }
-        h1 {
-            margin: 0 0 12px;
-            font-size: clamp(2rem, 7vw, 3.6rem);
+
+        .skip-link:focus {
+            transform: translateY(0);
         }
-        p {
+
+        .shell {
+            width: var(--shell);
+            margin-inline: auto;
+        }
+
+        .site-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 20;
+            width: 100%;
+            padding-top: 22px;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 68px;
+            padding: 10px 12px 10px 18px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: rgba(7, 11, 20, 0.72);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(22px);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 780;
+            letter-spacing: -0.02em;
+        }
+
+        .brand img {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 13px;
+            box-shadow: 0 8px 24px rgba(37, 107, 205, 0.22);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .nav-links a {
+            color: var(--text-soft);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 650;
+            transition: color 180ms ease;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .language-switch {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px;
+            border: 1px solid var(--line);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, 0.045);
+        }
+
+        .language-option {
+            min-width: 43px;
+            min-height: 36px;
+            padding: 0 10px;
+            border: 0;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font: inherit;
+            font-size: 0.75rem;
+            font-weight: 760;
+            transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .language-option:hover {
+            color: #fff;
+        }
+
+        .language-option[aria-pressed="true"] {
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+            color: #fff;
+        }
+
+        .nav-cta,
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 48px;
+            padding: 0 20px;
+            border: 1px solid transparent;
+            border-radius: 15px;
+            text-decoration: none;
+            font-size: 0.92rem;
+            font-weight: 760;
+            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+        }
+
+        .nav-cta {
+            min-height: 44px;
+            padding-inline: 18px;
+            background: #fff;
+            color: #07101f;
+        }
+
+        .nav-cta:hover,
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #6aa6ff, #4f6fff 58%, #8b6eff);
+            color: #fff;
+            box-shadow: 0 16px 40px rgba(68, 105, 255, 0.28);
+        }
+
+        .button-primary:hover {
+            box-shadow: 0 20px 50px rgba(68, 105, 255, 0.4);
+        }
+
+        .button-secondary {
+            border-color: var(--line-strong);
+            background: rgba(255, 255, 255, 0.045);
+            color: var(--text);
+        }
+
+        .button-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.28);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .arrow {
+            display: inline-block;
+            transition: transform 180ms ease;
+        }
+
+        a:hover .arrow {
+            transform: translate(2px, -2px);
+        }
+
+        .hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 880px;
+            overflow: hidden;
+            padding: 150px 0 76px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .hero::after {
+            position: absolute;
+            right: -12vw;
+            bottom: -18rem;
+            width: 48rem;
+            height: 48rem;
+            pointer-events: none;
+            content: "";
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(45, 109, 255, 0.14), transparent 68%);
+            filter: blur(10px);
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.03fr) minmax(440px, 0.97fr);
+            align-items: center;
+            gap: 32px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 24px;
+            color: #b9c7dc;
+            font-size: 0.74rem;
+            font-weight: 820;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            width: 7px;
+            height: 7px;
+            content: "";
+            border-radius: 50%;
+            background: var(--mint);
+            box-shadow: 0 0 18px rgba(117, 229, 195, 0.9);
+        }
+
+        .hero h1 {
+            max-width: 760px;
+            margin: 0;
+            font-size: clamp(4rem, 7.4vw, 7rem);
+            font-weight: 780;
+            letter-spacing: -0.072em;
+            line-height: 0.9;
+        }
+
+        .hero h1 .hero-title-line {
+            display: block;
+        }
+
+        .hero h1 .hero-title-accent {
+            margin-top: 0.13em;
+            background: linear-gradient(100deg, #dbe8ff 4%, #75acff 50%, #aa8cff 92%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        html[lang="zh-CN"] body {
+            font-family: "PingFang SC", "Microsoft YaHei", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        html[lang="zh-CN"] .hero h1,
+        html[lang="zh-CN"] .section-heading h2,
+        html[lang="zh-CN"] .security-copy h2,
+        html[lang="zh-CN"] .showcase-copy h2,
+        html[lang="zh-CN"] .zero-panel h2,
+        html[lang="zh-CN"] .cta h2 {
+            letter-spacing: -0.045em;
+        }
+
+        html[lang="zh-CN"] .hero h1 {
+            font-size: clamp(3.7rem, 6.1vw, 5.5rem);
+            line-height: 0.98;
+        }
+
+        .hero-copy {
+            max-width: 630px;
+            margin: 30px 0 0;
+            color: var(--text-soft);
+            font-size: clamp(1.04rem, 1.6vw, 1.22rem);
+            line-height: 1.72;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 36px;
+        }
+
+        .hero-actions .button {
+            min-height: 56px;
+            padding-inline: 24px;
+        }
+
+        .trust-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 22px;
+            margin-top: 30px;
+            color: var(--muted);
+            font-size: 0.84rem;
+            font-weight: 650;
+        }
+
+        .trust-line span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trust-line span::before {
+            content: "✓";
+            color: var(--mint);
+            font-weight: 900;
+        }
+
+        .hero-visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            height: 620px;
+        }
+
+        .hero-visual::before,
+        .hero-visual::after {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            content: "";
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(111, 156, 255, 0.16);
+            border-radius: 50%;
+        }
+
+        .hero-visual::before {
+            width: 510px;
+            height: 510px;
+            box-shadow: 0 0 90px rgba(45, 92, 255, 0.08) inset;
+        }
+
+        .hero-visual::after {
+            width: 380px;
+            height: 380px;
+            border-color: rgba(120, 172, 255, 0.1);
+        }
+
+        .device-stage {
+            position: relative;
+            z-index: 2;
+            width: min(100%, 590px);
+            height: 600px;
+            perspective: 1300px;
+        }
+
+        .device-stage::before {
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            bottom: 26px;
+            height: 80px;
+            content: "";
+            border-radius: 50%;
+            background: rgba(29, 85, 230, 0.42);
+            filter: blur(42px);
+        }
+
+        .phone {
+            position: absolute;
+            overflow: hidden;
+            border: 8px solid #090c13;
+            border-radius: 36px;
+            background: #eef1f7;
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.13);
+            transform-style: preserve-3d;
+        }
+
+        .phone::before {
+            position: absolute;
+            top: 9px;
+            left: 50%;
+            z-index: 2;
+            width: 31%;
+            height: 20px;
+            content: "";
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: #080b11;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+        }
+
+        .phone img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .phone-main {
+            top: 20px;
+            left: 28%;
+            z-index: 4;
+            width: 44%;
+            aspect-ratio: 788 / 1598;
+            transform: translateZ(60px);
+            animation: phone-float 6s ease-in-out infinite;
+        }
+
+        .phone-left,
+        .phone-right {
+            z-index: 2;
+            width: 36%;
+            aspect-ratio: 788 / 1598;
+            opacity: 0.88;
+            filter: saturate(0.88) brightness(0.8);
+        }
+
+        .phone-left {
+            top: 126px;
+            left: 1%;
+            transform: rotateY(16deg) rotateZ(-9deg);
+        }
+
+        .phone-right {
+            top: 108px;
+            right: 0;
+            transform: rotateY(-16deg) rotateZ(9deg);
+        }
+
+        .privacy-chip {
+            position: absolute;
+            z-index: 7;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            min-width: 166px;
+            padding: 13px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 16px;
+            background: rgba(10, 18, 31, 0.88);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+            color: #edf4ff;
+            font-size: 0.76rem;
+            font-weight: 750;
+            white-space: nowrap;
+            backdrop-filter: blur(16px);
+        }
+
+        .privacy-chip::before {
+            width: 8px;
+            height: 8px;
+            content: "";
+            border-radius: 50%;
+            background: var(--mint);
+            box-shadow: 0 0 14px rgba(117, 229, 195, 0.72);
+        }
+
+        .chip-top {
+            top: 64px;
+            right: auto;
+            left: -2%;
+        }
+
+        .chip-bottom {
+            right: -2%;
+            bottom: 8px;
+            left: auto;
+        }
+
+        .signal-bar {
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.018);
+        }
+
+        .signals {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .signal {
+            min-height: 132px;
+            padding: 30px 26px;
+            border-left: 1px solid var(--line);
+        }
+
+        .signal:last-child {
+            border-right: 1px solid var(--line);
+        }
+
+        .signal strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #fff;
+            font-size: 1.04rem;
+            letter-spacing: -0.02em;
+        }
+
+        .signal span {
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.55;
+        }
+
+        .section {
+            padding: 132px 0;
+        }
+
+        .section-heading {
+            display: grid;
+            grid-template-columns: 0.7fr 1.3fr;
+            gap: 60px;
+            align-items: start;
+            margin-bottom: 58px;
+        }
+
+        .section-heading .eyebrow {
+            margin: 10px 0 0;
+        }
+
+        .section-heading h2,
+        .security-copy h2,
+        .showcase-copy h2,
+        .cta h2 {
+            margin: 0;
+            font-size: clamp(2.55rem, 5.2vw, 5rem);
+            font-weight: 730;
+            letter-spacing: -0.058em;
+            line-height: 0.98;
+        }
+
+        .section-heading p,
+        .security-copy > p,
+        .showcase-copy > p {
+            max-width: 610px;
+            margin: 24px 0 0;
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.75;
+        }
+
+        .bento {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 18px;
+        }
+
+        .feature-card {
+            position: relative;
+            min-height: 390px;
+            overflow: hidden;
+            padding: 34px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            background: linear-gradient(145deg, rgba(17, 27, 43, 0.9), rgba(9, 15, 26, 0.9));
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+        }
+
+        .feature-card::after {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            content: "";
+            border-radius: 50%;
+            background: rgba(64, 109, 255, 0.1);
+            filter: blur(45px);
+        }
+
+        .feature-card h3 {
+            position: relative;
+            z-index: 2;
+            max-width: 430px;
+            margin: 12px 0 12px;
+            font-size: clamp(1.55rem, 2.8vw, 2.25rem);
+            letter-spacing: -0.045em;
+            line-height: 1.08;
+        }
+
+        .feature-card p {
+            position: relative;
+            z-index: 2;
+            max-width: 480px;
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .card-label {
+            position: relative;
+            z-index: 2;
+            color: var(--blue-bright);
+            font-size: 0.72rem;
+            font-weight: 850;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+
+        .offline-card {
+            grid-column: span 7;
+            background:
+                radial-gradient(circle at 90% 92%, rgba(65, 112, 255, 0.2), transparent 42%),
+                linear-gradient(145deg, rgba(17, 29, 49, 0.96), rgba(8, 14, 25, 0.96));
+        }
+
+        .offline-card::after {
+            right: -90px;
+            bottom: -80px;
+        }
+
+        .status-panel {
+            position: absolute;
+            right: 28px;
+            bottom: 28px;
+            left: 28px;
+            z-index: 2;
+            display: grid;
+            gap: 1px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 13px 16px;
+            background: rgba(5, 10, 19, 0.72);
+            color: #aeb9ca;
+            font: 650 0.74rem ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .status-row strong {
+            color: var(--mint);
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+        }
+
+        .crypto-card {
+            grid-column: span 5;
+        }
+
+        .crypto-card::after {
+            top: 100px;
+            right: -40px;
+            background: rgba(139, 111, 255, 0.12);
+        }
+
+        .lock-visual {
+            position: absolute;
+            right: 34px;
+            bottom: 24px;
+            width: 188px;
+            height: 178px;
+        }
+
+        .lock-ring {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 92px;
+            height: 94px;
+            transform: translateX(-50%);
+            border: 12px solid rgba(126, 157, 255, 0.72);
+            border-bottom: 0;
+            border-radius: 52px 52px 0 0;
+            box-shadow: 0 0 34px rgba(82, 116, 255, 0.18);
+        }
+
+        .lock-body {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            height: 118px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 30px;
+            background: linear-gradient(145deg, rgba(105, 151, 255, 0.62), rgba(96, 80, 216, 0.34));
+            box-shadow: 0 24px 60px rgba(44, 73, 179, 0.3), 0 1px 0 rgba(255, 255, 255, 0.24) inset;
+            backdrop-filter: blur(16px);
+        }
+
+        .lock-body::before {
+            position: absolute;
+            top: 38px;
+            left: 50%;
+            width: 16px;
+            height: 34px;
+            content: "";
+            transform: translateX(-50%);
+            border-radius: 10px;
+            background: #e9f0ff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.45);
+        }
+
+        .types-card {
+            grid-column: span 5;
+            min-height: 430px;
+        }
+
+        .types-card::after {
+            bottom: -120px;
+            left: 20%;
+            background: rgba(77, 206, 178, 0.1);
+        }
+
+        .type-stack {
+            position: absolute;
+            right: 30px;
+            bottom: 28px;
+            left: 30px;
+            display: grid;
+            gap: 9px;
+        }
+
+        .type-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 54px;
+            padding: 0 16px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.045);
+            color: #dbe4f2;
+            font-size: 0.84rem;
+            font-weight: 680;
+        }
+
+        .type-pill span:last-child {
+            color: var(--muted);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.68rem;
+            font-weight: 650;
+        }
+
+        .daily-card {
+            grid-column: span 7;
+            min-height: 430px;
+            background:
+                radial-gradient(circle at 84% 44%, rgba(122, 99, 255, 0.18), transparent 36%),
+                linear-gradient(145deg, rgba(17, 27, 43, 0.96), rgba(9, 14, 25, 0.96));
+        }
+
+        .daily-card::after {
+            right: 10%;
+            bottom: -80px;
+        }
+
+        .protection-orbit {
+            position: absolute;
+            right: 34px;
+            bottom: 26px;
+            width: 278px;
+            height: 214px;
+        }
+
+        .orbit {
+            position: absolute;
+            inset: 12px 0;
+            transform: rotate(-8deg);
+            border: 1px solid rgba(120, 159, 255, 0.25);
+            border-radius: 50%;
+        }
+
+        .orbit:nth-child(2) {
+            inset: 42px 34px;
+            transform: rotate(12deg);
+            border-color: rgba(159, 134, 255, 0.26);
+        }
+
+        .orbit-dot {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border: 3px solid #caddff;
+            border-radius: 50%;
+            background: var(--blue);
+            box-shadow: 0 0 24px rgba(85, 129, 255, 0.85);
+        }
+
+        .orbit-dot.one {
+            top: 17px;
+            left: 88px;
+        }
+
+        .orbit-dot.two {
+            right: 22px;
+            bottom: 50px;
+            background: var(--violet);
+        }
+
+        .orbit-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: grid;
+            place-items: center;
+            width: 92px;
+            height: 92px;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(255, 255, 255, 0.17);
+            border-radius: 30px;
+            background: rgba(15, 26, 47, 0.88);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            color: #fff;
+            font-size: 1.55rem;
+            font-weight: 820;
+        }
+
+        .security-section {
+            position: relative;
+            border-block: 1px solid var(--line);
+            background:
+                radial-gradient(circle at 16% 40%, rgba(53, 94, 223, 0.13), transparent 30rem),
+                var(--bg-deep);
+        }
+
+        .security-grid {
+            display: grid;
+            grid-template-columns: 0.9fr 1.1fr;
+            gap: 90px;
+            align-items: center;
+        }
+
+        .security-copy .eyebrow,
+        .showcase-copy .eyebrow {
+            margin-bottom: 24px;
+        }
+
+        .security-points {
+            display: grid;
+            gap: 18px;
+            margin-top: 38px;
+        }
+
+        .security-point {
+            display: grid;
+            grid-template-columns: 42px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .security-point span:first-child {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border: 1px solid rgba(111, 156, 255, 0.22);
+            border-radius: 14px;
+            background: rgba(75, 114, 236, 0.1);
+            color: var(--blue-bright);
+            font: 760 0.76rem ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .security-point strong {
+            display: block;
+            margin: 2px 0 5px;
+            font-size: 0.96rem;
+        }
+
+        .security-point p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .security-map {
+            position: relative;
+            padding: 30px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            background: linear-gradient(145deg, rgba(15, 25, 43, 0.94), rgba(8, 13, 23, 0.94));
+            box-shadow: var(--shadow);
+        }
+
+        .security-map::before {
+            position: absolute;
+            top: 74px;
+            bottom: 74px;
+            left: 55px;
+            width: 1px;
+            content: "";
+            background: linear-gradient(var(--blue), rgba(124, 102, 255, 0.4), var(--mint));
+        }
+
+        .map-step {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 18px;
+            align-items: center;
+            min-height: 114px;
+            margin-bottom: 14px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.085);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .map-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .map-icon {
+            display: grid;
+            place-items: center;
+            width: 52px;
+            height: 52px;
+            border: 1px solid rgba(121, 158, 255, 0.24);
+            border-radius: 17px;
+            background: #111d32;
+            color: #b9cfff;
+            font: 800 0.76rem ui-monospace, SFMono-Regular, Menlo, monospace;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .map-step strong {
+            display: block;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .map-step p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+
+        .map-badge {
+            display: inline-flex;
+            margin-top: 10px;
+            padding: 5px 9px;
+            border-radius: 9px;
+            background: rgba(117, 229, 195, 0.08);
+            color: var(--mint);
+            font: 760 0.64rem ui-monospace, SFMono-Regular, Menlo, monospace;
+            letter-spacing: 0.04em;
+        }
+
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: 0.92fr 1.08fr;
+            gap: 92px;
+            align-items: center;
+        }
+
+        .showcase-device-wrap {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-height: 690px;
+        }
+
+        .showcase-device-wrap::before {
+            position: absolute;
+            width: min(500px, 100%);
+            aspect-ratio: 1;
+            content: "";
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 107, 246, 0.2), transparent 66%);
+            filter: blur(2px);
+        }
+
+        .showcase-device {
+            position: relative;
+            z-index: 2;
+            width: 315px;
+            overflow: hidden;
+            border: 10px solid #090c13;
+            border-radius: 46px;
+            background: #edf0f6;
+            box-shadow: 0 48px 100px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12);
+            transform: rotate(-3deg);
+        }
+
+        .showcase-device::before {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            z-index: 3;
+            width: 92px;
+            height: 22px;
+            content: "";
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: #070a10;
+        }
+
+        .showcase-device img {
+            width: 100%;
+        }
+
+        .showcase-note {
+            position: absolute;
+            z-index: 4;
+            max-width: 190px;
+            padding: 15px 17px;
+            border: 1px solid var(--line-strong);
+            border-radius: 17px;
+            background: rgba(12, 21, 36, 0.9);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.26);
+            color: var(--text-soft);
+            font-size: 0.76rem;
+            font-weight: 690;
+            line-height: 1.42;
+            backdrop-filter: blur(18px);
+        }
+
+        .showcase-note strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--mint);
+            font: 780 0.62rem ui-monospace, SFMono-Regular, Menlo, monospace;
+            letter-spacing: 0.08em;
+        }
+
+        .note-one {
+            top: 140px;
+            right: 0;
+        }
+
+        .note-two {
+            bottom: 124px;
+            left: 0;
+        }
+
+        .feature-list {
+            display: grid;
+            gap: 0;
+            margin-top: 46px;
+            border-top: 1px solid var(--line);
+        }
+
+        .feature-list-item {
+            display: grid;
+            grid-template-columns: 44px 1fr;
+            gap: 16px;
+            padding: 22px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .feature-list-item > span {
+            color: var(--blue-bright);
+            font: 780 0.76rem ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .feature-list-item strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 1rem;
+        }
+
+        .feature-list-item p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .zero-section {
+            padding-top: 0;
+        }
+
+        .zero-panel {
+            position: relative;
+            overflow: hidden;
+            padding: 72px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            background:
+                radial-gradient(circle at 88% 14%, rgba(102, 87, 255, 0.18), transparent 24rem),
+                radial-gradient(circle at 12% 86%, rgba(44, 131, 255, 0.15), transparent 28rem),
+                #0c1422;
+            box-shadow: var(--shadow);
+        }
+
+        .zero-panel::after {
+            position: absolute;
+            top: -180px;
+            right: -140px;
+            width: 460px;
+            height: 460px;
+            content: "";
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 50%;
+            box-shadow: 0 0 0 70px rgba(255, 255, 255, 0.018), 0 0 0 140px rgba(255, 255, 255, 0.012);
+        }
+
+        .zero-panel h2 {
+            position: relative;
+            z-index: 2;
+            max-width: 760px;
+            margin: 0;
+            font-size: clamp(2.75rem, 5.7vw, 5.4rem);
+            letter-spacing: -0.065em;
+            line-height: 0.98;
+        }
+
+        .zero-panel h2 span {
+            color: var(--blue-bright);
+        }
+
+        .zero-stats {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            margin-top: 64px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: var(--line);
+        }
+
+        .zero-stat {
+            padding: 26px;
+            background: rgba(7, 12, 21, 0.86);
+        }
+
+        .zero-stat strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #fff;
+            font-size: 2.8rem;
+            letter-spacing: -0.06em;
+        }
+
+        .zero-stat span {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 650;
+        }
+
+        .open-source {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 40px;
+            align-items: center;
+            margin-top: 22px;
+            padding: 28px 30px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .open-source strong {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 1.05rem;
+        }
+
+        .open-source p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .text-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            color: #dce7ff;
+            text-decoration: none;
+            font-size: 0.86rem;
+            font-weight: 760;
+        }
+
+        .cta-section {
+            padding: 50px 0 120px;
+        }
+
+        .cta {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 60px;
+            align-items: end;
+            overflow: hidden;
+            padding: 72px;
+            border: 1px solid rgba(135, 165, 255, 0.2);
+            border-radius: var(--radius-xl);
+            background:
+                radial-gradient(circle at 88% 4%, rgba(139, 108, 255, 0.32), transparent 22rem),
+                radial-gradient(circle at 15% 100%, rgba(41, 116, 255, 0.3), transparent 28rem),
+                linear-gradient(135deg, #111d35, #0a1120 70%);
+            box-shadow: var(--shadow);
+        }
+
+        .cta::before {
+            position: absolute;
+            right: 16%;
+            bottom: -240px;
+            width: 440px;
+            height: 440px;
+            content: "";
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            box-shadow: 0 0 0 60px rgba(255, 255, 255, 0.02), 0 0 0 120px rgba(255, 255, 255, 0.012);
+        }
+
+        .cta > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .cta h2 {
+            max-width: 780px;
+        }
+
+        .cta p {
+            max-width: 620px;
+            margin: 22px 0 0;
+            color: var(--text-soft);
             line-height: 1.7;
         }
-        .local {
-            display: inline-block;
-            margin: 12px 0 24px;
-            padding: 6px 12px;
-            color: #4f3c58;
-            background: #efe6f3;
-            border-radius: 999px;
-            font-weight: 600;
+
+        .cta-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 220px;
         }
-        a.button {
-            display: inline-block;
-            margin: 8px 8px 0 0;
-            padding: 12px 18px;
-            color: #fff;
-            background: #67506f;
-            border-radius: 14px;
+
+        .site-footer {
+            padding: 42px 0 50px;
+            border-top: 1px solid var(--line);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .footer-brand img {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+        }
+
+        .footer-brand strong {
+            display: block;
+            font-size: 0.92rem;
+        }
+
+        .footer-brand > div > span {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 12px 24px;
+        }
+
+        .footer-links a {
+            color: var(--muted);
             text-decoration: none;
-            font-weight: 600;
+            font-size: 0.78rem;
+            font-weight: 650;
         }
-        @media (prefers-color-scheme: dark) {
-            body { background: #171319; color: #f1eaf3; }
-            .card { background: #241f26; box-shadow: none; }
-            .local { color: #eadcf0; background: #44364a; }
-            a.button { color: #221c24; background: #d9bddd; }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        @keyframes phone-float {
+            0%, 100% { transform: translateZ(60px) translateY(0); }
+            50% { transform: translateZ(60px) translateY(-12px); }
+        }
+
+        @media (max-width: 1040px) {
+            .hero {
+                min-height: auto;
+                padding-top: 168px;
+            }
+
+            .hero-grid,
+            .security-grid,
+            .showcase-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-grid {
+                gap: 52px;
+            }
+
+            .hero-copy {
+                max-width: 720px;
+            }
+
+            .hero-visual {
+                width: min(100%, 680px);
+                margin-inline: auto;
+            }
+
+            .signals {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .signal:nth-child(2) {
+                border-right: 1px solid var(--line);
+            }
+
+            .signal:nth-child(-n + 2) {
+                border-bottom: 1px solid var(--line);
+            }
+
+            .security-grid,
+            .showcase-grid {
+                gap: 62px;
+            }
+
+            .security-copy,
+            .showcase-copy {
+                max-width: 760px;
+            }
+
+            .showcase-device-wrap {
+                order: 2;
+            }
+
+            .showcase-copy {
+                order: 1;
+            }
+
+            .cta {
+                grid-template-columns: 1fr;
+                align-items: start;
+            }
+
+            .cta-actions {
+                flex-direction: row;
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 760px) {
+            :root {
+                --shell: min(100% - 28px, 1180px);
+                --radius-xl: 28px;
+                --radius-lg: 24px;
+            }
+
+            .site-header {
+                padding-top: 14px;
+            }
+
+            .nav {
+                min-height: 60px;
+                padding: 8px 8px 8px 13px;
+                border-radius: 18px;
+            }
+
+            .brand img {
+                width: 36px;
+                height: 36px;
+                border-radius: 11px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .nav-cta {
+                display: none;
+            }
+
+            .nav-actions {
+                gap: 0;
+            }
+
+            .language-switch {
+                border-radius: 12px;
+            }
+
+            .language-option {
+                min-width: 41px;
+                min-height: 34px;
+                padding-inline: 8px;
+            }
+
+            .hero {
+                padding: 130px 0 54px;
+            }
+
+            .hero-grid {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 32px;
+            }
+
+            .hero h1 {
+                font-size: clamp(3.35rem, 17vw, 5rem);
+                letter-spacing: -0.07em;
+            }
+
+            .hero-copy {
+                margin-top: 24px;
+                font-size: 1rem;
+            }
+
+            .hero-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+                margin-top: 28px;
+            }
+
+            .hero-actions .button {
+                width: 100%;
+            }
+
+            .trust-line {
+                gap: 9px 16px;
+                margin-top: 24px;
+            }
+
+            .hero-visual {
+                height: 420px;
+            }
+
+            .hero-visual::before {
+                width: 360px;
+                height: 360px;
+            }
+
+            .hero-visual::after {
+                width: 260px;
+                height: 260px;
+            }
+
+            .device-stage {
+                height: 400px;
+            }
+
+            .phone {
+                border-width: 5px;
+                border-radius: 24px;
+            }
+
+            .phone::before {
+                top: 6px;
+                height: 13px;
+            }
+
+            .phone-left {
+                top: 95px;
+            }
+
+            .phone-right {
+                top: 82px;
+            }
+
+            .privacy-chip {
+                min-width: 142px;
+                padding: 9px 11px;
+                border-radius: 12px;
+                font-size: 0.61rem;
+            }
+
+            .chip-top {
+                top: -18px;
+                right: auto;
+                left: 0;
+            }
+
+            .chip-bottom {
+                right: 0;
+                bottom: 0;
+                left: auto;
+            }
+
+            html[lang="zh-CN"] .hero h1 {
+                font-size: clamp(3rem, 12.5vw, 4rem);
+                line-height: 1;
+            }
+
+            .signals {
+                grid-template-columns: 1fr;
+            }
+
+            .signal,
+            .signal:nth-child(2),
+            .signal:last-child {
+                min-height: auto;
+                padding: 23px 20px;
+                border-right: 1px solid var(--line);
+                border-bottom: 1px solid var(--line);
+            }
+
+            .signal:last-child {
+                border-bottom: 0;
+            }
+
+            .section {
+                padding: 92px 0;
+            }
+
+            .section-heading {
+                grid-template-columns: 1fr;
+                gap: 18px;
+                margin-bottom: 38px;
+            }
+
+            .section-heading .eyebrow {
+                margin-top: 0;
+            }
+
+            .section-heading h2,
+            .security-copy h2,
+            .showcase-copy h2,
+            .cta h2 {
+                font-size: clamp(2.55rem, 12vw, 4rem);
+            }
+
+            .bento {
+                grid-template-columns: 1fr;
+            }
+
+            .offline-card,
+            .crypto-card,
+            .types-card,
+            .daily-card {
+                grid-column: auto;
+                min-height: 410px;
+            }
+
+            .feature-card {
+                padding: 26px;
+            }
+
+            .status-panel {
+                right: 20px;
+                bottom: 20px;
+                left: 20px;
+            }
+
+            .lock-visual {
+                right: 26px;
+                bottom: 24px;
+                transform: scale(0.88);
+                transform-origin: right bottom;
+            }
+
+            .protection-orbit {
+                right: 6px;
+                transform: scale(0.82);
+                transform-origin: right bottom;
+            }
+
+            .security-map {
+                padding: 16px;
+                border-radius: 26px;
+            }
+
+            .security-map::before {
+                left: 41px;
+            }
+
+            .map-step {
+                grid-template-columns: 44px 1fr;
+                min-height: 104px;
+                padding: 15px;
+            }
+
+            .map-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+            }
+
+            .showcase-device-wrap {
+                min-height: 590px;
+            }
+
+            .showcase-device {
+                width: min(268px, 74vw);
+                border-width: 8px;
+                border-radius: 38px;
+            }
+
+            .showcase-note {
+                max-width: 154px;
+                padding: 12px 13px;
+                font-size: 0.68rem;
+            }
+
+            .note-one {
+                top: 74px;
+            }
+
+            .note-two {
+                bottom: 78px;
+            }
+
+            .zero-panel,
+            .cta {
+                padding: 40px 24px;
+            }
+
+            .zero-stats {
+                grid-template-columns: 1fr;
+                margin-top: 42px;
+            }
+
+            .zero-stat {
+                padding: 21px;
+            }
+
+            .zero-stat strong {
+                font-size: 2.3rem;
+            }
+
+            .open-source {
+                grid-template-columns: 1fr;
+                gap: 18px;
+                padding: 24px;
+            }
+
+            .cta-section {
+                padding: 20px 0 88px;
+            }
+
+            .cta-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+                width: 100%;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-links {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 <body>
-<div class="page">
-    <div class="card">
-        <span class="local">Offline by design</span>
-        <h1>PocketVault</h1>
-        <p>An open-source Android password manager with no Internet permission, analytics, advertising, telemetry, crash reporting, account, or remote server.</p>
-        <p>Your encrypted vault remains on your device unless you explicitly export or share a backup to a destination you choose.</p>
-        <p>Google Play and the project's official GitHub Releases distribute the same package and Play App Signing identity.</p>
-        <a class="button" href="privacy_policy.html">Privacy policy</a>
-        <a class="button" href="https://play.google.com/store/apps/details?id=com.turisla.hellopocket">Google Play</a>
+<a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
+
+<header class="site-header">
+    <nav class="nav shell" aria-label="Main navigation" data-i18n-aria-label="nav.label">
+        <a class="brand" href="#top" aria-label="PocketVault home" data-i18n-aria-label="brand.home">
+            <img src="assets/app-icon.png" alt="">
+            <span>PocketVault</span>
+        </a>
+        <div class="nav-links">
+            <a href="#features" data-i18n="nav.features">Features</a>
+            <a href="#security" data-i18n="nav.security">Security</a>
+            <a href="#open-source" data-i18n="nav.openSource">Open source</a>
+        </div>
+        <div class="nav-actions">
+            <div class="language-switch" role="group" aria-label="Language" data-i18n-aria-label="language.label">
+                <button class="language-option" type="button" data-language="en" aria-label="English" aria-pressed="true" lang="en">EN</button>
+                <button class="language-option" type="button" data-language="zh" aria-label="简体中文" aria-pressed="false" lang="zh-CN">中文</button>
+            </div>
+            <a class="nav-cta" href="https://play.google.com/store/apps/details?id=com.turisla.hellopocket"><span data-i18n="nav.getApp">Get the app</span> <span class="arrow" aria-hidden="true">↗</span></a>
+        </div>
+    </nav>
+</header>
+
+<main id="main">
+    <section class="hero" id="top">
+        <div class="hero-grid shell">
+            <div class="hero-content">
+                <div class="eyebrow" data-i18n="hero.eyebrow">Private by architecture</div>
+                <h1>
+                    <span class="hero-title-line" data-i18n="hero.titleMain">Your digital life.</span>
+                    <span class="hero-title-line hero-title-accent" data-i18n="hero.titleAccent">Yours alone.</span>
+                </h1>
+                <p class="hero-copy" data-i18n="hero.copy">PocketVault is a strictly offline password manager for Android. Passwords, cards, secure notes, and TOTP codes stay encrypted on your device—without an account, a cloud, or a remote server.</p>
+                <div class="hero-actions">
+                    <a class="button button-primary" href="https://play.google.com/store/apps/details?id=com.turisla.hellopocket"><span data-i18n="hero.getPlay">Get it on Google Play</span> <span class="arrow" aria-hidden="true">↗</span></a>
+                    <a class="button button-secondary" href="https://github.com/greyfreedom/PocketVault"><span data-i18n="hero.source">Explore the source</span> <span class="arrow" aria-hidden="true">↗</span></a>
+                </div>
+                <div class="trust-line" aria-label="Privacy highlights" data-i18n-aria-label="hero.trustLabel">
+                    <span data-i18n="hero.noInternet">No Internet permission</span>
+                    <span data-i18n="hero.noTracking">No tracking</span>
+                    <span>Apache 2.0</span>
+                </div>
+            </div>
+
+            <div class="hero-visual" aria-label="PocketVault app screens" data-i18n-aria-label="hero.visualLabel">
+                <div class="device-stage">
+                    <div class="phone phone-left" aria-hidden="true">
+                        <img src="assets/generator-screen.png" alt="" loading="eager">
+                    </div>
+                    <div class="phone phone-main">
+                        <img src="assets/vault-screen.png" alt="PocketVault password vault screen" data-i18n-alt="hero.imageAlt" loading="eager">
+                    </div>
+                    <div class="phone phone-right" aria-hidden="true">
+                        <img src="assets/totp-screen.png" alt="" loading="eager">
+                    </div>
+                    <div class="privacy-chip chip-top" data-i18n="hero.encrypted">Encrypted on device</div>
+                    <div class="privacy-chip chip-bottom" data-i18n="hero.network">Network access: none</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="signal-bar" aria-label="PocketVault highlights" data-i18n-aria-label="signals.label">
+        <div class="signals shell">
+            <div class="signal">
+                <strong data-i18n="signals.offlineTitle">Strictly offline</strong>
+                <span data-i18n="signals.offlineCopy">Built without Android Internet permission.</span>
+            </div>
+            <div class="signal">
+                <strong data-i18n="signals.encryptionTitle">Strong encryption</strong>
+                <span data-i18n="signals.encryptionCopy">Google Tink Streaming AEAD protects your vault.</span>
+            </div>
+            <div class="signal">
+                <strong data-i18n="signals.openSourceTitle">Open source</strong>
+                <span data-i18n="signals.openSourceCopy">Transparent code under Apache License 2.0.</span>
+            </div>
+            <div class="signal">
+                <strong>Android 7.0+</strong>
+                <span data-i18n="signals.androidCopy">Modern protection on devices you already own.</span>
+            </div>
+        </div>
     </div>
-</div>
+
+    <section class="section" id="features">
+        <div class="shell">
+            <div class="section-heading">
+                <div class="eyebrow" data-i18n="features.eyebrow">Quietly capable</div>
+                <div>
+                    <h2 data-i18n-html="features.heading">Everything you need.<br>Nothing watching you.</h2>
+                    <p data-i18n="features.copy">A complete password manager designed around a simple boundary: your vault belongs on your device, under your control.</p>
+                </div>
+            </div>
+
+            <div class="bento">
+                <article class="feature-card offline-card">
+                    <div class="card-label" data-i18n="features.offline.label">Offline first</div>
+                    <h3 data-i18n="features.offline.title">Privacy is not a setting. It is the architecture.</h3>
+                    <p data-i18n="features.offline.copy">PocketVault has no account system, analytics SDK, advertising, telemetry, or remote backend.</p>
+                    <div class="status-panel" aria-label="Privacy status" data-i18n-aria-label="features.offline.statusLabel">
+                        <div class="status-row"><span data-i18n="features.offline.internet">INTERNET_PERMISSION</span><strong data-i18n="features.offline.absent">ABSENT</strong></div>
+                        <div class="status-row"><span data-i18n="features.offline.backend">REMOTE_BACKEND</span><strong data-i18n="features.offline.none">NONE</strong></div>
+                        <div class="status-row"><span data-i18n="features.offline.analytics">ANALYTICS</span><strong data-i18n="features.offline.none">NONE</strong></div>
+                    </div>
+                </article>
+
+                <article class="feature-card crypto-card">
+                    <div class="card-label" data-i18n="features.crypto.label">Encrypted by default</div>
+                    <h3 data-i18n="features.crypto.title">Built to keep secrets secret.</h3>
+                    <p data-i18n="features.crypto.copy">AES-256-GCM-HKDF streaming encryption protects vault data, including attachments.</p>
+                    <div class="lock-visual" aria-hidden="true">
+                        <div class="lock-ring"></div>
+                        <div class="lock-body"></div>
+                    </div>
+                </article>
+
+                <article class="feature-card types-card">
+                    <div class="card-label" data-i18n="features.types.label">One private vault</div>
+                    <h3 data-i18n="features.types.title">More than passwords.</h3>
+                    <p data-i18n="features.types.copy">Keep the essentials together, organized and locally searchable.</p>
+                    <div class="type-stack" aria-label="Supported vault items" data-i18n-aria-label="features.types.listLabel">
+                        <div class="type-pill"><span data-i18n="features.types.passwords">Passwords</span><span data-i18n="features.types.login">LOGIN</span></div>
+                        <div class="type-pill"><span data-i18n="features.types.notes">Secure notes</span><span data-i18n="features.types.note">NOTE</span></div>
+                        <div class="type-pill"><span data-i18n="features.types.cards">Payment cards</span><span data-i18n="features.types.card">CARD</span></div>
+                        <div class="type-pill"><span data-i18n="features.types.totp">TOTP codes</span><span data-i18n="features.types.twoFactor">2FA</span></div>
+                    </div>
+                </article>
+
+                <article class="feature-card daily-card">
+                    <div class="card-label" data-i18n="features.daily.label">Safer every day</div>
+                    <h3 data-i18n="features.daily.title">Protection that stays out of your way.</h3>
+                    <p data-i18n="features.daily.copy">Biometric convenience unlock, auto-lock, screenshot protection, and timed clipboard clearing help reduce routine exposure.</p>
+                    <div class="protection-orbit" aria-hidden="true">
+                        <div class="orbit"></div>
+                        <div class="orbit"></div>
+                        <span class="orbit-dot one"></span>
+                        <span class="orbit-dot two"></span>
+                        <div class="orbit-center" data-i18n="features.daily.seconds">60s</div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="section security-section" id="security">
+        <div class="security-grid shell">
+            <div class="security-copy">
+                <div class="eyebrow" data-i18n="security.eyebrow">Designed with a boundary</div>
+                <h2 data-i18n="security.title">Your master password stays the source of truth.</h2>
+                <p data-i18n="security.copy">A random vault key encrypts your data. Your master password wraps that key, so changing the password is fast without compromising the encryption model.</p>
+                <div class="security-points">
+                    <div class="security-point">
+                        <span>01</span>
+                        <div>
+                            <strong data-i18n="security.derivationTitle">Strong local derivation</strong>
+                            <p data-i18n="security.derivationCopy">PBKDF2-HMAC-SHA256 with 600,000 iterations for current vault writes.</p>
+                        </div>
+                    </div>
+                    <div class="security-point">
+                        <span>02</span>
+                        <div>
+                            <strong data-i18n="security.authTitle">Authenticated encryption</strong>
+                            <p data-i18n="security.authCopy">Google Tink Streaming AEAD protects content and verifies integrity.</p>
+                        </div>
+                    </div>
+                    <div class="security-point">
+                        <span>03</span>
+                        <div>
+                            <strong data-i18n="security.bioTitle">Biometrics as convenience</strong>
+                            <p data-i18n="security.bioCopy">Android Keystore can unlock the vault locally; it never replaces your master password.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-map" aria-label="PocketVault encryption flow" data-i18n-aria-label="security.mapLabel">
+                <div class="map-step">
+                    <div class="map-icon">MP</div>
+                    <div>
+                        <strong data-i18n="security.masterTitle">Your master password</strong>
+                        <p data-i18n="security.masterCopy">Combined with a random salt to derive a local key-encryption key.</p>
+                        <span class="map-badge" data-i18n="security.masterBadge">NEVER PERSISTED</span>
+                    </div>
+                </div>
+                <div class="map-step">
+                    <div class="map-icon">KEY</div>
+                    <div>
+                        <strong data-i18n="security.keyTitle">Wrapped random keyset</strong>
+                        <p data-i18n="security.keyCopy">The keyset is encrypted at rest and can be re-wrapped when your password changes.</p>
+                        <span class="map-badge" data-i18n="security.keyBadge">PASSWORD-WRAPPED</span>
+                    </div>
+                </div>
+                <div class="map-step">
+                    <div class="map-icon">VAULT</div>
+                    <div>
+                        <strong data-i18n="security.vaultTitle">Encrypted vault bundle</strong>
+                        <p data-i18n="security.vaultCopy">Independent encrypted data files and attachments remain portable and under your control.</p>
+                        <span class="map-badge" data-i18n="security.vaultBadge">LOCAL BY DEFAULT</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="showcase-grid shell">
+            <div class="showcase-device-wrap" aria-label="PocketVault interface preview" data-i18n-aria-label="showcase.visualLabel">
+                <div class="showcase-device">
+                    <img src="assets/vault-screen.png" alt="PocketVault vault with password and secure note entries" data-i18n-alt="showcase.imageAlt" loading="lazy">
+                </div>
+                <div class="showcase-note note-one"><strong data-i18n="showcase.searchLabel">LOCAL SEARCH</strong><span data-i18n="showcase.searchCopy">Find what you need without indexing sensitive secrets.</span></div>
+                <div class="showcase-note note-two"><strong data-i18n="showcase.structureLabel">YOUR STRUCTURE</strong><span data-i18n="showcase.structureCopy">Categories, favorites, custom fields, and flexible layouts.</span></div>
+            </div>
+
+            <div class="showcase-copy">
+                <div class="eyebrow" data-i18n="showcase.eyebrow">Made for real life</div>
+                <h2 data-i18n="showcase.title">A calm place for everything important.</h2>
+                <p data-i18n="showcase.copy">Thoughtful details make PocketVault useful every day, while sensitive values stay outside search indexes and remote systems.</p>
+                <div class="feature-list">
+                    <div class="feature-list-item">
+                        <span>01</span>
+                        <div>
+                            <strong data-i18n="showcase.passwordTitle">Passwords and passphrases</strong>
+                            <p data-i18n="showcase.passwordCopy">Generate strong credentials with configurable rules, then organize them with categories and custom fields.</p>
+                        </div>
+                    </div>
+                    <div class="feature-list-item">
+                        <span>02</span>
+                        <div>
+                            <strong data-i18n="showcase.totpTitle">TOTP without a service dependency</strong>
+                            <p data-i18n="showcase.totpCopy">Scan QR codes locally or add entries manually, with secrets kept inside the encrypted vault.</p>
+                        </div>
+                    </div>
+                    <div class="feature-list-item">
+                        <span>03</span>
+                        <div>
+                            <strong data-i18n="showcase.backupTitle">Encrypted backup and restore</strong>
+                            <p data-i18n="showcase.backupCopy">Export a portable backup to a destination you choose—PocketVault never chooses a cloud for you.</p>
+                        </div>
+                    </div>
+                    <div class="feature-list-item">
+                        <span>07</span>
+                        <div>
+                            <strong data-i18n="showcase.languagesTitle">Seven languages</strong>
+                            <p data-i18n="showcase.languagesCopy">Available in English, Simplified Chinese, Spanish, Hindi, Korean, Portuguese, and Vietnamese.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section zero-section" id="open-source">
+        <div class="shell">
+            <div class="zero-panel">
+                <h2 data-i18n-html="zero.heading">The best privacy policy starts with <span>zero.</span></h2>
+                <div class="zero-stats">
+                    <div class="zero-stat"><strong>0</strong><span data-i18n="zero.accounts">cloud accounts</span></div>
+                    <div class="zero-stat"><strong>0</strong><span data-i18n="zero.analytics">advertising or analytics SDKs</span></div>
+                    <div class="zero-stat"><strong>0</strong><span data-i18n="zero.permissions">Internet permissions</span></div>
+                </div>
+            </div>
+            <div class="open-source">
+                <div>
+                    <strong data-i18n="openSource.title">Open code. Verifiable choices.</strong>
+                    <p data-i18n="openSource.copy">Review the implementation, security model, release process, and known limitations on GitHub.</p>
+                </div>
+                <a class="text-link" href="https://github.com/greyfreedom/PocketVault"><span data-i18n="openSource.link">View repository</span> <span class="arrow" aria-hidden="true">↗</span></a>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="cta shell">
+            <div>
+                <div class="eyebrow" data-i18n="cta.eyebrow">Your vault. Your rules.</div>
+                <h2 data-i18n="cta.title">Keep your secrets close—not in someone else’s cloud.</h2>
+                <p data-i18n="cta.copy">Download PocketVault for Android or inspect every design decision in the source.</p>
+            </div>
+            <div class="cta-actions">
+                <a class="button button-primary" href="https://play.google.com/store/apps/details?id=com.turisla.hellopocket"><span data-i18n="cta.getApp">Get PocketVault</span> <span class="arrow" aria-hidden="true">↗</span></a>
+                <a class="button button-secondary" href="https://github.com/greyfreedom/PocketVault/releases"><span data-i18n="cta.releases">GitHub releases</span> <span class="arrow" aria-hidden="true">↗</span></a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-grid shell">
+        <div class="footer-brand">
+            <img src="assets/app-icon.png" alt="">
+            <div>
+                <strong>PocketVault</strong>
+                <span>© <span id="year">2026</span> · <span data-i18n="footer.tagline">Private by architecture.</span></span>
+            </div>
+        </div>
+        <div class="footer-links">
+            <a href="privacy_policy.html" data-i18n="footer.privacy">Privacy</a>
+            <a href="https://github.com/greyfreedom/PocketVault/blob/main/SECURITY.md" data-i18n="footer.security">Security</a>
+            <a href="https://github.com/greyfreedom/PocketVault">GitHub</a>
+            <a href="https://github.com/greyfreedom/PocketVault/blob/main/LICENSE">Apache 2.0</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    const translations = {
+        en: {
+            "meta.title": "PocketVault — Private by architecture",
+            "meta.description": "PocketVault is a strictly offline, open-source Android password manager. No account, no cloud, no tracking—your encrypted vault stays on your device.",
+            "skip": "Skip to content",
+            "nav.label": "Main navigation",
+            "brand.home": "PocketVault home",
+            "nav.features": "Features",
+            "nav.security": "Security",
+            "nav.openSource": "Open source",
+            "nav.getApp": "Get the app",
+            "language.label": "Language",
+            "hero.eyebrow": "Private by architecture",
+            "hero.titleMain": "Your digital life.",
+            "hero.titleAccent": "Yours alone.",
+            "hero.copy": "PocketVault is a strictly offline password manager for Android. Passwords, cards, secure notes, and TOTP codes stay encrypted on your device—without an account, a cloud, or a remote server.",
+            "hero.getPlay": "Get it on Google Play",
+            "hero.source": "Explore the source",
+            "hero.trustLabel": "Privacy highlights",
+            "hero.noInternet": "No Internet permission",
+            "hero.noTracking": "No tracking",
+            "hero.visualLabel": "PocketVault app screens",
+            "hero.imageAlt": "PocketVault password vault screen",
+            "hero.encrypted": "Encrypted on device",
+            "hero.network": "Network access: none",
+            "signals.label": "PocketVault highlights",
+            "signals.offlineTitle": "Strictly offline",
+            "signals.offlineCopy": "Built without Android Internet permission.",
+            "signals.encryptionTitle": "Strong encryption",
+            "signals.encryptionCopy": "Google Tink Streaming AEAD protects your vault.",
+            "signals.openSourceTitle": "Open source",
+            "signals.openSourceCopy": "Transparent code under Apache License 2.0.",
+            "signals.androidCopy": "Modern protection on devices you already own.",
+            "features.eyebrow": "Quietly capable",
+            "features.heading": "Everything you need.<br>Nothing watching you.",
+            "features.copy": "A complete password manager designed around a simple boundary: your vault belongs on your device, under your control.",
+            "features.offline.label": "Offline first",
+            "features.offline.title": "Privacy is not a setting. It is the architecture.",
+            "features.offline.copy": "PocketVault has no account system, analytics SDK, advertising, telemetry, or remote backend.",
+            "features.offline.statusLabel": "Privacy status",
+            "features.offline.internet": "INTERNET_PERMISSION",
+            "features.offline.absent": "ABSENT",
+            "features.offline.backend": "REMOTE_BACKEND",
+            "features.offline.none": "NONE",
+            "features.offline.analytics": "ANALYTICS",
+            "features.crypto.label": "Encrypted by default",
+            "features.crypto.title": "Built to keep secrets secret.",
+            "features.crypto.copy": "AES-256-GCM-HKDF streaming encryption protects vault data, including attachments.",
+            "features.types.label": "One private vault",
+            "features.types.title": "More than passwords.",
+            "features.types.copy": "Keep the essentials together, organized and locally searchable.",
+            "features.types.listLabel": "Supported vault items",
+            "features.types.passwords": "Passwords",
+            "features.types.login": "LOGIN",
+            "features.types.notes": "Secure notes",
+            "features.types.note": "NOTE",
+            "features.types.cards": "Payment cards",
+            "features.types.card": "CARD",
+            "features.types.totp": "TOTP codes",
+            "features.types.twoFactor": "2FA",
+            "features.daily.label": "Safer every day",
+            "features.daily.title": "Protection that stays out of your way.",
+            "features.daily.copy": "Biometric convenience unlock, auto-lock, screenshot protection, and timed clipboard clearing help reduce routine exposure.",
+            "features.daily.seconds": "60s",
+            "security.eyebrow": "Designed with a boundary",
+            "security.title": "Your master password stays the source of truth.",
+            "security.copy": "A random vault key encrypts your data. Your master password wraps that key, so changing the password is fast without compromising the encryption model.",
+            "security.derivationTitle": "Strong local derivation",
+            "security.derivationCopy": "PBKDF2-HMAC-SHA256 with 600,000 iterations for current vault writes.",
+            "security.authTitle": "Authenticated encryption",
+            "security.authCopy": "Google Tink Streaming AEAD protects content and verifies integrity.",
+            "security.bioTitle": "Biometrics as convenience",
+            "security.bioCopy": "Android Keystore can unlock the vault locally; it never replaces your master password.",
+            "security.mapLabel": "PocketVault encryption flow",
+            "security.masterTitle": "Your master password",
+            "security.masterCopy": "Combined with a random salt to derive a local key-encryption key.",
+            "security.masterBadge": "NEVER PERSISTED",
+            "security.keyTitle": "Wrapped random keyset",
+            "security.keyCopy": "The keyset is encrypted at rest and can be re-wrapped when your password changes.",
+            "security.keyBadge": "PASSWORD-WRAPPED",
+            "security.vaultTitle": "Encrypted vault bundle",
+            "security.vaultCopy": "Independent encrypted data files and attachments remain portable and under your control.",
+            "security.vaultBadge": "LOCAL BY DEFAULT",
+            "showcase.visualLabel": "PocketVault interface preview",
+            "showcase.imageAlt": "PocketVault vault with password and secure note entries",
+            "showcase.searchLabel": "LOCAL SEARCH",
+            "showcase.searchCopy": "Find what you need without indexing sensitive secrets.",
+            "showcase.structureLabel": "YOUR STRUCTURE",
+            "showcase.structureCopy": "Categories, favorites, custom fields, and flexible layouts.",
+            "showcase.eyebrow": "Made for real life",
+            "showcase.title": "A calm place for everything important.",
+            "showcase.copy": "Thoughtful details make PocketVault useful every day, while sensitive values stay outside search indexes and remote systems.",
+            "showcase.passwordTitle": "Passwords and passphrases",
+            "showcase.passwordCopy": "Generate strong credentials with configurable rules, then organize them with categories and custom fields.",
+            "showcase.totpTitle": "TOTP without a service dependency",
+            "showcase.totpCopy": "Scan QR codes locally or add entries manually, with secrets kept inside the encrypted vault.",
+            "showcase.backupTitle": "Encrypted backup and restore",
+            "showcase.backupCopy": "Export a portable backup to a destination you choose—PocketVault never chooses a cloud for you.",
+            "showcase.languagesTitle": "Seven languages",
+            "showcase.languagesCopy": "Available in English, Simplified Chinese, Spanish, Hindi, Korean, Portuguese, and Vietnamese.",
+            "zero.heading": "The best privacy policy starts with <span>zero.</span>",
+            "zero.accounts": "cloud accounts",
+            "zero.analytics": "advertising or analytics SDKs",
+            "zero.permissions": "Internet permissions",
+            "openSource.title": "Open code. Verifiable choices.",
+            "openSource.copy": "Review the implementation, security model, release process, and known limitations on GitHub.",
+            "openSource.link": "View repository",
+            "cta.eyebrow": "Your vault. Your rules.",
+            "cta.title": "Keep your secrets close—not in someone else’s cloud.",
+            "cta.copy": "Download PocketVault for Android or inspect every design decision in the source.",
+            "cta.getApp": "Get PocketVault",
+            "cta.releases": "GitHub releases",
+            "footer.tagline": "Private by architecture.",
+            "footer.privacy": "Privacy",
+            "footer.security": "Security"
+        },
+        zh: {
+            "meta.title": "PocketVault — 架构即隐私",
+            "meta.description": "PocketVault 是一款严格离线、开源的 Android 密码管理器。无需账户、无需云端、没有追踪，你的加密保险库只保存在自己的设备上。",
+            "skip": "跳至主要内容",
+            "nav.label": "主导航",
+            "brand.home": "PocketVault 主页",
+            "nav.features": "功能",
+            "nav.security": "安全",
+            "nav.openSource": "开源",
+            "nav.getApp": "获取应用",
+            "language.label": "语言",
+            "hero.eyebrow": "架构即隐私",
+            "hero.titleMain": "你的私密数据，",
+            "hero.titleAccent": "只属于你。",
+            "hero.copy": "PocketVault 是一款严格离线运行的 Android 密码管理器。密码、支付卡、安全笔记和 TOTP 验证码均加密保存在你的设备上——无需账户、无需云端、无需远程服务器。",
+            "hero.getPlay": "前往 Google Play 获取",
+            "hero.source": "查看源代码",
+            "hero.trustLabel": "隐私特性",
+            "hero.noInternet": "无网络权限",
+            "hero.noTracking": "无追踪",
+            "hero.visualLabel": "PocketVault 应用界面",
+            "hero.imageAlt": "PocketVault 密码保险库界面",
+            "hero.encrypted": "仅在设备端加密",
+            "hero.network": "网络访问：无",
+            "signals.label": "PocketVault 核心特性",
+            "signals.offlineTitle": "严格离线",
+            "signals.offlineCopy": "构建时即不申请 Android 网络权限。",
+            "signals.encryptionTitle": "强力加密",
+            "signals.encryptionCopy": "Google Tink Streaming AEAD 保护你的保险库。",
+            "signals.openSourceTitle": "开源透明",
+            "signals.openSourceCopy": "代码公开，采用 Apache 2.0 许可证。",
+            "signals.androidCopy": "让现有设备也能获得现代安全保护。",
+            "features.eyebrow": "强大而克制",
+            "features.heading": "你的一切由你掌控，<br>不容任何窥探。",
+            "features.copy": "一个完整的密码管理器，围绕清晰边界设计：保险库留在你的设备上，始终由你掌控。",
+            "features.offline.label": "离线优先",
+            "features.offline.title": "隐私不是一个选项，而是底层架构。",
+            "features.offline.copy": "PocketVault 没有账户系统、分析 SDK、广告、遥测或远程后端。",
+            "features.offline.statusLabel": "隐私状态",
+            "features.offline.internet": "网络权限",
+            "features.offline.absent": "不存在",
+            "features.offline.backend": "远程后端",
+            "features.offline.none": "无",
+            "features.offline.analytics": "分析服务",
+            "features.crypto.label": "默认加密",
+            "features.crypto.title": "让秘密始终是秘密。",
+            "features.crypto.copy": "AES-256-GCM-HKDF 流式加密保护保险库数据及附件。",
+            "features.types.label": "一个私密保险库",
+            "features.types.title": "不只是密码。",
+            "features.types.copy": "将重要内容集中保存、分类整理，并在本地快速搜索。",
+            "features.types.listLabel": "支持的保险库条目",
+            "features.types.passwords": "密码",
+            "features.types.login": "登录",
+            "features.types.notes": "安全笔记",
+            "features.types.note": "笔记",
+            "features.types.cards": "支付卡",
+            "features.types.card": "卡片",
+            "features.types.totp": "TOTP 验证码",
+            "features.types.twoFactor": "双重验证",
+            "features.daily.label": "日常防护",
+            "features.daily.title": "安全保护，不打扰使用。",
+            "features.daily.copy": "生物识别便捷解锁、自动锁定、防截屏和定时清理剪贴板，减少日常暴露风险。",
+            "features.daily.seconds": "60秒",
+            "security.eyebrow": "边界清晰的设计",
+            "security.title": "主密码始终是唯一信源。",
+            "security.copy": "随机保险库密钥负责加密数据，主密码则用于包装该密钥。因此修改主密码既快速，也不会削弱原有加密模型。",
+            "security.derivationTitle": "高强度本地派生",
+            "security.derivationCopy": "当前格式写入使用 600,000 次 PBKDF2-HMAC-SHA256 迭代。",
+            "security.authTitle": "认证加密",
+            "security.authCopy": "Google Tink Streaming AEAD 保护内容并验证完整性。",
+            "security.bioTitle": "生物识别仅用于便捷解锁",
+            "security.bioCopy": "Android Keystore 可在本地解锁保险库，但永远不会取代主密码。",
+            "security.mapLabel": "PocketVault 加密流程",
+            "security.masterTitle": "你的主密码",
+            "security.masterCopy": "与随机盐组合，派生出仅在本地使用的密钥加密密钥。",
+            "security.masterBadge": "从不持久化",
+            "security.keyTitle": "被主密码包装的随机密钥集",
+            "security.keyCopy": "密钥集以加密形式静态保存，修改主密码时可重新包装。",
+            "security.keyBadge": "由主密码包装",
+            "security.vaultTitle": "加密保险库目录",
+            "security.vaultCopy": "多个独立加密的数据文件和附件保持可移植，并始终由你掌控。",
+            "security.vaultBadge": "默认仅本地",
+            "showcase.visualLabel": "PocketVault 界面预览",
+            "showcase.imageAlt": "包含密码和安全笔记条目的 PocketVault 保险库",
+            "showcase.searchLabel": "本地搜索",
+            "showcase.searchCopy": "无需索引敏感机密，也能快速找到所需内容。",
+            "showcase.structureLabel": "按你的方式组织",
+            "showcase.structureCopy": "分类、收藏、自定义字段与灵活布局。",
+            "showcase.eyebrow": "为真实生活而生",
+            "showcase.title": "安静收纳每一件重要之物。",
+            "showcase.copy": "精心设计的细节让 PocketVault 日常使用更顺手，同时确保敏感值不进入搜索索引或任何远程系统。",
+            "showcase.passwordTitle": "密码与口令短语",
+            "showcase.passwordCopy": "按自定义规则生成强凭据，再使用分类和自定义字段灵活整理。",
+            "showcase.totpTitle": "无需依赖服务的 TOTP",
+            "showcase.totpCopy": "在本地扫描二维码或手动添加条目，密钥始终保存在加密保险库中。",
+            "showcase.backupTitle": "加密备份与恢复",
+            "showcase.backupCopy": "将可移植备份导出到你选择的位置——PocketVault 不会替你选择云端。",
+            "showcase.languagesTitle": "七种语言",
+            "showcase.languagesCopy": "支持英语、简体中文、西班牙语、印地语、韩语、葡萄牙语和越南语。",
+            "zero.heading": "最好的隐私政策<br>始于<span>零。</span>",
+            "zero.accounts": "云端账户",
+            "zero.analytics": "广告或分析 SDK",
+            "zero.permissions": "网络权限",
+            "openSource.title": "代码公开，选择可验证。",
+            "openSource.copy": "在 GitHub 查看实现、安全模型、发布流程和已知限制。",
+            "openSource.link": "查看代码仓库",
+            "cta.eyebrow": "你的保险库，你的规则。",
+            "cta.title": "把秘密留在身边，而不是别人的云端。",
+            "cta.copy": "下载 Android 版 PocketVault，或亲自检查源代码中的每一项设计决策。",
+            "cta.getApp": "获取 PocketVault",
+            "cta.releases": "GitHub 发行版",
+            "footer.tagline": "架构即隐私。",
+            "footer.privacy": "隐私",
+            "footer.security": "安全"
+        }
+    };
+
+    const languageStorageKey = "pocketvault-language";
+    const descriptionMeta = document.querySelector('meta[name="description"]');
+
+    function applyLanguage(language, persist = true) {
+        const activeLanguage = Object.prototype.hasOwnProperty.call(translations, language) ? language : "en";
+        const copy = translations[activeLanguage];
+
+        document.documentElement.lang = activeLanguage === "zh" ? "zh-CN" : "en";
+        document.title = copy["meta.title"];
+        descriptionMeta.setAttribute("content", copy["meta.description"]);
+
+        document.querySelectorAll("[data-i18n]").forEach((element) => {
+            const value = copy[element.dataset.i18n];
+            if (value !== undefined) {
+                element.textContent = value;
+            }
+        });
+
+        document.querySelectorAll("[data-i18n-html]").forEach((element) => {
+            const value = copy[element.dataset.i18nHtml];
+            if (value !== undefined) {
+                element.innerHTML = value;
+            }
+        });
+
+        document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+            const value = copy[element.dataset.i18nAriaLabel];
+            if (value !== undefined) {
+                element.setAttribute("aria-label", value);
+            }
+        });
+
+        document.querySelectorAll("[data-i18n-alt]").forEach((element) => {
+            const value = copy[element.dataset.i18nAlt];
+            if (value !== undefined) {
+                element.setAttribute("alt", value);
+            }
+        });
+
+        document.querySelectorAll("[data-language]").forEach((button) => {
+            button.setAttribute("aria-pressed", String(button.dataset.language === activeLanguage));
+        });
+
+        if (persist) {
+            try {
+                localStorage.setItem(languageStorageKey, activeLanguage);
+            } catch (error) {
+                // 浏览器禁用本地存储时，语言切换仍在当前页面内生效。
+            }
+        }
+    }
+
+    document.querySelectorAll("[data-language]").forEach((button) => {
+        button.addEventListener("click", () => applyLanguage(button.dataset.language));
+    });
+
+    let initialLanguage = "en";
+    try {
+        const savedLanguage = localStorage.getItem(languageStorageKey);
+        if (savedLanguage === "en" || savedLanguage === "zh") {
+            initialLanguage = savedLanguage;
+        }
+    } catch (error) {
+        // 默认使用英文。
+    }
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+    applyLanguage(initialLanguage, false);
+</script>
 </body>
 </html>
