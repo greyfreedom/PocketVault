@@ -74,7 +74,8 @@ PocketVault（口袋密本）是一款完全在 Android 设备本地运行的密
 <p align="center">
   <a href="./pictures/zh/listtotp.png"><img src="./pictures/zh/listtotp.png" alt="TOTP 验证码列表" width="200"></a>
   <a href="./pictures/zh/addtotp.png"><img src="./pictures/zh/addtotp.png" alt="添加 TOTP 验证码" width="200"></a>
-  <a href="./pictures/zh/genpass.png"><img src="./pictures/zh/genpass.png" alt="密码生成器" width="200"></a>
+  <a href="./pictures/zh/random-gene.png"><img src="./pictures/zh/random-gene.png" alt="随机生成密码" width="200"></a>
+  <a href="./pictures/zh/rule-gene.png"><img src="./pictures/zh/rule-gene.png" alt="按规则生成密码" width="200"></a>
 </p>
 
 ## 安全设计

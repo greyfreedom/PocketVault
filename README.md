@@ -74,7 +74,8 @@ The screenshots contain demonstration data only. Click any screenshot to open th
 <p align="center">
   <a href="./pictures/en/listtotp.png"><img src="./pictures/en/listtotp.png" alt="TOTP code list" width="200"></a>
   <a href="./pictures/en/addtotp.png"><img src="./pictures/en/addtotp.png" alt="Add TOTP entry" width="200"></a>
-  <a href="./pictures/en/genpass.png"><img src="./pictures/en/genpass.png" alt="Password generator" width="200"></a>
+  <a href="./pictures/en/random-gene.png"><img src="./pictures/en/random-gene.png" alt="Random password generator" width="200"></a>
+  <a href="./pictures/en/rule-gene.png"><img src="./pictures/en/rule-gene.png" alt="Rule-based password generator" width="200"></a>
 </p>
 
 ## Security design
