@@ -1,5 +1,6 @@
 package com.turisla.hellopocket.data
 
+import android.app.Application
 import android.content.Context
 import android.util.Base64
 import com.google.crypto.tink.Aead
@@ -13,6 +14,11 @@ import com.turisla.hellopocket.model.Categories
 import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.model.CustomField
 import com.turisla.hellopocket.model.CustomFieldType
+import com.turisla.hellopocket.model.GeneratorRule
+import com.turisla.hellopocket.model.GeneratorSegment
+import com.turisla.hellopocket.model.GeneratorStep
+import com.turisla.hellopocket.model.GeneratorTemplate
+import com.turisla.hellopocket.model.GeneratorVaultData
 import com.turisla.hellopocket.model.PasswordEntries
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.PaymentCardBrand
@@ -25,12 +31,14 @@ import com.turisla.hellopocket.model.VaultManifestV2
 import com.turisla.hellopocket.security.TinkCryptoManager
 import com.turisla.hellopocket.security.VaultSessionGuard
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -50,7 +58,7 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE, sdk = [28])
+@Config(application = Application::class, manifest = Config.NONE, sdk = [28])
 @Suppress("DEPRECATION")
 class PasswordRepositoryLegacyV2MigrationTest {
 
@@ -379,6 +387,116 @@ class PasswordRepositoryLegacyV2MigrationTest {
         )
     }
 
+    @Test
+    fun `schema three generator upgrade preserves rule snapshots and backup round trips`() = runBlocking {
+        val password = "generator-master-password"
+        val manager = TinkCryptoManager()
+        val guard = VaultSessionGuard().apply { enterForeground() }
+        val vault = PasswordRepository(context, manager, guard)
+        vault.setupNewVault(password)
+        vault.addEntry("Existing", "user", "existing-secret", "")
+        rewriteCurrentVaultAsSchema(requireNotNull(vault.getVaultEncryptionContext()), 3)
+        vault.lock()
+        assertTrue(vault.loadAndDecryptData(password) is VaultLoadResult.Success)
+        assertTrue(vault.getBackupHistory().isEmpty())
+        val repository = GeneratorRepository(vault)
+        val session = requireNotNull(repository.session.value)
+        val rule = GeneratorRule("fixed", "Word", GeneratorSegment.Text("private-fixed-word"))
+        val digits = GeneratorRule("digits", "Digits", GeneratorSegment.Digits(6))
+        repository.saveRule(session, rule)
+        repository.saveRule(session, digits)
+        val template = GeneratorTemplate("template", "Work", listOf(
+            GeneratorStep("one", rule.name, rule.segment),
+            GeneratorStep("two", digits.name, digits.segment),
+        ))
+        repository.saveTemplate(session, template)
+        assertEquals(4, readCurrentManifest(requireNotNull(vault.getVaultEncryptionContext())).schemaVersion)
+        val oldBackup = vault.getBackupHistory().single()
+        val generatorFile = File(File(context.filesDir, PasswordRepository.VAULT_DIRECTORY_NAME), PasswordRepository.GENERATOR_DATA_FILE)
+        assertFalse(generatorFile.readBytes().toString(Charsets.ISO_8859_1).contains("private-fixed-word"))
+
+        repository.saveRule(session, rule.copy(segment = GeneratorSegment.Text("changed-word")))
+        repository.deleteRule(session, rule.id)
+        assertEquals(template, repository.data.value.templates.single())
+        // 普通条目、TOTP 与改密路径也必须保留规则文件的认证摘要。
+        vault.addEntry("Another", "user", "another-secret", "")
+        vault.persistTotpEntries(emptyList())
+        val rulesBeforePasswordChange = generatorFile.readBytes()
+        assertTrue(vault.changeMasterPassword(password, "new-generator-master-password").success)
+        assertArrayEquals(rulesBeforePasswordChange, generatorFile.readBytes())
+        val expected = repository.data.value
+        val exported = requireNotNull(vault.exportToCache("generator-round-trip.hpb"))
+        vault.lock()
+        assertEquals(GeneratorVaultData(), repository.data.value)
+        assertNull(repository.session.value)
+        assertTrue(vault.loadAndDecryptData("new-generator-master-password") is VaultLoadResult.Success)
+        assertEquals(expected, repository.data.value)
+        repository.deleteTemplate(requireNotNull(repository.session.value), template.id)
+        assertTrue(vault.restoreFromBackup(exported, "new-generator-master-password"))
+        assertTrue(vault.loadAndDecryptData("new-generator-master-password") is VaultLoadResult.Success)
+        assertEquals(expected, repository.data.value)
+        assertEquals(2, vault.passwordEntries.value.size)
+
+        assertTrue(vault.restoreFromBackup(oldBackup, password))
+        assertTrue(vault.loadAndDecryptData(password) is VaultLoadResult.Success)
+        assertEquals(GeneratorVaultData(), repository.data.value)
+        assertEquals(listOf("Existing"), vault.passwordEntries.value.map { it.title })
+        assertEquals(3, readCurrentManifest(requireNotNull(vault.getVaultEncryptionContext())).schemaVersion)
+    }
+
+    @Test
+    fun `missing or tampered generator files fail authentication without publishing rules`() = runBlocking {
+        val manager = TinkCryptoManager()
+        val guard = VaultSessionGuard().apply { enterForeground() }
+        val vault = PasswordRepository(context, manager, guard)
+        vault.setupNewVault("generator-test-password")
+        val repository = GeneratorRepository(vault)
+        repository.saveRule(requireNotNull(repository.session.value), GeneratorRule("digits", "Digits", GeneratorSegment.Digits(6)))
+        val file = File(File(context.filesDir, PasswordRepository.VAULT_DIRECTORY_NAME), PasswordRepository.GENERATOR_DATA_FILE)
+        val original = file.readBytes()
+        vault.lock()
+        assertTrue(file.delete())
+        assertTrue(vault.loadAndDecryptData("generator-test-password") is VaultLoadResult.IntegrityCheckFailed)
+        assertEquals(GeneratorVaultData(), repository.data.value)
+        val changed = original.copyOf()
+        changed[changed.lastIndex] = (changed.last().toInt() xor 1).toByte()
+        file.writeBytes(changed)
+        assertTrue(vault.loadAndDecryptData("generator-test-password") is VaultLoadResult.IntegrityCheckFailed)
+        assertNull(repository.session.value)
+        file.writeBytes(original)
+        assertTrue(vault.loadAndDecryptData("generator-test-password") is VaultLoadResult.Success)
+        assertEquals(1, repository.data.value.rules.size)
+    }
+
+    @Test
+    fun `stale generator sessions and invalid templates never write the vault`() = runBlocking {
+        val manager = TinkCryptoManager()
+        val guard = VaultSessionGuard().apply { enterForeground() }
+        val vault = PasswordRepository(context, manager, guard)
+        vault.setupNewVault("generator-test-password")
+        val repository = GeneratorRepository(vault)
+        val staleSession = requireNotNull(repository.session.value)
+        vault.lock()
+        assertTrue(vault.loadAndDecryptData("generator-test-password") is VaultLoadResult.Success)
+        val directory = File(context.filesDir, PasswordRepository.VAULT_DIRECTORY_NAME)
+        val before = snapshotFiles(directory)
+        var rejected = false
+        try {
+            repository.saveRule(staleSession, GeneratorRule("old", "Old", GeneratorSegment.Text("old-vault-secret")))
+        } catch (_: CancellationException) { rejected = true }
+        assertTrue(rejected)
+        rejected = false
+        try {
+            repository.saveTemplate(requireNotNull(repository.session.value), GeneratorTemplate("bad", "Bad", listOf(
+                GeneratorStep("fixed", "Fixed", GeneratorSegment.Text("no-random-part")),
+            )))
+        } catch (_: IllegalArgumentException) { rejected = true }
+        assertTrue(rejected)
+        val after = snapshotFiles(directory)
+        assertEquals(before.keys, after.keys)
+        before.forEach { (name, bytes) -> assertArrayEquals(bytes, after.getValue(name)) }
+    }
+
     private fun createEarlyV2Vault(
         manager: TinkCryptoManager,
         password: String,
@@ -550,6 +668,8 @@ class PasswordRepositoryLegacyV2MigrationTest {
             encryptionContext.associatedData(PasswordRepository.CATEGORIES_DATA_FILE),
         ).let(Categories::parseFrom)
         val manifest = readCurrentManifest(encryptionContext)
+        // 旧 schema 没有规则文件，测试夹具也必须准确模拟旧版文件集合。
+        File(vaultDirectory, PasswordRepository.GENERATOR_DATA_FILE).delete()
 
         writeLegacyMessage(
             File(vaultDirectory, PasswordRepository.PASSWORDS_DATA_FILE),

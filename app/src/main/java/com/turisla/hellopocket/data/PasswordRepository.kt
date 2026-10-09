@@ -13,6 +13,7 @@ import com.turisla.hellopocket.model.AttachmentManifestEntry
 import com.turisla.hellopocket.model.Categories
 import com.turisla.hellopocket.model.Category
 import com.turisla.hellopocket.model.CustomField
+import com.turisla.hellopocket.model.GeneratorVaultData
 import com.turisla.hellopocket.model.PasswordEntries
 import com.turisla.hellopocket.model.PasswordEntry
 import com.turisla.hellopocket.model.PaymentCardBrand
@@ -29,6 +30,7 @@ import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.StreamingAead
 import com.google.protobuf.CodedInputStream
 import com.turisla.hellopocket.utils.AppConstants
+import com.turisla.hellopocket.utils.RulePasswordGenerator
 import com.turisla.hellopocket.utils.loggerE
 import com.turisla.hellopocket.utils.loggerI
 import kotlinx.coroutines.Dispatchers
@@ -106,11 +108,12 @@ class PasswordRepository(
         const val PASSWORDS_DATA_FILE = "passwords.dat"
         const val CATEGORIES_DATA_FILE = "categories.dat"
         const val TOTP_DATA_FILE = "totp.dat"
+        const val GENERATOR_DATA_FILE = "generator_rules.dat"
         const val ATTACHMENTS_DIR = "attachments"
         
-        // 公开保险库仍为 V2；内部 schema 3 增加支付卡条目及其专用字段。
+        // 公开保险库仍为 V2；内部 schema 4 增加加密的生成规则和模板。
         const val MIN_SUPPORTED_SCHEMA_VERSION = 1
-        const val CURRENT_SCHEMA_VERSION = 3
+        const val CURRENT_SCHEMA_VERSION = 4
 
         private const val SALT_SIZE_BYTES = 16
         private const val LEGACY_VAULT_VERSION = 1
@@ -135,6 +138,7 @@ class PasswordRepository(
         private const val MAX_PASSWORDS_PLAINTEXT_BYTES = 32L * 1024 * 1024
         private const val MAX_CATEGORIES_PLAINTEXT_BYTES = 4L * 1024 * 1024
         private const val MAX_TOTP_PLAINTEXT_BYTES = 16L * 1024 * 1024
+        private const val MAX_GENERATOR_PLAINTEXT_BYTES = 8L * 1024 * 1024
         private const val MAX_THUMBNAIL_PLAINTEXT_BYTES = 2L * 1024 * 1024
         private const val MAX_THUMBNAIL_DIMENSION = 200
         private const val STREAMING_CIPHERTEXT_OVERHEAD_ALLOWANCE_BYTES = 2L * 1024 * 1024
@@ -164,6 +168,12 @@ class PasswordRepository(
 
     private val _attachments = MutableStateFlow<List<AttachmentManifestEntry>>(emptyList())
     val attachments: StateFlow<List<AttachmentManifestEntry>> = _attachments.asStateFlow()
+
+    private val _generatorData = MutableStateFlow(GeneratorVaultData())
+    val generatorData: StateFlow<GeneratorVaultData> = _generatorData.asStateFlow()
+
+    private val _unlockedSession = MutableStateFlow<Long?>(null)
+    val unlockedSession: StateFlow<Long?> = _unlockedSession.asStateFlow()
 
     private val _isBiometricEnabled = MutableStateFlow(isBiometricUnlockEnabled())
     val isBiometricEnabled: StateFlow<Boolean> = _isBiometricEnabled.asStateFlow()
@@ -201,6 +211,7 @@ class PasswordRepository(
         val manifest: VaultManifestV2,
         val passwords: List<PasswordEntry>,
         val categories: List<Category>,
+        val generatorData: GeneratorVaultData = GeneratorVaultData(),
     )
 
     private data class LoadedLegacyV2Data(
@@ -209,6 +220,7 @@ class PasswordRepository(
         val categories: List<Category>,
         val totpEntries: List<TotpEntry>,
         val hasTotpFile: Boolean,
+        val generatorData: GeneratorVaultData,
     )
 
     private data class PreparedVaultUpgrade(
@@ -359,10 +371,15 @@ class PasswordRepository(
                     streamingAead,
                     encryptionContext.associatedData(CATEGORIES_DATA_FILE)
                 )
+                writeGeneratorData(
+                    File(stagedDir, GENERATOR_DATA_FILE), GeneratorVaultData(),
+                    streamingAead, encryptionContext,
+                )
                 val initialMetadata = calculateSnapshotMetadata(
                     mapOf(
                         PASSWORDS_DATA_FILE to File(stagedDir, PASSWORDS_DATA_FILE),
                         CATEGORIES_DATA_FILE to File(stagedDir, CATEGORIES_DATA_FILE),
+                        GENERATOR_DATA_FILE to File(stagedDir, GENERATOR_DATA_FILE),
                     )
                 )
                 val newManifest = VaultManifestV2(
@@ -491,6 +508,7 @@ class PasswordRepository(
                             manifest = upgraded.manifest,
                             passwords = legacyData.passwords,
                             categories = legacyData.categories,
+                            generatorData = legacyData.generatorData,
                         ),
                     )
                 ) {
@@ -667,6 +685,7 @@ class PasswordRepository(
                 manifest = manifest,
                 passwords = loadedPasswords.entriesList,
                 categories = loadedCategories.categoriesList,
+                generatorData = readGeneratorData(vaultDir, manifest.schemaVersion, streamingAead, encryptionContext),
             )
         } catch (error: CancellationException) {
             throw error
@@ -817,6 +836,7 @@ class PasswordRepository(
                 categories = categories.categoriesList,
                 totpEntries = totpEntries,
                 hasTotpFile = totpFile.isFile,
+                generatorData = readGeneratorData(directory, manifest.schemaVersion, streamingAead, encryptionContext),
             )
         } catch (error: CancellationException) {
             throw error
@@ -988,6 +1008,11 @@ class PasswordRepository(
         val snapshotFiles = mutableMapOf(
             PASSWORDS_DATA_FILE to File(targetDirectory, PASSWORDS_DATA_FILE),
             CATEGORIES_DATA_FILE to File(targetDirectory, CATEGORIES_DATA_FILE),
+            GENERATOR_DATA_FILE to File(targetDirectory, GENERATOR_DATA_FILE),
+        )
+        writeGeneratorData(
+            File(targetDirectory, GENERATOR_DATA_FILE), legacyData.generatorData,
+            streamingAead, newContext,
         )
         File(targetDirectory, TOTP_DATA_FILE).takeIf(File::isFile)?.let {
             snapshotFiles[TOTP_DATA_FILE] = it
@@ -1059,13 +1084,18 @@ class PasswordRepository(
     private suspend fun persistVaultState(
         passwords: List<PasswordEntry>,
         categories: List<Category>,
-        attachments: List<AttachmentManifestEntry>
+        attachments: List<AttachmentManifestEntry>,
+        generatorData: GeneratorVaultData = _generatorData.value,
+        expectedSession: Long? = null,
     ) = withContext(Dispatchers.IO) {
         VaultSemanticValidator.validateCore(passwords, categories, attachments)
         saveMutex.withLock {
             VaultFileTransaction.recover(vaultDir)
             val writeSession = captureActiveVaultWriteSession()
                 ?: throw CancellationException("Vault is locked")
+            if (expectedSession != null && writeSession.epoch != expectedSession) {
+                throw CancellationException("Generator session was invalidated")
+            }
             // 旧 schema 第一次升级写入前保留完整备份，便于使用旧版本回退恢复。
             val schemaUpgradeBackup = if (
                 writeSession.manifest.schemaVersion < CURRENT_SCHEMA_VERSION
@@ -1083,10 +1113,12 @@ class PasswordRepository(
 
             val passwordTarget = File(vaultDir, PASSWORDS_DATA_FILE)
             val categoryTarget = File(vaultDir, CATEGORIES_DATA_FILE)
+            val generatorTarget = File(vaultDir, GENERATOR_DATA_FILE)
             val manifestTarget = File(vaultDir, MANIFEST_DATA_FILE)
             val configTarget = File(vaultDir, VAULT_CONFIG_FILE_NAME)
             val passwordPending = VaultFileTransaction.createPendingFile(passwordTarget)
             val categoryPending = VaultFileTransaction.createPendingFile(categoryTarget)
+            val generatorPending = VaultFileTransaction.createPendingFile(generatorTarget)
             val manifestPending = VaultFileTransaction.createPendingFile(manifestTarget)
             val configPending = VaultFileTransaction.createPendingFile(configTarget)
 
@@ -1109,9 +1141,11 @@ class PasswordRepository(
                     streamingAead,
                     encryptionContext.associatedData(CATEGORIES_DATA_FILE)
                 )
+                writeGeneratorData(generatorPending, generatorData, streamingAead, encryptionContext)
                 val snapshotFiles = mutableMapOf(
                     PASSWORDS_DATA_FILE to passwordPending,
                     CATEGORIES_DATA_FILE to categoryPending,
+                    GENERATOR_DATA_FILE to generatorPending,
                 )
                 File(vaultDir, TOTP_DATA_FILE).takeIf(File::isFile)?.let {
                     snapshotFiles[TOTP_DATA_FILE] = it
@@ -1151,6 +1185,7 @@ class PasswordRepository(
                     writes = listOf(
                         VaultFileTransaction.PendingWrite(passwordTarget, passwordPending),
                         VaultFileTransaction.PendingWrite(categoryTarget, categoryPending),
+                        VaultFileTransaction.PendingWrite(generatorTarget, generatorPending),
                         VaultFileTransaction.PendingWrite(manifestTarget, manifestPending),
                         VaultFileTransaction.PendingWrite(configTarget, configPending)
                     ),
@@ -1159,13 +1194,14 @@ class PasswordRepository(
                         _passwordEntries.value = passwords
                         _categories.value = categories
                         _attachments.value = attachments
+                        _generatorData.value = generatorData
                         vaultManifestV2 = newManifest
                         vaultConfig = updatedConfig
                     },
                 )
                 schemaUpgradeBackup?.let(::pruneAutomaticBackups)
             } finally {
-                listOf(passwordPending, categoryPending, manifestPending, configPending).forEach(File::delete)
+                listOf(passwordPending, categoryPending, generatorPending, manifestPending, configPending).forEach(File::delete)
             }
         }
     }
@@ -1200,9 +1236,11 @@ class PasswordRepository(
             )
 
             val totpTarget = File(vaultDir, TOTP_DATA_FILE)
+            val generatorTarget = File(vaultDir, GENERATOR_DATA_FILE)
             val manifestTarget = File(vaultDir, MANIFEST_DATA_FILE)
             val configTarget = File(vaultDir, VAULT_CONFIG_FILE_NAME)
             val totpPending = VaultFileTransaction.createPendingFile(totpTarget)
+            val generatorPending = VaultFileTransaction.createPendingFile(generatorTarget)
             val manifestPending = VaultFileTransaction.createPendingFile(manifestTarget)
             val configPending = VaultFileTransaction.createPendingFile(configTarget)
             try {
@@ -1215,11 +1253,14 @@ class PasswordRepository(
                     streamingAead,
                     encryptionContext.associatedData(TOTP_DATA_FILE),
                 )
+                // TOTP 也可能是旧保险库的首次写入，必须在同一事务中补齐 schema 4 文件。
+                writeGeneratorData(generatorPending, _generatorData.value, streamingAead, encryptionContext)
                 val snapshotMetadata = calculateSnapshotMetadata(
                     mapOf(
                         PASSWORDS_DATA_FILE to File(vaultDir, PASSWORDS_DATA_FILE),
                         CATEGORIES_DATA_FILE to File(vaultDir, CATEGORIES_DATA_FILE),
                         TOTP_DATA_FILE to totpPending,
+                        GENERATOR_DATA_FILE to generatorPending,
                     )
                 )
                 val newManifest = currentManifest.copy(
@@ -1252,6 +1293,7 @@ class PasswordRepository(
                     expectedKeyset = keyset,
                     writes = listOf(
                         VaultFileTransaction.PendingWrite(totpTarget, totpPending),
+                        VaultFileTransaction.PendingWrite(generatorTarget, generatorPending),
                         VaultFileTransaction.PendingWrite(manifestTarget, manifestPending),
                         VaultFileTransaction.PendingWrite(configTarget, configPending),
                     ),
@@ -1262,7 +1304,7 @@ class PasswordRepository(
                 )
                 schemaUpgradeBackup?.let(::pruneAutomaticBackups)
             } finally {
-                listOf(totpPending, manifestPending, configPending).forEach(File::delete)
+                listOf(totpPending, generatorPending, manifestPending, configPending).forEach(File::delete)
             }
         }
     }
@@ -1290,6 +1332,8 @@ class PasswordRepository(
                     _passwordEntries.value = data.passwords
                     _categories.value = data.categories
                     _attachments.value = data.manifest.attachments
+                    _generatorData.value = data.generatorData
+                    _unlockedSession.value = sessionEpoch
                     didPublish = true
                 }
             }
@@ -1317,6 +1361,8 @@ class PasswordRepository(
             streamingAeadKeysetHandle = null
             vaultConfig = null
             vaultManifestV2 = null
+            _generatorData.value = GeneratorVaultData()
+            _unlockedSession.value = null
             clearAttachmentCacheLocked()
         }
         // Common
@@ -1333,6 +1379,66 @@ class PasswordRepository(
     ) {
         writeEncryptedStream(target, streamingAead, associatedData) { encryptedOutput ->
             message.writeTo(encryptedOutput)
+        }
+    }
+
+    /** 规则的读改写与密码条目共用状态互斥锁，防止并发保存覆盖另一个页面的更新。 */
+    suspend fun updateGeneratorData(
+        expectedSession: Long,
+        transform: (GeneratorVaultData) -> GeneratorVaultData,
+    ) = stateMutationMutex.withLock {
+        if (_unlockedSession.value != expectedSession) {
+            throw CancellationException("Generator session was invalidated")
+        }
+        val next = transform(_generatorData.value)
+        RulePasswordGenerator.validateVaultData(next)
+        persistVaultState(
+            _passwordEntries.value, _categories.value, _attachments.value,
+            generatorData = next, expectedSession = expectedSession,
+        )
+    }
+
+    private fun writeGeneratorData(
+        target: File,
+        data: GeneratorVaultData,
+        streamingAead: StreamingAead,
+        encryptionContext: VaultEncryptionContext,
+    ) {
+        RulePasswordGenerator.validateVaultData(data)
+        val bytes = Json.encodeToString(data).toByteArray(Charsets.UTF_8)
+        try {
+            require(bytes.size <= MAX_GENERATOR_PLAINTEXT_BYTES) { "Generator data exceeds its size limit" }
+            writeEncryptedStream(target, streamingAead, encryptionContext.associatedData(GENERATOR_DATA_FILE)) {
+                it.write(bytes)
+            }
+        } finally {
+            bytes.fill(0)
+        }
+    }
+
+    private fun readGeneratorData(
+        directory: File,
+        schemaVersion: Int,
+        streamingAead: StreamingAead,
+        encryptionContext: VaultEncryptionContext,
+    ): GeneratorVaultData {
+        val file = File(directory, GENERATOR_DATA_FILE)
+        if (schemaVersion < 4) {
+            require(!file.exists()) { "Unexpected generator data in an older schema" }
+            return GeneratorVaultData()
+        }
+        require(file.isFile) { "Generator data is missing" }
+        return try {
+            FileInputStream(file).use { input ->
+                streamingAead.newDecryptingStream(input, encryptionContext.associatedData(GENERATOR_DATA_FILE)).use {
+                    Json.decodeFromString<GeneratorVaultData>(readUtf8WithLimit(it, MAX_GENERATOR_PLAINTEXT_BYTES))
+                }
+            }.also(RulePasswordGenerator::validateVaultData)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            // 序列化异常可能包含明文片段；只向上抛出不含用户内容的固定错误。
+            throw IllegalArgumentException("Invalid encrypted generator data")
         }
     }
 
@@ -2003,6 +2109,7 @@ class PasswordRepository(
         require(verifyAuthenticatedSnapshotMetadata(importedManifest, directory)) {
             "Imported vault snapshot metadata is invalid"
         }
+        readGeneratorData(directory, importedManifest.schemaVersion, streamingAead, encryptionContext)
 
         val importedPasswords = decryptImportedFile(
             File(directory, PASSWORDS_DATA_FILE),
@@ -2842,6 +2949,7 @@ class PasswordRepository(
             TOTP_DATA_FILE -> {
                 MAX_TOTP_PLAINTEXT_BYTES + STREAMING_CIPHERTEXT_OVERHEAD_ALLOWANCE_BYTES
             }
+            GENERATOR_DATA_FILE -> MAX_GENERATOR_PLAINTEXT_BYTES + STREAMING_CIPHERTEXT_OVERHEAD_ALLOWANCE_BYTES
             else -> {
                 val attachmentPrefix = "$ATTACHMENTS_DIR/"
                 require(entryName.startsWith(attachmentPrefix)) { "Import contains an unexpected file" }
@@ -2932,7 +3040,7 @@ class PasswordRepository(
     )
 
     private fun calculateSnapshotMetadata(files: Map<String, File>): SnapshotMetadata {
-        val orderedNames = listOf(PASSWORDS_DATA_FILE, CATEGORIES_DATA_FILE, TOTP_DATA_FILE)
+        val orderedNames = listOf(PASSWORDS_DATA_FILE, CATEGORIES_DATA_FILE, TOTP_DATA_FILE, GENERATOR_DATA_FILE)
             .filter(files::containsKey)
         val digests = linkedMapOf<String, String>()
         val sizes = linkedMapOf<String, Long>()
@@ -2957,6 +3065,7 @@ class PasswordRepository(
             fileSizes = manifest.fileSizes,
             directory = directory,
             allowBothMissing = false,
+            schemaVersion = manifest.schemaVersion,
         )
     }
 
@@ -2970,6 +3079,7 @@ class PasswordRepository(
             fileSizes = manifest.fileSizes,
             directory = directory,
             allowBothMissing = allowMissing,
+            schemaVersion = manifest.schemaVersion,
         )
     }
 
@@ -2978,7 +3088,9 @@ class PasswordRepository(
         fileSizes: Map<String, Long>,
         directory: File,
         allowBothMissing: Boolean,
+        schemaVersion: Int,
     ): Boolean {
+        if (schemaVersion < 4 && File(directory, GENERATOR_DATA_FILE).exists()) return false
         if (fileDigests.isEmpty() && fileSizes.isEmpty()) return allowBothMissing
         if (fileDigests.isEmpty() || fileSizes.isEmpty()) return false
 
@@ -2987,6 +3099,7 @@ class PasswordRepository(
                 add(PASSWORDS_DATA_FILE)
                 add(CATEGORIES_DATA_FILE)
                 if (File(directory, TOTP_DATA_FILE).isFile) add(TOTP_DATA_FILE)
+                if (schemaVersion >= 4) add(GENERATOR_DATA_FILE)
             }
             if (fileDigests.keys != expectedNames || fileSizes.keys != expectedNames) {
                 return false

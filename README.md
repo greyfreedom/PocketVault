@@ -45,7 +45,7 @@ Vault data is encrypted and processed on the device. Data leaves the app only wh
 - **Custom fields** — add ordered plain-text or concealed fields to passwords, secure notes, and payment cards.
 - **TOTP codes** — add entries manually or scan a QR code locally with the optional camera permission.
 - **Local organization** — categories, favorites, list/grid layouts, and local search across non-sensitive metadata and visible text fields. Passwords, card numbers, security codes, TOTP secrets, and concealed custom-field values are never indexed.
-- **Password generator** — configurable length, character sets, confusing-character exclusion, and passphrases.
+- **Password generator** — random passwords plus ordered combinations of fixed text, random digits, letters, and symbols. Reuse an encrypted rule library and independent template snapshots; reorder or duplicate fragments without a fragment-count cap. The last mode and rule composition, including unsaved template edits, are remembered in the encrypted vault; generated passwords are never persisted. Rule-generated passwords are limited to 128 Unicode code points, and randomness estimates exclude fixed text.
 - **Biometric convenience unlock** — protected by a local Android Keystore wrapping key.
 - **Backup and restore** — encrypted import/export plus a bounded automatic history of up to 5 backups and 1 GiB total.
 - **Sensitive-screen protection** — global `FLAG_SECURE`, background auto-lock, sensitive clipboard marking, and timed clearing.
@@ -75,7 +75,7 @@ PocketVault uses a master-password-wrapped random data key:
 1. A new vault receives a random salt and a random Google Tink `StreamingAead` keyset.
 2. PBKDF2-HMAC-SHA256 derives a key-encryption key from the master password. New, re-keyed, and current-format vaults use 600,000 iterations. The historical 100,000-iteration V2 parameter is read only during a one-time authenticated migration and is never used for new writes.
 3. The derived key wraps the random keyset. The master password, derived key, and plaintext keyset are not persisted.
-4. Passwords, secure notes, payment cards, custom fields, categories, TOTP entries, manifests, and attachments are encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF.
+4. Passwords, secure notes, payment cards, custom fields, categories, TOTP entries, generator rules and templates, manifests, and attachments are encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF.
 5. Changing the master password re-wraps the keyset instead of re-encrypting every vault file.
 6. Biometric unlock is only a convenience mechanism: an Android Keystore key unwraps the keyset after system authentication, while the master password remains the recovery source of truth.
 
@@ -83,7 +83,7 @@ The implementation also includes authenticated encryption, associated-data bindi
 
 ## Backup metadata
 
-Passwords, notes, payment cards, custom fields, TOTP entries, categories, attachments, and the encrypted manifest inside an exported `.hpb` backup are protected with AES-256-GCM. The backup container is not completely opaque.
+Passwords, notes, payment cards, custom fields, TOTP entries, categories, generator rules and templates, attachments, and the encrypted manifest inside an exported `.hpb` backup are protected with AES-256-GCM. The backup container is not completely opaque.
 
 Its readable `vault_v2.json` configuration includes:
 
@@ -92,7 +92,7 @@ Its readable `vault_v2.json` configuration includes:
 - the encrypted Tink keyset;
 - version, vault identifier, and integrity-binding metadata.
 
-Do not place sensitive information in a password hint, and store exported backups securely. A supported backup requires the password that protected it when it was created. Version 2.5.1 and later can authenticate and normalize early V2 backups before import; V1 backups remain unsupported. Vaults written by 2.6.0 use internal schema 3 and should be restored with 2.6.0 or later. PocketVault has no account, escrow key, or master-password recovery service.
+Do not place sensitive information in a password hint, and store exported backups securely. A supported backup requires the password that protected it when it was created. Version 2.5.1 and later can authenticate and normalize early V2 backups before import; V1 backups remain unsupported. The current development version writes internal schema 4, including encrypted generator rules and templates. Schemas 1–3 remain readable; the first data write creates an encrypted backup before the transactional upgrade. Schema 4 backups require a compatible app version; older releases, including 2.6.0, cannot read them. PocketVault has no account, escrow key, or master-password recovery service.
 
 ## Security model and limitations
 
