@@ -23,8 +23,8 @@ android {
         applicationId = "com.turisla.hellopocket"
         minSdk = 24
         targetSdk = 36
-        versionCode = 12
-        versionName = "2.6.0"
+        versionCode = 13
+        versionName = "2.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -81,6 +81,10 @@ android {
         compose = true
         buildConfig = true
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 java {
@@ -106,6 +110,8 @@ dependencies {
     implementation(libs.androidx.biometric.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

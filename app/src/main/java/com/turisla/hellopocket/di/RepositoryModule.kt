@@ -1,6 +1,7 @@
 package com.turisla.hellopocket.di
 
 import com.turisla.hellopocket.data.PasswordRepository
+import com.turisla.hellopocket.data.GeneratorRepository
 import com.turisla.hellopocket.data.TotpRepository
 import com.turisla.hellopocket.data.UserPreferencesRepository
 import com.turisla.hellopocket.security.BiometricCipherManager
@@ -10,6 +11,7 @@ import com.turisla.hellopocket.security.VaultSessionGuard
 import com.turisla.hellopocket.utils.ClipboardManagerHelper
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 
 /**
  * Koin 模块，负责数据层和安全层的依赖注入
@@ -26,6 +28,7 @@ val repositoryModule = module {
 
     // 将 PasswordRepository 声明为单例
     single { PasswordRepository(androidContext(), get(), get()) }
+    single { GeneratorRepository(get()) } onClose { it?.close() }
 
     // 将 ClipboardManagerHelper 声明为单例
     single { ClipboardManagerHelper(androidContext()) }

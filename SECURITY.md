@@ -32,13 +32,15 @@ PocketVault is designed as a strictly local Android application:
 - it contains no analytics, advertising, telemetry, or crash-reporting SDK;
 - the master password is not persisted;
 - new, re-keyed, and current-format vaults derive a wrapping key with PBKDF2-HMAC-SHA256 using 600,000 iterations; the historical 100,000-iteration V2 parameter is read only during authenticated one-time migration;
-- passwords, secure notes, payment cards, custom fields, TOTP entries, manifests, and attachments are encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF;
+- passwords, secure notes, payment cards, custom fields, categories, TOTP entries, generator rules, templates, remembered generator configuration, manifests, and attachments are encrypted with Google Tink Streaming AEAD using AES-256-GCM-HKDF;
 - biometric unlock is a convenience mechanism backed by Android Keystore, not a replacement for the master password;
 - automatic locking, screenshot protection, authenticated encryption, import validation, and timed clipboard clearing reduce common exposure paths.
 
 The readable `vault_v2.json` configuration contains metadata required before decryption, including the password hint, salt, KDF parameters, and encrypted keyset. Exported backups include this metadata. Password hints must not contain sensitive information.
 
 The app enforces a six-character minimum master password as an input floor, not as a security guarantee. Users should choose a substantially longer, unique passphrase because offline backup access permits repeated password guesses without contacting PocketVault.
+
+Rule generation uses `SecureRandom` for random fragments. Fixed text adds no randomness, and the displayed estimate counts only random choices rather than predicting cracking time. Rules, template snapshots, and the last mode and composition are stored in encrypted `generator_rules.dat`, including fixed text and unfinished compositions. Generated results are not saved by the generator and are cleared when the vault locks; a password becomes persisted vault data only when the user saves it in an entry. Delayed generator writes are bound to the vault session that created them.
 
 ## Vault format compatibility
 
@@ -49,6 +51,8 @@ After the master password unwraps the historical Keyset, PocketVault authenticat
 V1 vaults remain recognized but unsupported; they are not decrypted, migrated, imported, or silently overwritten. Test migration procedures with synthetic data or a disposable copy, and never send a real vault to a public issue.
 
 Version 2.6.0 introduces internal schema 3 for custom fields and payment cards. Supported schema 1 and 2 vaults remain readable; before the first write upgrades one to schema 3, PocketVault creates an automatic encrypted backup and commits the new core files and manifest transactionally. Vaults and backups written with schema 3 should be opened with PocketVault 2.6.0 or later because older releases do not understand the newer schema boundary.
+
+Version 2.7.0 introduces internal schema 4 for the encrypted generator rule library, templates, and remembered configuration. Schemas 1–3 remain readable. Before the first write, including a generator-setting autosave, upgrades an older schema to schema 4, the app creates an automatic encrypted backup and transactionally commits the new generator file, core files, manifest, and configuration. Schema 4 vaults and backups require version 2.7.0 or later; version 2.6.0 and earlier cannot read them. Restoring a backup made before the schema upgrade restores only the data contained in that backup.
 
 ## Security limitations
 
