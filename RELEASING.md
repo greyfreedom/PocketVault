@@ -18,13 +18,13 @@ Google Play and this repository's GitHub Releases distribute one official applic
    ```
 
 5. Perform a Play-signed upgrade test over the latest production version using a synthetic vault. A debug build is a separate application and is not an upgrade-path test.
-6. Verify passwords, secure notes, payment cards, custom fields, TOTP, categories, attachments, biometrics, password changes, export, import, automatic backup, and backup restoration after the upgrade.
+6. Verify passwords, secure notes, payment cards, custom fields, TOTP, categories, attachments, rule generation, generator templates and remembered settings, biometrics, password changes, export, import, automatic backup, and backup restoration after the upgrade.
 7. For a release that changes vault compatibility, verify both paths: the newest supported vault and backup must open successfully, while deliberately unsupported formats must fail without modifying the original data.
 8. Confirm the merged release manifest contains no Internet or network-state permission and no Firebase or Crashlytics component.
 9. Review runtime dependencies and update `THIRD_PARTY_NOTICES.md` and the in-app notices when a dependency family or license changes.
 10. Confirm that GitHub will receive only the Play-generated Universal APK—not a locally signed APK.
 
-The version-specific candidate checklist for this release is [`docs/release-checklists/2.6.0.md`](docs/release-checklists/2.6.0.md), and copy-ready Play Console text is in [`docs/release-notes/2.6.0.md`](docs/release-notes/2.6.0.md).
+The version-specific candidate checklist for this release is [`docs/release-checklists/2.7.0.md`](docs/release-checklists/2.7.0.md), and copy-ready Play Console text is in [`docs/release-notes/2.7.0.md`](docs/release-notes/2.7.0.md).
 
 ## Source and artifact traceability
 

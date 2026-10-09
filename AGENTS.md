@@ -15,7 +15,7 @@ HelloPocket is an Android password manager built with Kotlin and Jetpack Compose
 
 2.  **安全模型**:
     *   **主密码是唯一信源**: 主密码和 `vault_v2.json` 中的随机盐通过 PBKDF2-HMAC-SHA256（当前写入 600,000 次；历史 100,000 次仅用于旧 V2 认证迁移）派生密钥加密密钥，用于包装随机生成的 `StreamingAead Keyset`；项目只持久化加密后的 Keyset，绝不存储主密码、派生密钥或明文 Keyset。
-    *   **当前格式边界**: 当前开发版本保留早期 V2 主密码认证迁移，内部 schema 4 在自定义字段和支付卡基础上增加加密的 `generator_rules.dat`。schema 1/2/3 可读取，第一次写入 schema 4 前必须创建自动加密备份并事务提交；新写入仍固定 600,000 次。V1 只识别并明确拒绝，不解密、不导入、不覆盖。
+    *   **当前格式边界**: 2.7.0 保留早期 V2 主密码认证迁移，内部 schema 4 在自定义字段和支付卡基础上增加加密的 `generator_rules.dat`。schema 1/2/3 可读取，第一次写入 schema 4 前必须创建自动加密备份并事务提交；新写入仍固定 600,000 次。schema 4 保险库和备份需要 2.7.0 或更高版本读取。V1 只识别并明确拒绝，不解密、不导入、不覆盖。
     *   **Google Tink 加密**: 采用 Google Tink 库的 `StreamingAead` (AES-256-GCM-HKDF-1MB) 流式认证加密方案。
     *   **流式加密优势**: 使用流式加密避免将整个附件同时加载到内存；可处理的实际大小仍受设备存储、Android 平台和应用安全限制影响。
     *   **数据完整性保护**: 内置 SHA-256 完整性校验，确保保险库数据未被篡改。同时 GCM 模式本身也提供认证加密 (AEAD)。

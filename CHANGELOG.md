@@ -2,6 +2,28 @@
 
 All notable changes to PocketVault will be documented in this file.
 
+## [2.7.0] - 2026-10-09
+
+### Added
+
+- Rule-based password generation from ordered fixed text, random digits, random letters, and random symbols. Select multiple reusable rules, duplicate fragments, and drag to reorder them without a fragment-count cap.
+- An encrypted rule library and combination templates with independent rule snapshots, included in vault backups. Templates can be reused, updated, or saved as new copies.
+- Local encrypted memory of the last generation mode, selected template, and actual rule order, including unfinished compositions and edits not yet saved to a template. Switching to random generation preserves the last rule composition.
+- An English and Simplified Chinese project website, plus a helper that creates, verifies, and pushes signed release tags from the configured app version.
+
+### Changed
+
+- Refreshed rule cards with sequence badges, type icons, clearer content, and separate drag and action controls. The template entry is now “View existing templates”; “Clear current rules” is a button below “Save as template”.
+- Advanced the vault's internal schema to version 4 with encrypted `generator_rules.dat`. Schemas 1–3 remain readable; the first write, including remembered generator settings, creates an automatic encrypted backup before a transactional upgrade. Schema 4 vaults and backups require PocketVault 2.7.0 or later; 2.6.0 and earlier cannot read them.
+- Rule-generated passwords use cryptographically secure randomness and are limited to 128 Unicode code points. Fixed text contributes no randomness, and generation requires at least one rule with multiple possible random results. The generator keeps results in memory only and clears them when the vault locks.
+- Added all generator controls, validation messages, and local-memory feedback in the seven supported app languages.
+
+### Fixed
+
+- Dragging the first visible rule no longer shifts the list viewport or keeps moving the rule after finger movement stops.
+- System text-selection copying in generator results and rule editors now uses the sensitive clipboard path and its timed clearing.
+- Delayed callbacks from a locked generator session cannot restore results or overwrite settings in a new vault session.
+
 ## [2.6.0] - 2026-08-11
 
 ### Added

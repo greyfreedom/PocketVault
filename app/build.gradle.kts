@@ -23,8 +23,8 @@ android {
         applicationId = "com.turisla.hellopocket"
         minSdk = 24
         targetSdk = 36
-        versionCode = 12
-        versionName = "2.6.0"
+        versionCode = 13
+        versionName = "2.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
